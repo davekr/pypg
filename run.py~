@@ -1,7 +1,0 @@
-import psycopg2
-from db import DB
-
-conn = psycopg2.connect("dbname=queens user=dave")
-db = DB(conn)
-#import pdb; pdb.set_trace()
-print '\n'.join([str(row) for row in db.test.where(db.test.id.in_([15,16])).select()])
