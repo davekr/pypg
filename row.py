@@ -2,6 +2,7 @@ from builder import SQLBuilder
 from exception import DBException
 from query import Query
 from utils import TableValidator
+from structure import Structure
 
 class Row(TableValidator):
 
@@ -14,7 +15,8 @@ class Row(TableValidator):
         
     def _set_sql_builder(self):
         self._sql = SQLBuilder(self._table_name)
-        self._sql.add_where_conditions(self.data)
+        pks = Structure.get_primary_keys(self._table_name)
+        map(lambda pk: self._sql.add_where_condition(pk, self.data[pk]), pks)
         
     def __str__(self):
         self._check_deleted()
@@ -39,7 +41,7 @@ class Row(TableValidator):
             update_query, update_args = self._sql.build_update()
             Query().execute(update_query, update_args)
             self._changed = False
-            self._set_sql_builder()
+            #self._set_sql_builder()
             return self
         else:
             raise DBException('No data to update for this row.')

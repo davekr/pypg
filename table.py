@@ -37,13 +37,20 @@ class TableSelect(TableValidator):
     def select(self, *args):
         if args:
             map(self._check_column_in_table, args)
+            args = self._add_primary_keys(list(args))
             self._sql.add_select_args(args)
         else:
             self._sql.add_select_args(Structure.get_all_columns(self._table_name))
         select_query, select_args = self._sql.build_select()
         data = Query().execute_and_fetch(select_query, select_args)
-        data = self._parse_data(data)
+        data = self._parse_data(data, args)
         return data
+            
+    def _add_primary_keys(self, args):
+        for pk in Structure.get_primary_keys(self._table_name):
+            if pk not in args:
+                args.append(pk)
+        return args
             
     def _table_select_instance(self):
         return TableSelect(self._table_name, self._sql)
@@ -51,8 +58,10 @@ class TableSelect(TableValidator):
     def _table_where_instance(self):
         return TableWhere(self._table_name, self._sql)
         
-    def _parse_data(self, data):
-        return [Row(dict(zip(Structure.get_all_columns(self._table_name), data_raw)), self._table_name) for data_raw in data]
+    def _parse_data(self, data, args=None):
+        if not args:
+            args = Structure.get_all_columns(self._table_name)
+        return ResultSet([Row(dict(zip(args, data_raw)), self._table_name) for data_raw in data])
     
 class TableWhere(TableSelect):
     

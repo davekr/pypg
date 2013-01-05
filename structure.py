@@ -17,3 +17,7 @@ class Structure(object):
     @staticmethod
     def get_all_columns(table):
         return Manager.get_scheme()[table]['columns']
+        
+    @staticmethod
+    def get_primary_keys(table):
+        return Manager.get_scheme()[table]['pks']

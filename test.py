@@ -4,6 +4,7 @@ from db import DB
 from exception import DBException
 from table import TableWhere, Table, TableSelect
 from row import Row
+from resultset import ResultSet
 
 db = DB(psycopg2.connect("dbname=queens user=dave"))
         
@@ -25,7 +26,7 @@ class TableInsertTest(unittest.TestCase):
         self.assertRaises(DBException, db.test.insert, notexistingcolumn='')
         
     def test_insert_good_karguments(self):
-        self.assertEqual(isinstance(db.test.insert(name='Test'), list), True)
+        self.assertEqual(isinstance(db.test.insert(name='Test'), ResultSet), True)
         
     def test_insert_bad_arguments(self):
         self.assertRaises(DBException, db.test.insert, 'blabla')
@@ -58,16 +59,16 @@ class TableSelectTest(unittest.TestCase):
         self.assertEqual(isinstance(db.test.order(db.test.id), TableSelect), True)    
         
     def test_select_no_arguments(self):
-        self.assertEqual(isinstance(db.test.select(), list), True)
+        self.assertEqual(isinstance(db.test.select(), ResultSet), True)
          
     def test_select_bad_arguments(self):
         self.assertRaises(DBException, db.test.select, 'notexistingcolumn')
         
     def test_select_good_arguments(self):
-        self.assertEqual(isinstance(db.test.select('id'), list), True)
+        self.assertEqual(isinstance(db.test.select('id'), ResultSet), True)
         
     def test_select_good_arguments2(self):
-        self.assertEqual(isinstance(db.test.select(db.test.id), list), True)
+        self.assertEqual(isinstance(db.test.select(db.test.id), ResultSet), True)
         
 class TableWhereTest(unittest.TestCase):
 
