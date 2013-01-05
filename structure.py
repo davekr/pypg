@@ -4,7 +4,7 @@ class Structure(object):
 
     @staticmethod
     def table_has_column(table, column):
-        return column in Manager.get_scheme()[table]
+        return column in Manager.get_scheme()[table]['columns']
         
     @staticmethod
     def get_all_tables():
@@ -16,4 +16,4 @@ class Structure(object):
         
     @staticmethod
     def get_all_columns(table):
-        return Manager.get_scheme()[table]
+        return Manager.get_scheme()[table]['columns']

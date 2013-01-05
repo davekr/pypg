@@ -5,96 +5,91 @@ from exception import DBException
 from table import TableWhere, Table, TableSelect
 from row import Row
 
-class Test(unittest.TestCase):
+db = DB(psycopg2.connect("dbname=queens user=dave"))
+        
     
-    def setUp(self):
-        conn = psycopg2.connect("dbname=queens user=dave")
-        self.db = DB(conn)
-    
-class DBTest(Test):
+class DBTest(unittest.TestCase):
 
     def test_table_access(self):
-        self.assertEqual(isinstance(self.db.test, Table), True)
+        self.assertEqual(isinstance(db.test, Table), True)
     
     def test_table_access_failure(self):
-        self.assertRaises(DBException, getattr, self.db, 'notexistingtable')
+        self.assertRaises(DBException, getattr, db, 'notexistingtable')
         
-class TableInsertTest(Test):
+class TableInsertTest(unittest.TestCase):
 
     def test_insert_no_arguments(self):
-        self.assertRaises(DBException, self.db.test.insert)
+        self.assertRaises(DBException, db.test.insert)
         
     def test_insert_bad_karguments(self):
-        self.assertRaises(DBException, self.db.test.insert, notexistingcolumn='')
+        self.assertRaises(DBException, db.test.insert, notexistingcolumn='')
         
     def test_insert_good_karguments(self):
-        self.assertEqual(isinstance(self.db.test.insert(name='Test'), list), True)
+        self.assertEqual(isinstance(db.test.insert(name='Test'), list), True)
         
     def test_insert_bad_arguments(self):
-        self.assertRaises(DBException, self.db.test.insert, 'blabla')
+        self.assertRaises(DBException, db.test.insert, 'blabla')
         
     def test_insert_good_arguments(self):
         #self.assertEqual(isinstance(self.db.test.insert(self.db.test.row()), list), True)
         pass
         
-class TableSelectTest(Test):
+class TableSelectTest(unittest.TestCase):
 
     def test_limit_no_arguments(self):
-        self.assertRaises(TypeError, self.db.test.limit)
+        self.assertRaises(TypeError, db.test.limit)
         
     def test_limit_bad_arguments(self):
-        self.assertRaises(DBException, self.db.test.limit, 'blabla')
+        self.assertRaises(DBException, db.test.limit, 'blabla')
         
     def test_limit_good_arguments(self):
-        self.assertEqual(isinstance(self.db.test.limit(10), TableSelect), True)
+        self.assertEqual(isinstance(db.test.limit(10), TableSelect), True)
     
     def test_order_no_arguments(self):
-        self.assertRaises(TypeError, self.db.test.order)
+        self.assertRaises(TypeError, db.test.order)
         
     def test_order_bad_arguments(self):
-        self.assertRaises(DBException, self.db.test.order, 'notexistingcolumn')    
+        self.assertRaises(DBException, db.test.order, 'notexistingcolumn')    
         
     def test_order_good_arguments(self):
-        self.assertEqual(isinstance(self.db.test.order('id'), TableSelect), True)
+        self.assertEqual(isinstance(db.test.order('id'), TableSelect), True)
         
     def test_order_good_arguments2(self):
-        self.assertEqual(isinstance(self.db.test.order(self.db.test.id), TableSelect), True)    
+        self.assertEqual(isinstance(db.test.order(db.test.id), TableSelect), True)    
         
     def test_select_no_arguments(self):
-        self.assertEqual(isinstance(self.db.test.select(), list), True)
+        self.assertEqual(isinstance(db.test.select(), list), True)
          
     def test_select_bad_arguments(self):
-        self.assertRaises(DBException, self.db.test.select, 'notexistingcolumn')
+        self.assertRaises(DBException, db.test.select, 'notexistingcolumn')
         
     def test_select_good_arguments(self):
-        self.assertEqual(isinstance(self.db.test.select('id'), list), True)
+        self.assertEqual(isinstance(db.test.select('id'), list), True)
         
     def test_select_good_arguments2(self):
-        self.assertEqual(isinstance(self.db.test.select(self.db.test.id), list), True)
+        self.assertEqual(isinstance(db.test.select(db.test.id), list), True)
         
-class TableWhereTest(Test):
+class TableWhereTest(unittest.TestCase):
 
     def test_where_no_arguments(self):
-        self.assertRaises(DBException, self.db.test.where)
+        self.assertRaises(DBException, db.test.where)
     
     def test_where_bad_karguments(self):
-        self.assertRaises(DBException, self.db.test.where, notexistingcolumn='')
+        self.assertRaises(DBException, db.test.where, notexistingcolumn='')
         
     def test_where_bad_arguments(self):
-        self.assertRaises(DBException, self.db.test.where, 'blabla')
+        self.assertRaises(DBException, db.test.where, 'blabla')
         
     def test_where_good_karguments(self):
-        self.assertEqual(isinstance(self.db.test.where(id=1), TableWhere), True)
+        self.assertEqual(isinstance(db.test.where(id=1), TableWhere), True)
         
     def test_where_good_arguments(self):
-        self.assertEqual(isinstance(self.db.test.where(self.db.test.id.notequal('1')), TableWhere), True)
+        self.assertEqual(isinstance(db.test.where(db.test.id.notequal('1')), TableWhere), True)
         
 class RowTest(unittest.TestCase):
 
     def setUp(self):
-        conn = psycopg2.connect("dbname=queens user=dave")
-        self.db = DB(conn)
-        self.row = self.db.test.select()[0]
+        self.row = db.test.select()[0]
         
     def test_item_access(self):
         self.assertEqual(type(self.row['name']), str)
@@ -125,9 +120,7 @@ class RowTest(unittest.TestCase):
 class RowDeleteTest(unittest.TestCase):
     
     def setUp(self):
-        conn = psycopg2.connect("dbname=queens user=dave")
-        self.db = DB(conn)
-        self.row = self.db.test.select()[0]
+        self.row = db.test.select()[0]
         
     def test_delete(self):
         self.assertEqual(self.row.delete(), None)
@@ -135,9 +128,7 @@ class RowDeleteTest(unittest.TestCase):
 class RowDeletedTest(unittest.TestCase):
     
     def setUp(self):
-        conn = psycopg2.connect("dbname=queens user=dave")
-        self.db = DB(conn)
-        self.row = self.db.test.select()[0]
+        self.row = db.test.select()[0]
         self.row.delete()
         
     def test_item_access_failure(self):
