@@ -39,8 +39,6 @@ class TableSelect(TableValidator):
             map(self._check_column_in_table, args)
             args = self._add_primary_keys(list(args))
             self._sql.add_select_args(args)
-        else:
-            self._sql.add_select_args(Structure.get_all_columns(self._table_name))
         select_query, select_args = self._sql.build_select()
         data = Query().execute_and_fetch(select_query, select_args)
         data = self._parse_data(data, args)
@@ -59,9 +57,7 @@ class TableSelect(TableValidator):
         return TableWhere(self._table_name, self._sql)
         
     def _parse_data(self, data, args=None):
-        if not args:
-            args = Structure.get_all_columns(self._table_name)
-        return ResultSet([Row(dict(zip(args, data_raw)), self._table_name) for data_raw in data])
+        return ResultSet([Row(row, self._table_name) for row in data])
     
 class TableWhere(TableSelect):
     

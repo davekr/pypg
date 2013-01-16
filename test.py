@@ -90,7 +90,7 @@ class TableWhereTest(unittest.TestCase):
 class RowTest(unittest.TestCase):
 
     def setUp(self):
-        self.row = db.test.select()[0]
+        self.row = db.test.insert(name='Test')[0]
         
     def test_item_access(self):
         self.assertEqual(type(self.row['name']), str)
@@ -121,7 +121,7 @@ class RowTest(unittest.TestCase):
 class RowDeleteTest(unittest.TestCase):
     
     def setUp(self):
-        self.row = db.test.select()[0]
+        self.row = db.test.insert(name='Test')[0]
         
     def test_delete(self):
         self.assertEqual(self.row.delete(), None)
@@ -129,7 +129,7 @@ class RowDeleteTest(unittest.TestCase):
 class RowDeletedTest(unittest.TestCase):
     
     def setUp(self):
-        self.row = db.test.select()[0]
+        self.row = db.test.insert(name='Test')[0]
         self.row.delete()
         
     def test_item_access_failure(self):

@@ -1,4 +1,4 @@
-
+from psycopg2 import extras
 from manager import Manager
 
 class Query(object):
@@ -17,7 +17,7 @@ class Query(object):
         self._done()
         
     def _execute(self, sql, args):
-        self._cursor = self._conn.cursor()
+        self._cursor = self._conn.cursor(cursor_factory=extras.DictCursor)
         self._cursor.execute(sql, *args)
         
     def _done(self):
