@@ -5,16 +5,20 @@ class Column(object):
 
     def __init__(self, name):
         self._name = name
-
-    def notequal(self, value):
+        
+    def __eq__(self, value):
+        sql = '"%s" = %s' % (self._name, '%s')
+        return Literal(sql, value)
+        
+    def __ne__(self, value):
         sql = '"%s" <> %s' % (self._name, '%s')
         return Literal(sql, value)
         
-    def gt(self, value):
+    def __gt__(self, value):
         sql = '"%s" > %s' % (self._name, '%s')
         return Literal(sql, value)
         
-    def lt(self, value):
+    def __lt__(self, value):
         sql = '"%s" < %s' % (self._name, '%s')
         return Literal(sql, value)
     
@@ -32,4 +36,5 @@ class Column(object):
     def __str__(self):
         return self._name
  
-
+    
+    

@@ -21,13 +21,22 @@ class TableInsertTest(unittest.TestCase):
 
     def test_insert_no_arguments(self):
         self.assertRaises(DBException, db.test.insert)
-        
+
+    def test_insert_and_get_no_arguments(self):
+        self.assertRaises(DBException, db.test.insert_and_get)
+    
     def test_insert_bad_karguments(self):
         self.assertRaises(DBException, db.test.insert, notexistingcolumn='')
-        
+
+    def test_insert_and_get_bad_karguments(self):
+        self.assertRaises(DBException, db.test.insert_and_get, notexistingcolumn='')
+         
     def test_insert_good_karguments(self):
-        self.assertEqual(isinstance(db.test.insert(name='Test'), ResultSet), True)
-        
+        self.assertEqual(db.test.insert(name='Test'), None)
+
+    def test_insert_and_get_good_karguments(self):
+        self.assertEqual(isinstance(db.test.insert_and_get(name='Test'), ResultSet), True)
+         
     def test_insert_bad_arguments(self):
         self.assertRaises(DBException, db.test.insert, 'blabla')
         
@@ -85,12 +94,12 @@ class TableWhereTest(unittest.TestCase):
         self.assertEqual(isinstance(db.test.where(id=1), TableWhere), True)
         
     def test_where_good_arguments(self):
-        self.assertEqual(isinstance(db.test.where(db.test.id.notequal('1')), TableWhere), True)
+        self.assertEqual(isinstance(db.test.where(db.test.id != 1), TableWhere), True)
         
 class RowTest(unittest.TestCase):
 
     def setUp(self):
-        self.row = db.test.insert(name='Test')[0]
+        self.row = db.test.insert_and_get(name='Test')[0]
         
     def test_item_access(self):
         self.assertEqual(type(self.row['name']), str)
@@ -121,7 +130,7 @@ class RowTest(unittest.TestCase):
 class RowDeleteTest(unittest.TestCase):
     
     def setUp(self):
-        self.row = db.test.insert(name='Test')[0]
+        self.row = db.test.insert_and_get(name='Test')[0]
         
     def test_delete(self):
         self.assertEqual(self.row.delete(), None)
@@ -129,7 +138,7 @@ class RowDeleteTest(unittest.TestCase):
 class RowDeletedTest(unittest.TestCase):
     
     def setUp(self):
-        self.row = db.test.insert(name='Test')[0]
+        self.row = db.test.insert_and_get(name='Test')[0]
         self.row.delete()
         
     def test_item_access_failure(self):

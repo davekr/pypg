@@ -26,7 +26,6 @@ class TableSelect(TableValidator):
         self._check_column_in_table(order)
         self._sql.add_order_condition(order)
         return self._table_select_instance()
-            
     
     def where(self, *args, **kwargs):
         self._validate_where(args, kwargs)
@@ -68,6 +67,13 @@ class TableWhere(TableSelect):
     def update(self, **kwargs):
         self._validate_update(kwargs)
         self._sql.add_update_kwargs(kwargs)
+        update_query, update_args = self._sql.build_update()
+        Query().execute(update_query, update_args)
+        return None
+
+    def update_and_get(self, **kwargs):
+        self._validate_update(kwargs)
+        self._sql.add_update_kwargs(kwargs)
         self._sql.add_returning_args(Structure.get_all_columns(self._table_name))
         update_query, update_args = self._sql.build_update()
         data = Query().execute_and_fetch(update_query, update_args)
@@ -78,8 +84,15 @@ class Table(TableWhere):
 
     def __init__(self, name):
         super(Table, self).__init__(name, SQLBuilder(name))
-    
+
     def insert(self, *args, **kwargs):
+        self._validate_insert(args, kwargs)
+        self._sql.add_insert_kwargs(kwargs)
+        insert_query, insert_args = self._sql.build_insert()
+        Query().execute(insert_query, insert_args)
+        return None
+     
+    def insert_and_get(self, *args, **kwargs):
         self._validate_insert(args, kwargs)
         self._sql.add_insert_kwargs(kwargs)
         self._sql.add_returning_args(Structure.get_all_columns(self._table_name))
