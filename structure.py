@@ -21,3 +21,11 @@ class Structure(object):
     @staticmethod
     def get_primary_keys(table):
         return Manager.get_scheme()[table]['pks']
+
+    @staticmethod
+    def get_primary_key(table):
+        pks = Structure.get_primary_keys(table)
+        try:
+            return pks[0]
+        except IndexError:
+            return None

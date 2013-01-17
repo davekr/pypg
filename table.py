@@ -2,7 +2,6 @@ from builder import SQLBuilder
 from resultset import ResultSet
 from column import Column
 from query import Query
-from row import Row
 from structure import Structure
 from utils import TableValidator
     
@@ -36,7 +35,8 @@ class TableSelect(TableValidator):
     def select(self, *args):
         if args:
             map(self._check_column_in_table, args)
-            args = self._add_primary_keys(list(args))
+            #args = self._add_primary_keys(list(args))
+            args.append(Structure.get_primary_key(self._table_name))
             self._sql.add_select_args(args)
         select_query, select_args = self._sql.build_select()
         data = Query().execute_and_fetch(select_query, select_args)
@@ -56,7 +56,7 @@ class TableSelect(TableValidator):
         return TableWhere(self._table_name, self._sql)
         
     def _parse_data(self, data, args=None):
-        return ResultSet([Row(row, self._table_name) for row in data])
+        return ResultSet(data, self._table_name)
     
 class TableWhere(TableSelect):
     

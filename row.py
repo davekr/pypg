@@ -12,12 +12,20 @@ class Row(TableValidator):
         self._set_sql_builder()
         self._changed = False
         self._deleted = False
+        self._result_set = None
         
     def _set_sql_builder(self):
         self._sql = SQLBuilder(self._table_name)
-        pks = Structure.get_primary_keys(self._table_name)
-        map(lambda pk: self._sql.add_where_condition(pk, self.data[pk]), pks)
+        #map(self._sql.add_where_condition, self._get_pks())
+        pk = self._get_pk()
+        self._sql.add_where_condition(pk, self._data[pk])
+
         
+    def _get_pk(self):
+        pk= Structure.get_primary_key(self._table_name)
+        #return [self._data[pk] for pk in pks]
+        return pk
+
     def __str__(self):
         self._check_deleted()
         return str(self.data)
@@ -32,6 +40,10 @@ class Row(TableValidator):
             self._sql.add_update_kwarg(item, value)
             self._changed = True
             self.data[item] = value
+
+    def __getattr__(self, attr):
+        if self._result_set:
+            self._result_set.get_related_data(attr, self._get_pks())
         
     def update(self, **kwargs):
         self._check_deleted()
@@ -56,3 +68,6 @@ class Row(TableValidator):
         if self._deleted:
             raise DBException('This row was deleted.')        
         
+    def add_reference(self, result_set):
+        self._result_set = result_set
+
