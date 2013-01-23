@@ -1,4 +1,5 @@
 from manager import Manager
+import settings
 
 class Structure(object):
 
@@ -24,8 +25,27 @@ class Structure(object):
 
     @staticmethod
     def get_primary_key(table):
-        pks = Structure.get_primary_keys(table)
-        try:
-            return pks[0]
-        except IndexError:
-            return None
+        if settings.STRICT:
+            pks = Structure.get_primary_keys(table)
+            try:
+                return pks[0]
+            except IndexError:
+                return None
+        else:
+            return settings.PK_NAMING
+    
+    @staticmethod
+    def get_foreign_keys(table, foreign_table):
+        return Manager.get_scheme()[table]['fks'][foreign_table]
+    
+    @staticmethod
+    def get_foreign_key(table, foreign_table):
+        if settings.STRICT:
+            fks = Structure.get_foreign_keys(table, foreign_table)
+            try:
+                return fks[0]
+            except IndexError:
+                return None
+        else:
+            return settings.FK_NAMING % foreign_table
+            

@@ -36,5 +36,3 @@ class Column(object):
     def __str__(self):
         return self._name
  
-    
-    

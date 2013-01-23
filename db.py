@@ -10,8 +10,8 @@ class DB(object):
     def __init__(self, conn, settings=None):
         Manager.set_connection(conn)
         Manager.renew_cache()
-        if settings and settings.debug:
-            dbsettings.DEBUG = True
+        if settings:
+            self._set_settings(settings)
     
     def __getattr__(self, name):
         if Structure.table_exists(name):
@@ -22,13 +22,24 @@ class DB(object):
     def __dir__(self):
         return Structure.get_all_tables()
         
+    def _set_settings(self, settings):
+        for setting in settings.avalible_for_setting():
+            value = getattr(settings, setting)
+            if value is not None:
+                setattr(dbsettings, setting, value)
+        
         
 class Settings(object):
 
     def __init__(self, **kwargs):
-        if kwargs.get('debug'):
-            self.debug = True
-        else:
-            self.debug = False        
+        for setting in self.avalible_for_setting():
+            setattr(self, kwargs.get(setting))
+        
+    def __dir__(self):
+        return self.avalible_for_setting()
     
-
+    def availible_for_setting(self):
+        return ['DEBUG', 'SILENT', 'STRICT', 'PK_NAMING', 'FK_NAMING']
+    
+        
+    
