@@ -23,7 +23,7 @@ class DB(object):
         return Structure.get_all_tables()
         
     def _set_settings(self, settings):
-        for setting in settings.avalible_for_setting():
+        for setting in settings.availible_for_setting():
             value = getattr(settings, setting)
             if value is not None:
                 setattr(dbsettings, setting, value)
@@ -32,11 +32,11 @@ class DB(object):
 class Settings(object):
 
     def __init__(self, **kwargs):
-        for setting in self.avalible_for_setting():
-            setattr(self, kwargs.get(setting))
+        for setting in self.availible_for_setting():
+            setattr(self, setting, kwargs.get(setting.lower()))
         
     def __dir__(self):
-        return self.avalible_for_setting()
+        return self.availible_for_setting()
     
     def availible_for_setting(self):
         return ['DEBUG', 'SILENT', 'STRICT', 'PK_NAMING', 'FK_NAMING']
