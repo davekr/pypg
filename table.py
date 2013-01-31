@@ -51,7 +51,7 @@ class TableSelect(TableValidator):
         
     def _parse_data(self, data):
         return ResultSet(data, self._table_name)
-    
+
 class TableWhere(TableSelect):
     
     def delete(self):

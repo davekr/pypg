@@ -92,7 +92,7 @@ class SQLBuilder(object):
         if self._limit_to:
             parameters_list.append(self._limit_to)
         if settings.DEBUG:
-            print select % parameters_list
+            print select % tuple(parameters_list)
         return select, parameters_list
         
     def build_delete(self):

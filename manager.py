@@ -4,7 +4,10 @@ from exception import DBException
 class Manager(object):
 
     _CONNECTION = None
-    _INTROSPECTION_CACHE = defaultdict(lambda: {'columns': [], 'pks': [], 'fks': defaultdict(list)})
+    #Example entry: 'book': {'columns': ['title', 'id', 'author_id'], 'pks': ['id'], \
+    #                           'fks': {'author': {'relcolumns': ['author_id'], 'columns': ['id']}}}
+    _INTROSPECTION_CACHE = defaultdict(lambda: {'columns': [], 'pks': [], 'fks': \
+                                defaultdict(lambda: {'relcolumns': [], 'columns': []})})
     _CACHE_POPULATED = False
     _INTROSPECTION_SELECT = """
                             SELECT t1.table_name, t1.column_name, t2.constraint_type, 
@@ -65,5 +68,7 @@ class Manager(object):
             if key == 'PRIMARY KEY':
                 Manager._INTROSPECTION_CACHE[table_name]['pks'].append(column_name)
             if key == 'FOREIGN KEY':
-                Manager._INTROSPECTION_CACHE[table_name]['fks'][fk_table].append(fk_pk)
+                Manager._INTROSPECTION_CACHE[table_name]['fks'][fk_table]['columns'].append(fk_pk)
+                Manager._INTROSPECTION_CACHE[table_name]['fks'][fk_table]['relcolumns'].append(column_name)
+                
         
