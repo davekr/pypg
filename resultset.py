@@ -45,9 +45,7 @@ class ResultSet(object):
         if not self._cache.relation_exists(self._table_name, relation):
             sql = SQLBuilder(relation)
             sql.add_where_literal(Column(relation_fk).in_(self._cache.get_all_keys(self._table_name, pk)))
-            from restricted import RestrictedTableSelect
-            return RestrictedTableSelect(relation, sql, self._cache, self._table_name, relation_fk, pk_value)
-        else:
-            from restricted import RestrictedDummyTable
-            return RestrictedDummyTable(relation, self._cache.get_relation_set(relation, relation_fk, pk_value), self._cache)
+            data = Query().execute_and_fetch(*sql.build_select())
+            self._cache.save_relation(self._table_name, relation, data)
+        return ResultSet(self._cache.get_relation_set(relation, relation_fk, pk_value), relation, self._cache)
 
