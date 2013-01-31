@@ -6,24 +6,22 @@ from structure import Structure
 
 class Row(TableValidator):
 
-    def __init__(self, data, table):
+    def __init__(self, data, table, result_set=None):
         super(Row, self).__init__(table)
         self.data = data
         self._set_sql_builder()
         self._changed = False
         self._deleted = False
-        self._result_set = None
+        self._result_set = result_set
         
     def _set_sql_builder(self):
         self._sql = SQLBuilder(self._table_name)
-        #map(self._sql.add_where_condition, self._get_pks())
         pk = self._get_pk()
-        self._sql.add_where_condition(pk, self._data[pk])
+        self._sql.add_where_condition(pk, self.data[pk])
 
         
     def _get_pk(self):
         pk= Structure.get_primary_key(self._table_name)
-        #return [self._data[pk] for pk in pks]
         return pk
 
     def __str__(self):
@@ -42,8 +40,13 @@ class Row(TableValidator):
             self.data[item] = value
 
     def __getattr__(self, attr):
-        if self._result_set:
-            self._result_set.get_related_data(attr, self._get_pks())
+        self._check_deleted()
+        if attr in Structure.get_foreign_keys(self._table_name):
+            return self._result_set._get_fk_data(attr, self.data[attr])
+        else:
+            self._check_relation_exists(attr)
+            pk = self._get_pk()
+            return self._result_set._get_rel_data(attr, pk, self.data[pk])
         
     def update(self, **kwargs):
         self._check_deleted()
@@ -66,7 +69,13 @@ class Row(TableValidator):
         
     def _check_deleted(self):
         if self._deleted:
-            raise DBException('This row was deleted.')        
+            raise DBException('This row was deleted.')  
+            
+    def _check_relation_exists(self, relation):
+        if Structure.table_exists(relation) and Structure.tables_related(relation, self._table_name):
+            return True
+        else:
+            raise DBException('No relation "%s" for table "%s"' % (relation, self._table_name))
         
     def add_reference(self, result_set):
         self._result_set = result_set
