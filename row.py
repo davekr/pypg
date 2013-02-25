@@ -22,7 +22,10 @@ class Row(TableValidator):
         
     def _get_pk(self):
         pk= Structure.get_primary_key(self._table_name)
-        return pk
+        if self.data.get(pk) is not None:
+            return pk
+        else:
+            raise DBException('Incorectly formated settings.PK_NAMING')
 
     def __str__(self):
         self._check_deleted()
@@ -41,8 +44,8 @@ class Row(TableValidator):
 
     def __getattr__(self, attr):
         self._check_deleted()
-        if attr in Structure.get_foreign_keys(self._table_name):
-            return self._result_set._get_fk_data(attr, self.data[attr])
+        if Structure.is_foreign_key(self._table_name, attr):
+            return self._result_set._get_fk_data(self._table_name, attr, self.data[attr])
         else:
             self._check_relation_exists(attr)
             pk = self._get_pk()

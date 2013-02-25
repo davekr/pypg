@@ -32,6 +32,15 @@ class TableSelect(TableValidator):
         self._sql.add_where_literals(args)
         return self._table_where_instance()
     
+    def __getitem__(self, item):
+        return Row(self._data[item], self._table_name)
+        
+    def __len__(self):
+        return len(self._data)
+        
+    def __iter__(self):
+        return iter(self._get_referenced_data())
+
     def select(self, *args):
         if args:
             map(self._check_column_in_table, args)
@@ -104,5 +113,3 @@ class Table(TableWhere):
         else:
             raise AttributeError("'%s' object has no attribute '%s'" % (type(self), attr))
             
-    
-

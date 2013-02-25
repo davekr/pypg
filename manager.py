@@ -1,5 +1,6 @@
 from collections import defaultdict
 from exception import DBException
+import settings
 
 class Manager(object):
 
@@ -53,10 +54,11 @@ class Manager(object):
                     
     @staticmethod
     def renew_cache():
-        cursor = Manager._CONNECTION.cursor()
-        cursor.execute(Manager._INTROSPECTION_SELECT)
-        Manager._populate_cache(cursor.fetchall())
-        cursor.close()
+        if settings.STRICT:
+            cursor = Manager._CONNECTION.cursor()
+            cursor.execute(Manager._INTROSPECTION_SELECT)
+            Manager._populate_cache(cursor.fetchall())
+            cursor.close()
     
     @staticmethod
     def _populate_cache(data):

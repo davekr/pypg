@@ -1,4 +1,3 @@
-import settings
 
 class SQLBuilder(object):
     
@@ -40,9 +39,9 @@ class SQLBuilder(object):
     def add_update_kwarg(self, key, value):
         self._update_values.append(value)
         if not self._update:
-            self._update = '"%s"=%s' % (key, '%s')
+            self._update = '"%s"=%%s' % key
         else:
-            self._update += ', "%s"=%s' % (key, '%s')
+            self._update += ', "%s"=%%s' % key
             
     def add_where_conditions(self, kwargs):
         map(lambda item: self.add_where_condition(*item), kwargs.items())
@@ -50,9 +49,9 @@ class SQLBuilder(object):
     def add_where_condition(self, key, value):
         self._where_values.append(value)
         if not self._where:
-            self._where = 'WHERE "%s"=%s ' % (key, '%s')
+            self._where = 'WHERE "%s"=%%s ' % key
         else:
-            self._where += 'AND "%s"=%s ' % (key, '%s')
+            self._where += 'AND "%s"=%%s ' % key
     
     def add_where_literals(self, args):
         map(self.add_where_literal, args)
@@ -91,28 +90,20 @@ class SQLBuilder(object):
         parameters_list = self._where_values[:]
         if self._limit_to:
             parameters_list.append(self._limit_to)
-        if settings.DEBUG:
-            print select % tuple(parameters_list)
         return select, parameters_list
         
     def build_delete(self):
         delete = self.DELETE % ({'table': self._table, 'where': self._where})
-        if settings.DEBUG:
-            print delete % self._where_values
         return delete, self._where_values
         
     def build_insert(self):
         insert = self.INSERT % ({'table': self._table, 'args': ', '.join(self._insert_keys), \
                                  'values': ', '.join(['%s' for k in self._insert_values]), 'returning': self._returning})
-        if settings.DEBUG:
-            print insert, self._insert_values
         return insert, self._insert_values
         
     def build_update(self):
         update = self.UPDATE % ({'table': self._table, 'values': self._update, 'where': self._where, \
                                  'returning': self._returning})
-        if settings.DEBUG:
-            print update, (self._update_values + self._where_values)
         return update, self._update_values + self._where_values
         
     def _escape(self, name):

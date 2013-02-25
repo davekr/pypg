@@ -1,12 +1,12 @@
 import psycopg2
 import unittest
-from db import DB
+from db import DB, Settings
 from exception import DBException
 from table import TableWhere, Table, TableSelect
 from row import Row
 from resultset import ResultSet
 
-db = DB(psycopg2.connect("dbname=queens user=dave"))
+db = DB(psycopg2.connect("dbname=dellstore2 user=dave"), Settings(strict=True))
         
     
 class DBTest(unittest.TestCase):

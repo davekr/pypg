@@ -10,12 +10,7 @@ class TableValidator(object):
         self._table_name = table_name
             
     def _check_column_in_table(self, column):
-        if Structure.table_has_column(self._table_name, str(column)):
-            return True
-        else:
-            error = 'Column "%s" is not a valid column in table "%s". Choices are: "%s".' \
-                    % (column, self._table_name, '", "'.join(Structure.get_all_columns(self._table_name)))
-            raise DBException(error)
+        return Structure.table_has_column(self._table_name, str(column))
             
     def _check_limit(self, limit):
         try:

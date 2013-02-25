@@ -1,70 +1,110 @@
 from manager import Manager
 import settings
+from exception import DBException
 
 class Structure(object):
 
     @staticmethod
     def table_has_column(table, column):
-        return column in Manager.get_scheme()[table]['columns']
+        if settings.STRICT:
+            if column in Manager.get_scheme()[table]['columns']:
+                return True
+            else:
+                error = 'Column "%s" is not a valid column in table "%s". Choices are: "%s".' \
+                        % (column, table, '", "'.join(Structure.get_all_columns(table)))
+                raise DBException(error)
+        else:
+            return True
         
     @staticmethod
     def get_all_tables():
-        return Manager.get_scheme().keys()
-        
-    @staticmethod
-    def table_exists(table):
-        return table in Manager.get_scheme()
-        
-    @staticmethod
-    def get_all_columns(table):
-        return Manager.get_scheme()[table]['columns']
-        
-    @staticmethod
-    def get_primary_keys(table):
-        return Manager.get_scheme()[table]['pks']
-
-    @staticmethod
-    def get_primary_key(table):
-        #if settings.STRICT:
-        pks = Structure.get_primary_keys(table)
-        try:
-            return pks[0]
-        except IndexError:
-            return None
-        #else:
-        #    return settings.PK_NAMING
-
-    @staticmethod
-    def get_foreign_keys(table):
-        try:
-            return reduce(lambda x, y: x + y, map(lambda x: x['relcolumns'], Manager.get_scheme()[table]['fks'].values()))
-        except TypeError:
+        if settings.STRICT:
+            return Manager.get_scheme().keys()
+        else:
             return []
         
     @staticmethod
+    def table_exists(table):
+        if settings.STRICT:
+            if table in Manager.get_scheme():
+                return True
+            else:
+                raise DBException('No table "%s" in database.' % table)
+        else:
+            return True
+        
+    @staticmethod
+    def get_all_columns(table):
+        if settings.STRICT:
+            return Manager.get_scheme()[table]['columns']
+        else:
+            return []
+        
+    @staticmethod
+    def get_primary_keys(table):
+        if settings.STRICT:
+            return Manager.get_scheme()[table]['pks']
+        else:
+            return [settings.PK_NAMING]
+
+    @staticmethod
+    def get_primary_key(table):
+        try:
+            return Structure.get_primary_keys(table)[0]
+        except IndexError:
+            return DBException('Table %s has no primary key.' % table)
+
+    @staticmethod
+    def is_foreign_key(table, attr):
+        if settings.STRICT:
+            relcolumns = map(lambda x: x['relcolumns'], Manager.get_scheme()[table]['fks'].values())
+            fks = reduce(lambda x, y: x + y, relcolumns, []) 
+            return attr in fks
+        else:
+            parsed_attr = settings.FK_NAMING.split('%s')
+            if len(parsed_attr) != 2:
+                raise DBException('FK_NAMING is incorectly formated.')
+            prefix, sufix = parsed_attr
+            if attr.startswith(prefix) and attr.endswith(sufix):
+                return True
+            else:
+                return False
+
+    @staticmethod
     def tables_related(table, reltable):
-        return reltable in Manager.get_scheme()[table]['fks'] or table in Manager.get_scheme()[reltable]['fks']
+        if settings.STRICT:
+            return reltable in Manager.get_scheme()[table]['fks'] or table in Manager.get_scheme()[reltable]['fks']
+        else:
+            return True
     
     @staticmethod
     def get_foreign_keys_for_table(table, foreign_table):
-        return Manager.get_scheme()[table]['fks'][foreign_table]['relcolumns']
+        if settings.STRICT:
+            return Manager.get_scheme()[table]['fks'][foreign_table]['relcolumns']
+        else:
+            return [settings.FK_NAMING % foreign_table]
     
     @staticmethod
     def get_foreign_key_for_table(table, foreign_table):
-        if settings.STRICT:
-            fks = Structure.get_foreign_keys(table, foreign_table)
-            try:
-                return fks[0]
-            except IndexError:
-                return None
-        else:
-            return settings.FK_NAMING % foreign_table
+        try:
+            return Structure.get_foreign_keys_for_table(table, foreign_table)[0]
+        except IndexError:
+            raise DBException('Table %s has no foreign key for table %s' % (table, foreign_table))
            
     @staticmethod
     def get_fk_referenced_table(table, foreign_key):
-        for table, fks in Manager.get_scheme()[table]['fks'].items():
-            if foreign_key in fks['relcolumns']:
-                return table
+        if settings.STRICT:
+            for table, fks in Manager.get_scheme()[table]['fks'].items():
+                if foreign_key in fks['relcolumns']:
+                    return table
+            else:
+                raise DBException('Table %s has no foreign key %s.' % (table, foreign_key))
+        else:
+            parsed_attr = settings.FK_NAMING.split('%s')
+            if len(parsed_attr) != 2:
+                raise DBException('FK_NAMING is incorectly formated.')
+            prefix, sufix = parsed_attr
+            return foreign_key.lstrip(prefix).rstrip(sufix)
                 
     @staticmethod
     def get_reltable_fks_for_table(table, reltable):

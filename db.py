@@ -8,16 +8,14 @@ import settings as dbsettings
 class DB(object):
     
     def __init__(self, conn, settings=None):
-        Manager.set_connection(conn)
-        Manager.renew_cache()
         if settings:
             self._set_settings(settings)
+        Manager.set_connection(conn)
+        Manager.renew_cache()
     
     def __getattr__(self, name):
-        if Structure.table_exists(name):
-            return Table(name)
-        else:
-            raise DBException('No table "%s" in database.' % name)
+        Structure.table_exists(name)
+        return Table(name)
             
     def __dir__(self):
         return Structure.get_all_tables()
@@ -40,6 +38,4 @@ class Settings(object):
     
     def availible_for_setting(self):
         return ['DEBUG', 'SILENT', 'STRICT', 'PK_NAMING', 'FK_NAMING']
-    
-        
     
