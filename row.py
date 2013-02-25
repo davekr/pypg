@@ -45,11 +45,28 @@ class Row(TableValidator):
     def __getattr__(self, attr):
         self._check_deleted()
         if Structure.is_foreign_key(self._table_name, attr):
-            return self._result_set._get_fk_data(self._table_name, attr, self.data[attr])
+            if self._result_set:
+                return self._result_set._get_fk_data(self._table_name, attr, self.data[attr])
+            else:
+                reltable = Structure.get_fk_referenced_table(self._table_name, attr)
+                reltable_pk = Structure.get_primary_key(reltable)
+                sql = SQLBuilder(reltable)
+                sql.add_where_condition(reltable_pk, self.data[attr])
+                data = Query().execute_and_fetch(*sql.build_select())
+                return Row(data[0], reltable)
         else:
             self._check_relation_exists(attr)
             pk = self._get_pk()
-            return self._result_set._get_rel_data(attr, pk, self.data[pk])
+            if self._result_set:
+                return self._result_set._get_rel_data(attr, pk, self.data[pk])
+            else:
+                relation_fk = Structure.get_foreign_key_for_table(attr, self._table_name)
+                sql = SQLBuilder(attr)
+                sql.add_where_condition(relation_fk, self.data[pk])
+                data = Query().execute_and_fetch(*sql.build_select())
+                from resultset import ResultSet
+                return ResultSet(data, attr)
+
         
     def update(self, **kwargs):
         self._check_deleted()
