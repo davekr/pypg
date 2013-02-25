@@ -1,0 +1,9 @@
+syntax: glob
+*.pyc
+*~
+run.py
+*.swp
+*.swo
+
+syntax: regexp
+^.ropeproject$
