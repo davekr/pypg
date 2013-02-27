@@ -12,6 +12,7 @@ class TableSelect(TableValidator):
     def __init__(self, name, sql):
         super(TableSelect, self).__init__(name)
         self._sql = sql
+        self._data = None
     
     def __str__(self):
         return 'Table: %s' % self._table_name
@@ -33,13 +34,16 @@ class TableSelect(TableValidator):
         return self._table_where_instance()
     
     def __getitem__(self, item):
-        return Row(self._data[item], self._table_name)
+        data = self._get_data()
+        return data[item]
         
     def __len__(self):
-        return len(self._data)
+        data = self._get_data()
+        return len(data)
         
     def __iter__(self):
-        return iter(self._get_referenced_data())
+        data = self._get_data()
+        return iter(data)
 
     def select(self, *args):
         if args:
@@ -47,10 +51,7 @@ class TableSelect(TableValidator):
             args = list(args)
             args.append(Structure.get_primary_key(self._table_name))
             self._sql.add_select_args(args)
-        select_query, select_args = self._sql.build_select()
-        data = Query().execute_and_fetch(select_query, select_args)
-        data = self._parse_data(data)
-        return data
+        return self
             
     def _table_select_instance(self):
         return TableSelect(self._table_name, self._sql)
@@ -58,8 +59,12 @@ class TableSelect(TableValidator):
     def _table_where_instance(self):
         return TableWhere(self._table_name, self._sql)
         
-    def _parse_data(self, data):
-        return ResultSet(data, self._table_name)
+    def _get_data(self):
+        if not self._data:
+            select_query, select_args = self._sql.build_select()
+            data = Query().execute_and_fetch(select_query, select_args)
+            self._data = ResultSet(data, self._table_name)
+        return self._data
 
 class TableWhere(TableSelect):
     
