@@ -4,6 +4,7 @@ from column import Column
 from query import Query
 from structure import Structure
 from utils import TableValidator
+from exception import DBException
     
 __all__ = ['Table']
     
@@ -23,7 +24,7 @@ class TableSelect(TableValidator):
         return self._table_select_instance()
     
     def order(self, order):
-        self._check_column_in_table(order)
+        self._check_is_instance(order, 'Column')
         self._sql.add_order_condition(order)
         return self._table_select_instance()
     
@@ -32,7 +33,26 @@ class TableSelect(TableValidator):
         self._sql.add_where_conditions(kwargs)
         self._sql.add_where_literals(args)
         return self._table_where_instance()
-    
+
+    def join(self, table, on=None):
+        if not isinstance(table, Table):
+            raise DBException("Wrong table to join")
+        if Structure.tables_related(self._table_name, table._table_name):
+            if on:
+                self._validate_on(table, on)
+            else:
+                try:
+                    fk = Structure.get_foreign_key_for_table(self._table_name, table._table_name)
+                except DBException:
+                    fk = Structure.get_foreign_key_for_table(table._table_name, self._table_name)
+                    on = Column(table._table_name, fk) == \
+                            Column(self._table_name, Structure.get_primary_key(self._table_name))
+                else:
+                    on = Column(self._table_name, fk) == \
+                            Column(table._table_name, Structure.get_primary_key(table._table_name))
+            self._sql.add_join(table._table_name, on)
+        return self._table_select_instance()
+
     def __getitem__(self, item):
         data = self._get_data()
         return data[item]
@@ -47,11 +67,11 @@ class TableSelect(TableValidator):
 
     def select(self, *args):
         if args:
-            map(self._check_column_in_table, args)
+            map(lambda arg: self._check_is_instance(arg, 'Column'), args)
             args = list(args)
-            args.append(Structure.get_primary_key(self._table_name))
+            args.append(Column(self._table_name, Structure.get_primary_key(self._table_name)))
             self._sql.add_select_args(args)
-        return self
+        return self._table_select_instance()
             
     def _table_select_instance(self):
         return TableSelect(self._table_name, self._sql)
@@ -67,6 +87,15 @@ class TableSelect(TableValidator):
         return self._data
 
 class TableWhere(TableSelect):
+
+    def __getitem__(self, item):
+        raise TypeError("'%s' object does not support indexing" % self)
+        
+    def __len__(self):
+        raise TypeError("object of type '%s' has no len()" % self)
+        
+    def __iter__(self):
+        raise TypeError("'%s' object is not iterable" % self)
     
     def delete(self):
         Query().execute(*self._sql.build_delete())
@@ -114,7 +143,7 @@ class Table(TableWhere):
         
     def __getattr__(self, attr):
         if Structure.table_has_column(self._table_name, attr):
-            return Column(attr)
+            return Column(self._table_name, attr)
         else:
             raise AttributeError("'%s' object has no attribute '%s'" % (type(self), attr))
             

@@ -42,6 +42,20 @@ class TableValidator(object):
             raise DBException(self._NO_ARGUMENTS_ERROR % method)
         map(lambda arg: self._check_is_instance(arg, class_), args)
         map(self._check_column_in_table, kwargs.keys())
+
+    def _validate_on(self, table, on):
+        if not isnstace(on._value, on._column.__class__):
+            raise DBException("Wrong join condition.")
+        if not on._column._table_name == table:
+            if not on._value._table_name == table:
+                raise DBException("Wrong join condition")
+            if not on._column._table_name == self._table_name:
+                raise DBException("Wrong join condition")
+        elif not on._value._table_name == table:
+            if not on._column._table_name == table:
+                raise DBException("Wrong join condition")
+            if not on._value._table_name == self._table_name:
+                raise DBException("Wrong join condition")
         
     def _check_is_instance(self, instance, class_):
         if not instance.__class__.__name__ == class_:

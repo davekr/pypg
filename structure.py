@@ -73,7 +73,10 @@ class Structure(object):
     @staticmethod
     def tables_related(table, reltable):
         if settings.STRICT:
-            return reltable in Manager.get_scheme()[table]['fks'] or table in Manager.get_scheme()[reltable]['fks']
+            if reltable in Manager.get_scheme()[table]['fks'] or table in Manager.get_scheme()[reltable]['fks']:
+                return True
+            else:
+                raise DBException('Tables %s and %s are not related.' % (table, reltable))
         else:
             return True
     

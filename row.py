@@ -92,10 +92,8 @@ class Row(TableValidator):
             raise DBException('This row was deleted.')  
             
     def _check_relation_exists(self, relation):
-        if Structure.table_exists(relation) and Structure.tables_related(relation, self._table_name):
-            return True
-        else:
-            raise DBException('No relation "%s" for table "%s"' % (relation, self._table_name))
+        Structure.table_exists(relation) 
+        Structure.tables_related(relation, self._table_name)
         
     def add_reference(self, result_set):
         self._result_set = result_set

@@ -16,7 +16,12 @@ class DBTest(unittest.TestCase):
     
     def test_table_access_failure(self):
         self.assertRaises(DBException, getattr, db, 'notexistingtable')
-        
+
+class Test(unittest.TestCase):
+
+    def setUp(self):
+        self.db = DB(psycopg2.connect("dbname=dellstore2 user=dave"))
+
 class TableInsertTest(unittest.TestCase):
 
     def test_insert_no_arguments(self):

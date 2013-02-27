@@ -1,7 +1,7 @@
 
 class SQLBuilder(object):
     
-    SELECT = 'SELECT %(args)s FROM %(table)s %(where)s %(order)s %(limit)s'
+    SELECT = 'SELECT %(args)s FROM %(table)s %(join)s %(where)s %(order)s %(limit)s'
     INSERT = 'INSERT INTO %(table)s (%(args)s) VALUES (%(values)s) %(returning)s'
     DELETE = 'DELETE FROM %(table)s %(where)s'
     UPDATE = 'UPDATE %(table)s SET %(values)s %(where)s %(returning)s'
@@ -11,6 +11,7 @@ class SQLBuilder(object):
         self._select_args = []
         self._where = ''
         self._where_values = []
+        self._join = ''
         self._order = ''
         self._limit = ''
         self._limit_to = 0
@@ -24,7 +25,7 @@ class SQLBuilder(object):
         map(self.add_select_arg, args)
         
     def add_select_arg(self, arg):
-        self._select_args.append(self._escape(arg))
+        self._select_args.append(str(arg))
             
     def add_insert_kwargs(self, kwargs):
         map(lambda item: self.add_insert_kwarg(*item), kwargs.items())
@@ -77,16 +78,18 @@ class SQLBuilder(object):
             self._returning += ', "%s"' % arg
             
     def add_order_condition(self, order_by):
-        self._order = 'ORDER BY "%s"' % order_by
+        self._order = 'ORDER BY %s' % order_by
         
     def add_limit_condition(self, limit_to):
         self._limit = 'LIMIT %s'
         self._limit_to = limit_to
         
+    def add_join(self, table, condition):
+        self._join += 'JOIN "%s" ON %s ' % (table, condition)
         
     def build_select(self):
         select = self.SELECT % ({'table': self._table, 'args': ', '.join(self._select_args) if self._select_args else '*', \
-                                 'where': self._where, 'order': self._order, 'limit': self._limit})
+                                 'where': self._where, 'order': self._order, 'limit': self._limit, 'join': self._join})
         parameters_list = self._where_values[:]
         if self._limit_to:
             parameters_list.append(self._limit_to)

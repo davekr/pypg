@@ -3,36 +3,37 @@ from literal import Literal
 
 class Column(object):
 
-    def __init__(self, name):
+    def __init__(self, table_name, name):
         self._name = name
+        self._table_name = table_name
         
     def __eq__(self, value):
-        sql = '"%s" = %s' % (self._name, '%s')
-        return Literal(sql, value)
+        sql = '%s = %%s' % self
+        return Literal(sql, self, value)
         
     def __ne__(self, value):
-        sql = '"%s" <> %s' % (self._name, '%s')
-        return Literal(sql, value)
+        sql = '%s <> %%s' % self
+        return Literal(sql, self, value)
         
     def __gt__(self, value):
-        sql = '"%s" > %s' % (self._name, '%s')
-        return Literal(sql, value)
+        sql = '%s > %%s' % self
+        return Literal(sql, self, value)
         
     def __lt__(self, value):
-        sql = '"%s" < %s' % (self._name, '%s')
-        return Literal(sql, value)
+        sql = '%s < %%s' % self
+        return Literal(sql, self, value)
     
     def like(self, value):
-        sql = '"%s" LIKE %s' % (self._name, '%s')
-        return Literal(sql, str(value))
+        sql = '%s LIKE %%s' % self
+        return Literal(sql, self, str(value))
     
     def in_(self, value):
         if type(value) == list or type(value) == tuple:
-            sql = '"%s" IN (%s)' % (self._name, ', '.join(['%s' for item in value]))
+            sql = '%s IN (%s)' % (self, ', '.join(['%s' for item in value]))
         else:
-            sql = '"%s" IN (%s)' % (self._name, '%s')
-        return Literal(sql, value)
+            sql = '%s IN (%%s)' % self
+        return Literal(sql, self, value)
         
     def __str__(self):
-        return self._name
+        return '%s.%s' % (self._table_name, self._name)
  

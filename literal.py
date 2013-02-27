@@ -1,9 +1,10 @@
 
 class Literal(object):
 
-    def __init__(self, sql, value):
+    def __init__(self, sql, column, value):
         self._sql = sql
         self._value = value
+        self._column = column
         
     def __str__(self):
         if type(self._value) == list:
