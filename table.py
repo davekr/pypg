@@ -37,20 +37,20 @@ class TableSelect(TableValidator):
     def join(self, table, on=None):
         if not isinstance(table, Table):
             raise DBException("Wrong table to join")
-        if Structure.tables_related(self._table_name, table._table_name):
-            if on:
-                self._validate_on(table, on)
+        #if Structure.tables_related(self._table_name, table._table_name):
+        if on:
+            self._validate_on(table, on)
+        else:
+            try:
+                fk = Structure.get_foreign_key_for_table(self._table_name, table._table_name)
+            except DBException:
+                fk = Structure.get_foreign_key_for_table(table._table_name, self._table_name)
+                on = Column(table._table_name, fk) == \
+                        Column(self._table_name, Structure.get_primary_key(self._table_name))
             else:
-                try:
-                    fk = Structure.get_foreign_key_for_table(self._table_name, table._table_name)
-                except DBException:
-                    fk = Structure.get_foreign_key_for_table(table._table_name, self._table_name)
-                    on = Column(table._table_name, fk) == \
-                            Column(self._table_name, Structure.get_primary_key(self._table_name))
-                else:
-                    on = Column(self._table_name, fk) == \
-                            Column(table._table_name, Structure.get_primary_key(table._table_name))
-            self._sql.add_join(table._table_name, on)
+                on = Column(self._table_name, fk) == \
+                        Column(table._table_name, Structure.get_primary_key(table._table_name))
+        self._sql.add_join(table._table_name, on)
         return self._table_select_instance()
 
     def __getitem__(self, item):
@@ -64,6 +64,10 @@ class TableSelect(TableValidator):
     def __iter__(self):
         data = self._get_data()
         return iter(data)
+
+    def pretty_print(self):
+        data = self._get_data()
+        return '\n'.join([str(row) for row in data])
 
     def select(self, *args):
         if args:
@@ -112,10 +116,15 @@ class TableWhere(TableSelect):
         self._validate_update(kwargs)
         self._sql.add_update_kwargs(kwargs)
         self._sql.add_returning_args(Structure.get_all_columns(self._table_name))
-        update_query, update_args = self._sql.build_update()
-        data = Query().execute_and_fetch(update_query, update_args)
-        data = self._parse_data(data)
+        data = self._get_data()
         return data
+
+    def _get_data(self):
+        if not self._data:
+            update_query, update_args = self._sql.build_update()
+            data = Query().execute_and_fetch(update_query, update_args)
+            self._data = ResultSet(data, self._table_name)
+        return self._data
         
 class Table(TableWhere):
 
@@ -133,11 +142,16 @@ class Table(TableWhere):
         self._validate_insert(args, kwargs)
         self._sql.add_insert_kwargs(kwargs)
         self._sql.add_returning_args(Structure.get_all_columns(self._table_name))
-        insert_query, insert_args = self._sql.build_insert()
-        data = Query().execute_and_fetch(insert_query, insert_args)
-        data = self._parse_data(data)
+        data = self._get_data()
         return data
         
+    def _get_data(self):
+        if not self._data:
+            insert_query, insert_args = self._sql.build_insert()
+            data = Query().execute_and_fetch(insert_query, insert_args)
+            self._data = ResultSet(data, self._table_name)
+        return self._data
+
     def row(**kwargs):
         self._validate_row(kwargs)
         

@@ -52,7 +52,7 @@ class Structure(object):
         try:
             return Structure.get_primary_keys(table)[0]
         except IndexError:
-            return DBException('Table %s has no primary key.' % table)
+            raise DBException('Table %s has no primary key.' % table)
 
     @staticmethod
     def is_foreign_key(table, attr):

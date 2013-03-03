@@ -12,6 +12,7 @@ class SQLBuilder(object):
         self._where = ''
         self._where_values = []
         self._join = ''
+        self._tables = [table]
         self._order = ''
         self._limit = ''
         self._limit_to = 0
@@ -86,6 +87,7 @@ class SQLBuilder(object):
         
     def add_join(self, table, condition):
         self._join += 'JOIN "%s" ON %s ' % (table, condition)
+        self._tables.append(table)
         
     def build_select(self):
         select = self.SELECT % ({'table': self._table, 'args': ', '.join(self._select_args) if self._select_args else '*', \
