@@ -1,6 +1,6 @@
-from psycopg2 import extras
 from manager import Manager
 import settings
+from cursor import DALCursor
 
 class Query(object):
 
@@ -18,9 +18,7 @@ class Query(object):
         self._done()
         
     def _execute(self, sql, args):
-        self._cursor = self._conn.cursor(cursor_factory=extras.DictCursor)
-        if settings.DEBUG:
-            print self._cursor.mogrify(sql, *args)
+        self._cursor = self._conn.cursor(cursor_factory=DALCursor)
         self._cursor.execute(sql, *args)
         
     def _done(self):

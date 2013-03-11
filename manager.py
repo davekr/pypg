@@ -1,6 +1,7 @@
 from collections import defaultdict
 from exception import DBException
 import settings
+import logging
 
 class Manager(object):
 
@@ -44,6 +45,14 @@ class Manager(object):
             return Manager._CONNECTION
         else:
             raise DBException('No connection specified.')
+
+    @staticmethod
+    def get_logger():
+        logger = logging.getLogger("queryLogger")
+        if not logger.handlers:
+            logger.setLevel(logging.DEBUG)
+            logger.addHandler(logging.StreamHandler())
+        return logger
             
     @staticmethod
     def get_scheme():
