@@ -45,7 +45,7 @@ class Structure(object):
         if settings.STRICT:
             return Manager.get_scheme()[table]['pks']
         else:
-            return [settings.PK_NAMING]
+            return [Manager.get_naming().get_pk_naming(table)]
 
     @staticmethod
     def get_primary_key(table):
@@ -61,14 +61,7 @@ class Structure(object):
             fks = reduce(lambda x, y: x + y, relcolumns, []) 
             return attr in fks
         else:
-            parsed_attr = settings.FK_NAMING.split('%s')
-            if len(parsed_attr) != 2:
-                raise DBException('FK_NAMING is incorectly formated.')
-            prefix, sufix = parsed_attr
-            if attr.startswith(prefix) and attr.endswith(sufix):
-                return True
-            else:
-                return False
+            return Manager.get_naming().match_fk_naming(table, attr)
 
     @staticmethod
     def tables_related(table, reltable):
@@ -85,7 +78,7 @@ class Structure(object):
         if settings.STRICT:
             return Manager.get_scheme()[table]['fks'][foreign_table]['relcolumns']
         else:
-            return [settings.FK_NAMING % foreign_table]
+            return [Manager.get_naming().get_fk_naming(table, foreign_table)]
     
     @staticmethod
     def get_foreign_key_for_table(table, foreign_table):
@@ -103,11 +96,7 @@ class Structure(object):
             else:
                 raise DBException('Table %s has no foreign key %s.' % (table, foreign_key))
         else:
-            parsed_attr = settings.FK_NAMING.split('%s')
-            if len(parsed_attr) != 2:
-                raise DBException('FK_NAMING is incorectly formated.')
-            prefix, sufix = parsed_attr
-            return foreign_key.lstrip(prefix).rstrip(sufix)
+            return Manager.get_naming().get_fk_column(table, foreign_key)
                 
     @staticmethod
     def get_reltable_fks_for_table(table, reltable):
