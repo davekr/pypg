@@ -4,28 +4,12 @@ from query import Query
 from utils import TableValidator
 from structure import Structure
 
-class Row(TableValidator):
+class ReadOnlyRow(TableValidator):
 
-    def __init__(self, data, table, result_set=None):
-        super(Row, self).__init__(table)
+    def __init__(self, data, table):
+        super(ReadOnlyRow, self).__init__(table)
         self.data = data
-        self._set_sql_builder()
-        self._changed = False
         self._deleted = False
-        self._result_set = result_set
-        
-    def _set_sql_builder(self):
-        self._sql = SQLBuilder(self._table_name)
-        pk = self._get_pk()
-        self._sql.add_where_condition(pk, self.data[pk])
-
-        
-    def _get_pk(self):
-        pk= Structure.get_primary_key(self._table_name)
-        if self.data.get(pk) is not None:
-            return pk
-        else:
-            raise DBException('Incorectly formated settings.PK_NAMING')
 
     def __str__(self):
         self._check_deleted()
@@ -34,6 +18,30 @@ class Row(TableValidator):
     def __getitem__(self, item):
         self._check_deleted()
         return self.data[item]
+        
+    def _check_deleted(self):
+        if self._deleted:
+            raise DBException('This row was deleted.')  
+
+class Row(ReadOnlyRow):
+
+    def __init__(self, data, table, result_set=None):
+        super(Row, self).__init__(data, table)
+        self._set_sql_builder()
+        self._changed = False
+        self._result_set = result_set
+        
+    def _set_sql_builder(self):
+        self._sql = SQLBuilder(self._table_name)
+        pk = self._get_pk()
+        self._sql.add_where_condition(pk, self.data[pk])
+        
+    def _get_pk(self):
+        pk= Structure.get_primary_key(self._table_name)
+        if self.data.get(pk) is not None:
+            return pk
+        else:
+            raise DBException('Incorectly formated naming for primary key. Please provide manager.Naming instance or set strict mode on.')
         
     def __setitem__(self, item, value):
         self._check_deleted()
@@ -66,7 +74,6 @@ class Row(TableValidator):
                 data = Query().execute_and_fetch(**sql.build_select())
                 from resultset import ResultSet
                 return ResultSet(data, attr)
-
         
     def update(self, **kwargs):
         self._check_deleted()
@@ -85,10 +92,6 @@ class Row(TableValidator):
         Query().execute(**self._sql.build_delete())
         self._deleted = True
         return None
-        
-    def _check_deleted(self):
-        if self._deleted:
-            raise DBException('This row was deleted.')  
             
     def _check_relation_exists(self, relation):
         Structure.table_exists(relation) 

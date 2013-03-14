@@ -77,6 +77,9 @@ class SQLBuilder(object):
             self._returning = 'RETURNING "%s"' % arg
         else:
             self._returning += ', "%s"' % arg
+
+    def add_returning_all(self):
+        self._returning = 'RETURNING *'
             
     def add_order_condition(self, order_by):
         self._order = 'ORDER BY %s' % order_by

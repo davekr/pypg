@@ -12,14 +12,18 @@ class Query(object):
         self._conn = Manager.get_connection()
     
     def execute_and_fetch(self, sql, **kwargs):
-        self._execute(sql, kwargs)
-        data = self._cursor.fetchall()
-        self._done()
+        try:
+            self._execute(sql, kwargs)
+            data = self._cursor.fetchall()
+        finally:
+            self._done()
         return data
     
     def execute(self, sql, **kwargs):
-        self._execute(sql, kwargs)
-        self._done()
+        try:
+            self._execute(sql, kwargs)
+        finally:
+            self._done()
         
     def _execute(self, sql, kwargs):
         self._cursor = self._conn.cursor(cursor_factory=DALCursor)

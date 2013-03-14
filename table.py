@@ -1,5 +1,5 @@
 from builder import SQLBuilder
-from resultset import ResultSet
+from resultset import ResultSet, ReadOnlyResultSet
 from column import Column
 from query import Query
 from structure import Structure
@@ -53,6 +53,7 @@ class TableSelect(TableValidator):
             self._check_is_instance(on, 'Literal')
             self._validate_on(table, on)
         else:
+            Structure.tables_related(self._table_name, table._table_name)
             try:
                 fk = Structure.get_foreign_key_for_table(self._table_name, table._table_name)
             except DBException:
@@ -95,7 +96,11 @@ class TableSelected(TableSelect):
     def _get_data(self):
         if not self._data:
             data = Query().execute_and_fetch(**self._sql.build_select())
-            self._data = ResultSet(data, self._table_name)
+            if len(self._sql._tables) > 1:
+                cls = ReadOnlyResultSet
+            else:
+                cls = ResultSet
+            self._data = cls(data, self._table_name)
         return self._data
 
     def _table_select_instance(self):
@@ -122,15 +127,9 @@ class TableWhere(TableSelect):
     def update_and_get(self, **kwargs):
         self._validate_update(kwargs)
         self._sql.add_update_kwargs(kwargs)
-        self._sql.add_returning_args(Structure.get_all_columns(self._table_name))
-        data = self._get_data()
-        return data
-
-    def _get_data(self):
-        if not self._data:
-            data = Query().execute_and_fetch(**self._sql.build_update())
-            self._data = ResultSet(data, self._table_name)
-        return self._data
+        self._sql.add_returning_all()
+        data = Query().execute_and_fetch(**self._sql.build_update())
+        return ResultSet(data, self._table_name)
         
 class Table(TableWhere):
 
@@ -146,16 +145,9 @@ class Table(TableWhere):
     def insert_and_get(self, *args, **kwargs):
         self._validate_insert(args, kwargs)
         self._sql.add_insert_kwargs(kwargs)
-        self._sql.add_returning_args(Structure.get_all_columns(self._table_name))
-        data = self._get_data()
-        return data
-        
-    def _get_data(self):
-        #REFACTOR!!!!
-        if not self._data:
-            data = Query().execute_and_fetch(**self._sql.build_insert())
-            self._data = ResultSet(data, self._table_name)
-        return self._data
+        self._sql.add_returning_all()
+        data = Query().execute_and_fetch(**self._sql.build_insert())
+        return ResultSet(data, self._table_name)
 
     def row(**kwargs):
         self._validate_row(kwargs)

@@ -74,7 +74,8 @@ class Manager(object):
     def set_logger(logger):
         if not logger:
             logger = logging.getLogger("queryLogger")
-            logger.addHandler(logging.StreamHandler())
+            if not logger.handlers:
+                logger.addHandler(logging.StreamHandler())
         Manager._LOGGER = logger
 
     @staticmethod

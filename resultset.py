@@ -1,28 +1,39 @@
-from row import Row
+from row import Row, ReadOnlyRow
 from column import Column
 from structure import Structure
 from query import Query
 from builder import SQLBuilder
 from cache import ResultSetCache
 
-class ResultSet(object):
+class ReadOnlyResultSet(object):
 
-    def __init__(self, data, table_name, cache=None):
+    def __init__(self, data, table_name):
         self._table_name = table_name
         self._data = data
-        self._cache = cache if cache else ResultSetCache(table_name, data)
         
     def __str__(self):
         return self.pretty_print()
     
     def __getitem__(self, item):
-        return Row(self._data[item], self._table_name)
+        return ReadOnlyRow(self._data[item], self._table_name)
         
     def __len__(self):
         return len(self._data)
         
     def pretty_print(self):
         return '\n'.join([str(row) for row in self._data])
+        
+    def __iter__(self):
+        return iter([ReadOnlyRow(row, self._table_name) for row in self._data])
+
+class ResultSet(ReadOnlyResultSet):
+
+    def __init__(self, data, table_name, cache=None):
+        super(ResultSet, self).__init__(data, table_name)
+        self._cache = cache if cache else ResultSetCache(table_name, data)
+    
+    def __getitem__(self, item):
+        return Row(self._data[item], self._table_name)
         
     def __iter__(self):
         return iter(self._get_referenced_data())

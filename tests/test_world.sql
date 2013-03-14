@@ -5383,6 +5383,9 @@ ALTER TABLE ONLY country
 ALTER TABLE ONLY countrylanguage
     ADD CONSTRAINT countrylanguage_countrycode_fkey FOREIGN KEY (countrycode) REFERENCES country(code);
 
+ALTER TABLE ONLY city
+    ADD CONSTRAINT city_countrycode_fkey FOREIGN KEY (countrycode) REFERENCES country(code);
+
 COMMIT;
 
 ANALYZE city;

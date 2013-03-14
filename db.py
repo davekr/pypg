@@ -48,7 +48,7 @@ class DB(object):
         Manager.set_naming(value)
 
     def set_logger(self, value):
-        Manager.set_logger(logger)
+        Manager.set_logger(value)
 
     def _set(self, setting, value):
         if value:

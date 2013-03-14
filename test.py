@@ -2,7 +2,7 @@ import unittest
 from exception import DBException
 from table import TableWhere, Table, TableSelect, TableSelected
 from column import Column
-from row import Row
+from row import Row, ReadOnlyRow
 from resultset import ResultSet
 from tests import TestHelper
 
@@ -222,13 +222,13 @@ class TableJoinTest(unittest.TestCase):
         self.assertRaises(DBException, self.db.city.join, self.db.country, self.db.city.id == 1)
 
     def test_join_implicit_on(self):
-        self.assertEqual(isinstance(self.db.city.join(self.db.country).limit(1).select()[0], Row), True)
+        self.assertEqual(isinstance(self.db.city.join(self.db.country).limit(1).select()[0], ReadOnlyRow), True)
 
     def test_join_explicit_on(self):
-        self.assertEqual(isinstance(self.db.city.join(self.db.country, on=self.db.country.population==self.db.city.population).limit(1).select()[0], Row), True)
+        self.assertEqual(isinstance(self.db.city.join(self.db.country, on=self.db.country.population==self.db.city.population).limit(1).select()[0], ReadOnlyRow), True)
 
     def test_join_multijoin_implicit_on(self):
-        self.assertEqual(isinstance(self.db.country.join(self.db.city).join(self.db.countrylanguage).limit(1).select()[0], Row), True)
+        self.assertEqual(isinstance(self.db.country.join(self.db.city).join(self.db.countrylanguage).limit(1).select()[0], ReadOnlyRow), True)
 
     def test_join_get_data_failure(self):
         import operator
@@ -265,67 +265,176 @@ class TableTest(unittest.TestCase):
     def test_select_last(self):
         self.assertEqual(isinstance(self.db.city.where(self.db.city.id == 1).limit(10).select(), TableSelected), True)
 
-#class RowTest(unittest.TestCase):
+class RowTest(unittest.TestCase):
 
-    #def setUp(self):
-        #self.row = db.city.insert_and_get(name='Test')[0]
-        
-    #def test_item_access(self):
-        #self.assertEqual(type(self.row['name']), str)
-        
-    #def test_item_access_failure(self):
-        #def get_item():
-            #self.row['notexistningcolumn']
-        #self.assertRaises(KeyError, get_item)
-        
-    #def test_update_no_arguments(self):
-        #self.assertRaises(DBException, self.row.update)
-        
-    #def test_update_bad_arguments(self):
-        #self.assertRaises(DBException, self.row.update, notexistingcolumn='')
-        
-    #def test_item_set_failuer(self):
-        #def set_item(x):
-            #self.row['notexistningcolumn'] = x
-        #self.assertRaises(DBException, set_item , '')
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        cls.db.set_strict(True)
 
-    #def test_update_good_arguments(self):
-        #self.assertEqual(type(self.row.update(name='Test')), Row)
+    def setUp(self):
+        self.row = self.db.city.insert_and_get(name='RowTest', countrycode="CZE", district="Testdistrict", population=300)[0]
         
-    #def test_update_good_arguments2(self):
-        #self.row['name'] = 'Test'
-        #self.assertEqual(type(self.row.update()), Row)
+    def test_item_access(self):
+        self.assertEqual(type(self.row['name']), str)
         
-#class RowDeleteTest(unittest.TestCase):
+    def test_item_access_failure(self):
+        import operator
+        self.assertRaises(KeyError, operator.getitem, self.row, 'notexstingcolumn')
+        
+    def test_update_no_arguments(self):
+        self.assertRaises(DBException, self.row.update)
+        
+    def test_update_bad_arguments(self):
+        self.assertRaises(DBException, self.row.update, notexistingcolumn='')
+        
+    def test_item_set_failuer(self):
+        import operator
+        self.assertRaises(DBException, operator.setitem , self.row, 'notexistingcolumn', 'value')
+
+    def test_update_good_arguments(self):
+        self.assertEqual(type(self.row.update(name='New name')), Row)
+        
+    def test_update_good_arguments2(self):
+        self.row['name'] = 'New name'
+        self.assertEqual(type(self.row.update()), Row)
+        
+class RowDeleteTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
     
-    #def setUp(self):
-        #self.row = db.city.insert_and_get(name='Test')[0]
+    def setUp(self):
+        self.row = self.db.city.insert_and_get(name='RowTest', countrycode="CZE", district="Testdistrict", population=300)[0]
         
-    #def test_delete(self):
-        #self.assertEqual(self.row.delete(), None)
+    def test_delete(self):
+        self.assertEqual(self.row.delete(), None)
         
-#class RowDeletedTest(unittest.TestCase):
+class RowDeletedTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
     
-    #def setUp(self):
-        #self.row = db.city.insert_and_get(name='Test')[0]
-        #self.row.delete()
+    def setUp(self):
+        self.row = self.db.city.insert_and_get(name='RowTest', countrycode="CZE", district="Testdistrict", population=300)[0]
+        self.row.delete()
         
-    #def test_item_access_failure(self):
-        #def get_item():
-            #self.row['name']
-        #self.assertRaises(DBException, get_item)
+    def test_item_access_failure(self):
+        import operator
+        self.assertRaises(DBException, operator.getitem, self.row, 'notexstingcolumn')
         
-    #def test_item_set_failure(self):
-        #def set_item():
-            #self.row['name'] = 'Test'
-        #self.assertRaises(DBException, set_item)
+    def test_item_set_failure(self):
+        import operator
+        self.assertRaises(DBException, operator.setitem , self.row, 'notexistingcolumn', 'value')
         
-    #def test_update_failure(self):
-        #self.assertRaises(DBException, self.row.update, name='Test')
+    def test_update_failure(self):
+        self.assertRaises(DBException, self.row.update, name='Test')
         
-    #def test_delete_failure(self):
-        #self.assertRaises(DBException, self.row.delete)
+    def test_delete_failure(self):
+        self.assertRaises(DBException, self.row.delete)
+
+class RowRelationTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        cls.db.set_strict(True)
+
+    def setUp(self):
+        self.row = self.db.city.limit(1).select()[0]
+
+    def test_access_country(self):
+        self.assertEqual(isinstance(self.row.countrycode, Row), True)
+
+    def test_access_languages(self):
+        self.assertEqual(isinstance(self.row.countrycode.countrylanguage, ResultSet), True)
+
+class SelectInTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        cls.db.set_strict(True)
+
+class NamingTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        cls.db.set_strict(False)
+        from manager import Naming
+        class TestNaming(Naming):
+
+            structure = {'city': {'pk': 'id', 'fks': ('country', 'countrycode')},
+                         'country': {'pk': 'code', 'fks': ('city','capitol')},
+                         'countrylanguage':{'pk': 'language', 'fks': ('country', 'countrycode')}
+                            }
+            def get_pk_naming(self, table):
+                return self.structure[table]['pk']
+
+            def get_fk_naming(self, table, foreign_table):
+                return self.structure[table]['fks'][1]
+
+            def match_fk_naming(self, table, attr):
+                for table in self.structure.values():
+                    if attr == table['fks'][1]:
+                        return True
+                return False
+
+            def get_fk_column(self, table, foreign_key):
+                for table in self.structure.values():
+                    if foreign_key == table['fks'][1]:
+                        return table['fks'][0]
+
+        cls.db.set_naming(TestNaming())
+
+    def setUp(self):
+        self.row = self.db.city.limit(1).select()[0]
+
+    def test_access_country(self):
+        self.assertEqual(isinstance(self.row.countrycode, Row), True)
+
+    def test_access_languages(self):
+        self.assertEqual(isinstance(self.row.countrycode.countrylanguage, ResultSet), True)
+
+class LoggingTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+
+class DebugingTest(unittest.TestCase):
         
+    test_file = 'debug.test'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        import logging
+        logger = logging.getLogger("testDebug")
+        logger.addHandler(logging.FileHandler(cls.test_file))
+        cls.db.set_logger(logger)
+        cls.db.set_strict(True)
+        cls.db.set_debug(True)
+
+    def setUp(self):
+        self.db.city.limit(1).select()[0]
+        self.db.country.limit(1).select()[0]
+
+    def test_debug(self):
+        with open(self.test_file, 'r') as f:
+            self.assertEqual(len(f.readlines()), 2)
+
+    @classmethod
+    def tearDownClass(cls):
+        import os
+        os.remove(cls.test_file)
+        cls.db.set_debug(False)
+        cls.db.set_logger(None)
+
+
 def setUpModule():
     TestHelper.setUp()
 
