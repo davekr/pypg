@@ -1,4 +1,5 @@
 from psycopg2.extras import DictCursor
+import time
 
 from manager import Manager
 
@@ -14,12 +15,14 @@ class DALCursor(DictCursor):
         if msg: self._logger.debug(msg)
 
     def execute(self, query, vars=None):
+        self.timestamp = time.time()
         try:
             return super(DALCursor, self).execute(query, vars)
         finally:
             self.log(self.query)
 
     def callproc(self, procname, vars=None):
+        self.timestamp = time.time()
         try:
             return super(DALCursor, self).callproc(procname, vars)
         finally:

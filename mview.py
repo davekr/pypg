@@ -51,7 +51,8 @@ class MaterializedView(object):
             pks.append(pk)
             if not str(column) in table._sql._select_args:
                 table._sql.add_select_arg(column)
-        sql, values = table._sql.build_select()
+        sql_dict = table._sql.build_select()
+        sql, values = sql_dict['sql'], sql_dict['parameters']
         view_sql = "CREATE VIEW %s_view AS %s" % (name, sql)
         Query().execute(view_sql, values)
         mview_sql = 'CREATE TABLE %s AS SELECT * FROM %s;' % (name, name + "_view")

@@ -52,7 +52,7 @@ class Row(TableValidator):
                 reltable_pk = Structure.get_primary_key(reltable)
                 sql = SQLBuilder(reltable)
                 sql.add_where_condition(reltable_pk, self.data[attr])
-                data = Query().execute_and_fetch(*sql.build_select())
+                data = Query().execute_and_fetch(**sql.build_select())
                 return Row(data[0], reltable)
         else:
             self._check_relation_exists(attr)
@@ -63,7 +63,7 @@ class Row(TableValidator):
                 relation_fk = Structure.get_foreign_key_for_table(attr, self._table_name)
                 sql = SQLBuilder(attr)
                 sql.add_where_condition(relation_fk, self.data[pk])
-                data = Query().execute_and_fetch(*sql.build_select())
+                data = Query().execute_and_fetch(**sql.build_select())
                 from resultset import ResultSet
                 return ResultSet(data, attr)
 
@@ -73,8 +73,7 @@ class Row(TableValidator):
         if self._changed or kwargs:
             map(self._check_column_in_table, kwargs.keys())
             self._sql.add_update_kwargs(kwargs)
-            update_query, update_args = self._sql.build_update()
-            Query().execute(update_query, update_args)
+            Query().execute(**self._sql.build_update())
             self._changed = False
             #self._set_sql_builder()
             return self
@@ -83,7 +82,7 @@ class Row(TableValidator):
         
     def delete(self):
         self._check_deleted()
-        Query().execute(*self._sql.build_delete())
+        Query().execute(**self._sql.build_delete())
         self._deleted = True
         return None
         

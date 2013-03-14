@@ -8,37 +8,52 @@ import settings as dbsettings
 
 class DB(object):
     
-    def __init__(self, conn, settings=None):
-        if settings:
-            self._set_settings(settings)
+    def __init__(self, conn, logger=None, naming=None, **kwargs):
         Manager.set_connection(conn)
-        Manager.renew_cache()
+        self._set_settings(kwargs)
+        Manager.set_logger(logger)
+        Manager.set_naming(naming)
     
     def __getattr__(self, name):
         Structure.table_exists(name)
         return Table(name)
             
     def __dir__(self):
-        return Structure.get_all_tables()
+        attrs = ['create_mview', 'set_debug', 'set_log', 'set_strict', 'set_naming', 'set_logger']
+        return Structure.get_all_tables() + attrs
         
     def _set_settings(self, settings):
-        for setting in settings.availible_for_setting():
-            value = getattr(settings, setting)
-            if value is not None:
-                setattr(dbsettings, setting, value)
+        for value in settings:
+            getattr(self, "set_%s" % value, self._wrong_arg)(settings[value])
+
+    def _wrong_arg(self, arg):
+        pass
 
     def create_mview(self, name, table):
         MaterializedView().create_mview(name, table)
-        
-class Settings(object):
 
-    def __init__(self, **kwargs):
-        for setting in self.availible_for_setting():
-            setattr(self, setting, kwargs.get(setting.lower()))
+    def set_debug(self, value):
+        self._set('DEBUG', value)
         
-    def __dir__(self):
-        return self.availible_for_setting()
-    
-    def availible_for_setting(self):
-        return ['DEBUG', 'SILENT', 'STRICT', 'PK_NAMING', 'FK_NAMING']
-    
+    def set_log(self, value):
+        self._set('LOG', value)
+
+    def set_strict(self, value):
+        if dbsettings.STRICT == False and value == True:
+            self._set('STRICT', value)
+            Manager.renew_cache()
+        else:
+            self._set('STRICT', value)
+
+    def set_naming(self, value):
+        Manager.set_naming(value)
+
+    def set_logger(self, value):
+        Manager.set_logger(logger)
+
+    def _set(self, setting, value):
+        if value:
+            setattr(dbsettings, setting, True)
+        else:
+            setattr(dbsettings, setting, False)
+        
