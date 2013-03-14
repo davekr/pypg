@@ -68,6 +68,47 @@ class TableInsertTest(unittest.TestCase):
         #self.assertEqual(isinstance(self.db.test.insert(self.db.test.row()), list), True)
         pass
 
+class TableWhereTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+
+    def test_where_get_data_failure(self):
+        import operator
+        self.assertRaises(TypeError, operator.getitem, self.db.city.where(self.db.city.id==1), 0)
+
+    def test_where_no_arguments(self):
+        self.assertRaises(DBException, self.db.city.where)
+    
+    def test_where_bad_karguments(self):
+        self.assertRaises(DBException, self.db.city.where, balderdash='')
+        
+    def test_where_bad_arguments(self):
+        self.assertRaises(DBException, self.db.city.where, 'balderdash')
+        
+    def test_where_good_karguments(self):
+        self.assertEqual(isinstance(self.db.city.where(self.db.city.id == 1), TableWhere), True)
+        
+    def test_where_good_karguments2(self):
+        self.assertEqual(isinstance(self.db.city.where(self.db.city.id != 1, self.db.city.name != 'Test'), TableWhere), True)
+
+    def test_where_good_karguments3(self):
+        self.assertEqual(isinstance(self.db.city.where(self.db.city.id.in_([1,2,3]), self.db.city.name.like('Test')), TableWhere), True)
+
+    def test_where_good_karguments4(self):
+        self.assertEqual(isinstance(self.db.city.where(self.db.city.id.in_(1), self.db.city.id > 1, self.db.city.id < 10), TableWhere), True)
+
+class TableDeleteTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+
+    def test_delete(self):
+        self.db.city.where(self.db.city.id == 6).delete()
+        self.assertEqual(len(self.db.city.where(self.db.city.id == 6).select()), 0)
+        
 class TableUpdateTest(unittest.TestCase):
 
     @classmethod
@@ -93,6 +134,9 @@ class TableUpdateTest(unittest.TestCase):
          
     def test_update_good_karguments(self):
         self.assertEqual(self.db.city.where(self.db.city.id==1).update(name='Test'), None)
+
+    def test_update_good_karguments2(self):
+        self.assertEqual(self.db.city.where(self.db.city.id==1).update(name='Test', district='TestDistrict'), None)
 
     def test_update_and_get_good_karguments(self):
         self.assertEqual(isinstance(self.db.city.where(self.db.city.id==2).update_and_get(name='Test'), ResultSet), True)
@@ -134,6 +178,18 @@ class TableSelectTest(unittest.TestCase):
     def test_order_good_arguments2(self):
         self.assertEqual(isinstance(self.db.city.order(Column('city', 'name')), TableSelect), True)    
         
+    def test_order_desc_no_arguments(self):
+        self.assertRaises(TypeError, self.db.city.order_desc)
+        
+    def test_order_desc_bad_arguments(self):
+        self.assertRaises(DBException, self.db.city.order_desc, 'balderdash')    
+        
+    def test_order_desc_good_arguments(self):
+        self.assertEqual(isinstance(self.db.city.order_desc(self.db.city.name), TableSelect), True)
+        
+    def test_order_desc_good_arguments2(self):
+        self.assertEqual(isinstance(self.db.city.order_desc(Column('city', 'name')), TableSelect), True)    
+
     def test_select_no_arguments(self):
         self.assertEqual(isinstance(self.db.city.select(), TableSelected), True)
          
@@ -149,35 +205,6 @@ class TableSelectTest(unittest.TestCase):
     def test_select_getitem(self):
         self.assertEqual(isinstance(self.db.city.limit(10).select()[0], Row), True)
         
-
-class TableWhereTest(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.db = TestHelper.db
-
-    def test_where_get_data_failure(self):
-        import operator
-        self.assertRaises(TypeError, operator.getitem, self.db.city.where(self.db.city.id==1), 0)
-
-    def test_where_no_arguments(self):
-        self.assertRaises(DBException, self.db.city.where)
-    
-    def test_where_bad_karguments(self):
-        self.assertRaises(DBException, self.db.city.where, balderdash='')
-        
-    def test_where_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.where, 'balderdash')
-        
-    def test_where_good_karguments(self):
-        self.assertEqual(isinstance(self.db.city.where(self.db.city.id == 1), TableWhere), True)
-        
-    def test_where_good_karguments2(self):
-        self.assertEqual(isinstance(self.db.city.where(self.db.city.id != 1), TableWhere), True)
-
-    def test_where_good_karguments3(self):
-        self.assertEqual(isinstance(self.db.city.where(self.db.city.id.in_([1,2,3])), TableWhere), True)
-        
 class TableJoinTest(unittest.TestCase):
 
     @classmethod
@@ -190,6 +217,9 @@ class TableJoinTest(unittest.TestCase):
 
     def test_join_bad_on_argument(self):
         self.assertRaises(DBException, self.db.city.join, self.db.country, 'balderdash')
+
+    def test_join_bad_on_argument2(self):
+        self.assertRaises(DBException, self.db.city.join, self.db.country, self.db.city.id == 1)
 
     def test_join_implicit_on(self):
         self.assertEqual(isinstance(self.db.city.join(self.db.country).limit(1).select()[0], Row), True)

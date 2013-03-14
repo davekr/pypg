@@ -24,10 +24,9 @@ class DB(object):
         
     def _set_settings(self, settings):
         for value in settings:
-            getattr(self, "set_%s" % value, self._wrong_arg)(settings[value])
-
-    def _wrong_arg(self, arg):
-        pass
+            func = getattr(self, "set_%s" % value, None)
+            if func:
+                func(settings[value])
 
     def create_mview(self, name, table):
         MaterializedView().create_mview(name, table)

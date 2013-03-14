@@ -72,10 +72,7 @@ class TableSelect(TableValidator):
         return TableSelected(self._table_name, self._sql)
 
     def _table_where_instance(self):
-        if isinstance(self, TableWhere):
-            return TableWhere(self._table_name, self._sql)
-        else:
-            return TableSelect(self._table_name, self._sql)
+        return TableWhere(self._table_name, self._sql)
 
 class TableSelected(TableSelect):
 
@@ -166,6 +163,3 @@ class Table(TableWhere):
     def __getattr__(self, attr):
         if Structure.table_has_column(self._table_name, attr):
             return Column(self._table_name, attr)
-        else:
-            raise AttributeError("'%s' object has no attribute '%s'" % (type(self), attr))
-            
