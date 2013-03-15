@@ -398,7 +398,7 @@ class SelectInTest(unittest.TestCase):
         for city in self.db.city.limit(10).select():
             city['name']
             city.countrycode['name']
-            for language in city.countrycode.countrylanguage:
+            for language in city.countrycode.countrylanguage.select():
                 language['language']
         self.assertEqual(True, True)
 

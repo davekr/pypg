@@ -99,7 +99,7 @@ class SQLBuilder(object):
         self._tables.append(table)
         
     def build_select(self):
-        select = self.SELECT % ({'table': self._table, 'args': ', '.join(self._select_args) if self._select_args else '*', \
+        select = self.SELECT % ({'table': self._table, 'args': ', '.join(map(str, self._select_args)) if self._select_args else '*', \
                                  'where': self._where, 'order': self._order, 'limit': self._limit, 'join': self._join})
         parameters_list = self._where_values[:]
         if self._limit_to:

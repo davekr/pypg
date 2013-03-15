@@ -1,45 +1,29 @@
-from table import TableSelect
-from resultset import ResultSet
+from table import TableSelect, TableSelected
+from exception import DBException
 
 class RestrictedTableSelect(TableSelect):
 
-    def __init__(self, name, sql, cache, parrent, rel_fk, pk_val):
+    def __init__(self, name, sql, result_set):
         super(RestrictedTableSelect, self).__init__(name, sql)
-        self._cache, self._parrent = cache, parrent
-        self._rel_fk, self._pk_val = rel_fk, pk_val
+        self._result_set = result_set
 
-    def limit(self, limit):
-        super(RestrictedTableSelect, self).limit(limit)
+    def join(self, *args, **kwargs):
+        raise DBException("Join not supported in SELECT...IN functionality")
+
+    def _table_select_instance(self):
         return self
+        
+    def _table_selected_instance(self):
+        return RestrictedTableSelected(self._table_name, self._sql, self._result_set)
 
-    def order(self, order):
-        super(RestrictedTableSelect, self).order(order)
-        return self
-
-    def where(self, *args, **kwargs):
-        super(RestrictedTableSelect, self).where(*args, **kwargs)
+    def _table_where_instance(self):
         return self
     
-    def _parse_data(self, data):
-        self._cache.save_relation(self._parrent, self._table_name, data)
-        return ResultSet(self._cache.get_relation_set(self._table_name, self._rel_fk, self._pk_val), self._table_name, self._cache)
+class RestrictedTableSelected(TableSelected):
 
-class RestrictedDummyTable(TableSelect):
+    def __init__(self, name, sql, result_set):
+        super(RestrictedTableSelected, self).__init__(name, sql)
+        self._result_set = result_set
 
-    def __init__(self, name, data, cache):
-        super(RestrictedDummyTable, self).__init__(name, None)
-        self._data = data
-        self._cache = cache
-
-    def limit(self, limit):
-        return self
-
-    def order(self, order):
-        return self
-
-    def where(self, *args, **kwargs):
-        return self
-
-    def select(self, *args):
-        return ResultSet(self._data, self._table_name, self._cache)
-    
+    def _get_data(self):
+        return self._result_set._get_rel_data_restricted(self._sql)
