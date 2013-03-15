@@ -40,11 +40,14 @@ CREATE TABLE country (
 );
 
 CREATE TABLE countrylanguage (
+    id serial NOT NULL,
     countrycode character(3) NOT NULL,
     "language" text NOT NULL,
     isofficial boolean NOT NULL,
     percentage real NOT NULL
 );
+
+SELECT pg_catalog.setval(pg_catalog.pg_get_serial_sequence('countrylanguage', 'id'), 984, true);
 
 COPY city (id, name, countrycode, district, population) FROM stdin;
 1	Kabul	AFG	Kabol	1780000
@@ -5375,7 +5378,7 @@ ALTER TABLE ONLY country
     ADD CONSTRAINT country_pkey PRIMARY KEY (code);
 
 ALTER TABLE ONLY countrylanguage
-    ADD CONSTRAINT countrylanguage_pkey PRIMARY KEY (countrycode, "language");
+    ADD CONSTRAINT countrylanguage_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY country
     ADD CONSTRAINT country_capital_fkey FOREIGN KEY (capital) REFERENCES city(id);

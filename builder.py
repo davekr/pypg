@@ -26,7 +26,10 @@ class SQLBuilder(object):
         map(self.add_select_arg, args)
         
     def add_select_arg(self, arg):
-        self._select_args.append(str(arg))
+        self._select_args.append(arg)
+
+    def add_aliases_to_select_args(self):
+        self._select_args = ['%s AS %s' % (arg, arg.get_aliased_name()) for arg in self._select_args]
             
     def add_insert_kwargs(self, kwargs):
         map(lambda item: self.add_insert_kwarg(*item), kwargs.items())

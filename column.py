@@ -36,4 +36,7 @@ class Column(object):
         
     def __str__(self):
         return '%s.%s' % (self._table_name, self._name)
+
+    def get_aliased_name(self):
+        return '%s_%s' % (self._table_name, self._name)
  

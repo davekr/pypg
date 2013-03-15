@@ -6,11 +6,6 @@ class ResultSetCache(object):
         self._cache[table] = {}
         self._cache[table]['data'] = data
         
-    def save_table_data(self, table, data):
-        if not self._cache.get(table):
-            self._cache[table] = {}
-        self._cache[table]['data'] = data
-
     def relation_exists(self, table, relation):
         if self._cache.get(table) and self._cache[table].get(relation):
             return True

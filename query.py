@@ -27,15 +27,15 @@ class Query(object):
         
     def _execute(self, sql, kwargs):
         self._cursor = self._conn.cursor(cursor_factory=DALCursor)
-        self._cursor.execute(sql, kwargs['parameters'])
+        self._cursor.execute(sql, kwargs.get('parameters'))
         if settings.LOG:
-            self._log()
+            self._log(kwargs)
         
     def _done(self):
         self._cursor.close()
         self._conn.commit()
 
-    def _log(self):
+    def _log(self, kwargs):
         t = (time.time() - self._cursor.timestamp) * 1000
         logger = logging.getLogger("DAL.statistics")
         logger.setLevel(logging.DEBUG)

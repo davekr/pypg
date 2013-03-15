@@ -19,7 +19,7 @@ class DB(object):
         return Table(name)
             
     def __dir__(self):
-        attrs = ['create_mview', 'set_debug', 'set_log', 'set_strict', 'set_naming', 'set_logger']
+        attrs = ['create_mview', 'drop_view', 'set_debug', 'set_log', 'set_strict', 'set_naming', 'set_logger']
         return Structure.get_all_tables() + attrs
         
     def _set_settings(self, settings):
@@ -30,6 +30,9 @@ class DB(object):
 
     def create_mview(self, name, table):
         MaterializedView().create_mview(name, table)
+
+    def drop_mview(self, name):
+        MaterializedView().drop_mview(name)
 
     def set_debug(self, value):
         self._set('DEBUG', value)

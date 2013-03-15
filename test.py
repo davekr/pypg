@@ -198,6 +198,9 @@ class TableSelectTest(unittest.TestCase):
         
     def test_select_good_arguments(self):
         self.assertEqual(isinstance(self.db.city.select(self.db.city.name), TableSelected), True)
+
+    def test_select_good_arguments2(self):
+        self.assertEqual(isinstance(self.db.city.select(self.db.city.name, self.db.city.population), TableSelected), True)
         
     def test_select_length(self):
         self.assertEqual(isinstance(len(self.db.city.limit(10).select()), int), True)
@@ -335,6 +338,33 @@ class RowDeletedTest(unittest.TestCase):
     def test_delete_failure(self):
         self.assertRaises(DBException, self.row.delete)
 
+class ReadOnlyRowTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        cls.db.set_strict(True)
+
+    def setUp(self):
+        self.row = self.db.country.join(self.db.city).join(self.db.countrylanguage).limit(1).select()[0]
+
+    def test_item_access(self):
+        self.assertEqual(type(self.row['name']), str)
+        
+    def test_item_access_failure(self):
+        import operator
+        self.assertRaises(KeyError, operator.getitem, self.row, 'notexstingcolumn')
+        
+    def test_no_update(self):
+        self.assertRaises(AttributeError, getattr, self.row, 'update')
+        
+    def test_item_set_failuer(self):
+        import operator
+        self.assertRaises(TypeError, operator.setitem , self.row, 'firstname', 'new name')
+        
+    def test_no_delete(self):
+        self.assertRaises(AttributeError, getattr, self.row, 'delete')
+
 class RowRelationTest(unittest.TestCase):
 
     @classmethod
@@ -351,12 +381,26 @@ class RowRelationTest(unittest.TestCase):
     def test_access_languages(self):
         self.assertEqual(isinstance(self.row.countrycode.countrylanguage, ResultSet), True)
 
+    def test_access_failure(self):
+        self.assertRaises(DBException, getattr, self.row, 'notexistingrelation')
+
+    def test_access_failure2(self):
+        self.assertRaises(DBException, getattr, self.row.countrycode, 'notexistingrelation')
+
 class SelectInTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.db = TestHelper.db
         cls.db.set_strict(True)
+
+    def test_select_in(self):
+        for city in self.db.city.limit(10).select():
+            city['name']
+            city.countrycode['name']
+            for language in city.countrycode.countrylanguage:
+                language['language']
+        self.assertEqual(True, True)
 
 class NamingTest(unittest.TestCase):
 
@@ -369,7 +413,7 @@ class NamingTest(unittest.TestCase):
 
             structure = {'city': {'pk': 'id', 'fks': ('country', 'countrycode')},
                          'country': {'pk': 'code', 'fks': ('city','capitol')},
-                         'countrylanguage':{'pk': 'language', 'fks': ('country', 'countrycode')}
+                         'countrylanguage':{'pk': 'id', 'fks': ('country', 'countrycode')}
                             }
             def get_pk_naming(self, table):
                 return self.structure[table]['pk']
@@ -404,6 +448,22 @@ class LoggingTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db = TestHelper.db
+        cls.db.set_log(True)
+        cls.db.set_strict(True)
+
+    def setUp(self):
+        self.db.city.limit(1).select()[0]
+        self.db.country.join(self.db.city).join(self.db.countrylanguage).limit(1).select()[0]
+
+    def test_statistics(self):
+        with open('statistics.log') as f:
+            import json
+            record = json.loads(list(f)[-1])
+            self.assertEqual(set(record['tables']), set(['country', 'countrylanguage', 'city']))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.set_log(False)
 
 class DebugingTest(unittest.TestCase):
         
@@ -434,6 +494,37 @@ class DebugingTest(unittest.TestCase):
         cls.db.set_debug(False)
         cls.db.set_logger(None)
 
+class MaterializedViewTest(unittest.TestCase):
+
+    view_name = 'test_view'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = TestHelper.db
+        cls.db.set_strict(True)
+        cls.db.create_mview(cls.view_name, cls.db.country.join(cls.db.city).join(cls.db.countrylanguage).select())
+
+    def get_view(self):
+        return getattr(self.db, self.view_name)
+
+    def test_access(self):
+        self.assertEqual(isinstance(self.get_view().select().limit(1)[0], Row), True)
+
+    def test_city_delete(self):
+        self.db.city.where(self.db.city.id == 2).delete()
+        self.assertEqual(len(self.get_view().where(self.get_view().city_id == 2).select()), 0)
+        
+    def test_language_insert(self):
+        row = self.db.countrylanguage.insert_and_get(language='Ostravstina', countrycode="CZE", isofficial=False, percentage=10)[0]
+        self.assertEqual(isinstance(self.get_view().where(self.get_view().countrylanguage_id == row['id']).select()[0], Row), True)
+
+    def test_city_update(self):
+        self.db.city.where(self.db.city.id == 33).update(name='Test')
+        self.assertEqual(self.get_view().where(self.get_view().city_id == 33).select()[0]['city_name'], 'Test')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.drop_mview(cls.view_name)
 
 def setUpModule():
     TestHelper.setUp()

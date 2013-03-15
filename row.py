@@ -18,7 +18,19 @@ class ReadOnlyRow(TableValidator):
     def __getitem__(self, item):
         self._check_deleted()
         return self.data[item]
-        
+
+    def keys(self):
+        self._check_deleted()
+        return self.data.keys()
+    
+    def values(self):
+        self._check_deleted()
+        return self.data.values()
+
+    def items(self):
+        self._check_deleted()
+        return self.data.items()
+
     def _check_deleted(self):
         if self._deleted:
             raise DBException('This row was deleted.')  
@@ -66,7 +78,7 @@ class Row(ReadOnlyRow):
             self._check_relation_exists(attr)
             pk = self._get_pk()
             if self._result_set:
-                return self._result_set._get_rel_data(attr, pk, self.data[pk])
+                return self._result_set._get_rel_data(self._table_name, attr, pk, self.data[pk])
             else:
                 relation_fk = Structure.get_foreign_key_for_table(attr, self._table_name)
                 sql = SQLBuilder(attr)
@@ -96,7 +108,4 @@ class Row(ReadOnlyRow):
     def _check_relation_exists(self, relation):
         Structure.table_exists(relation) 
         Structure.tables_related(relation, self._table_name)
-        
-    def add_reference(self, result_set):
-        self._result_set = result_set
 
