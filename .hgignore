@@ -8,4 +8,4 @@ run.py
 syntax: regexp
 ^.ropeproject$
 ^.coverage$
-^statistics.log$
+^log/

@@ -108,17 +108,17 @@ class SQLBuilder(object):
         
     def build_delete(self):
         delete = self.DELETE % ({'table': self._table, 'where': self._where})
-        return {'sql': delete, 'parameters': self._where_values, 'tables': [], 'columns': []}
+        return {'sql': delete, 'parameters': self._where_values, 'tables': self._tables, 'columns': []}
         
     def build_insert(self):
         insert = self.INSERT % ({'table': self._table, 'args': ', '.join(self._insert_keys), \
                                  'values': ', '.join(['%s' for k in self._insert_values]), 'returning': self._returning})
-        return {'sql': insert, 'parameters': self._insert_values, 'tables': [], 'columns': []}
+        return {'sql': insert, 'parameters': self._insert_values, 'tables': self._tables, 'columns': []}
         
     def build_update(self):
         update = self.UPDATE % ({'table': self._table, 'values': self._update, 'where': self._where, \
                                  'returning': self._returning})
-        return {'sql': update, 'parameters': self._update_values + self._where_values, 'tables': [], 'columns': []}
+        return {'sql': update, 'parameters': self._update_values + self._where_values, 'tables': self._tables, 'columns': []}
         
     def _escape(self, name):
         return '"%s"' % name

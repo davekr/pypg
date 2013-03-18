@@ -5,6 +5,7 @@ from manager import Manager
 from structure import Structure
 from mview import MaterializedView
 import settings as dbsettings
+from analyzer import Denormalization, DBBackup
 
 class DB(object):
     
@@ -28,6 +29,9 @@ class DB(object):
             if func:
                 func(settings[value])
 
+    def analyze_statistics(self):
+        Denormalization().start()
+
     def create_mview(self, name, table):
         MaterializedView().create_mview(name, table)
 
@@ -38,6 +42,8 @@ class DB(object):
         self._set('DEBUG', value)
         
     def set_log(self, value):
+        if dbsettings.LOG == False and value == True:
+            DBBackup().create_backup()
         self._set('LOG', value)
 
     def set_strict(self, value):

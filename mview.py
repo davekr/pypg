@@ -75,7 +75,7 @@ class MaterializedView(object):
                 pk = Structure.get_primary_key(table_name)
                 column = Column(table_name, pk)
                 pks.append(column.get_aliased_name())
-                if not str(column) in table._sql._select_args:
+                if not str(column) in map(str, table._sql._select_args):
                     table._sql.add_select_arg(column)
         table._sql.add_aliases_to_select_args()
         sql_dict = table._sql.build_select()

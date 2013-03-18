@@ -40,13 +40,14 @@ class Query(object):
         logger = logging.getLogger("DAL.statistics")
         logger.setLevel(logging.DEBUG)
         if not logger.handlers:
-            logger.addHandler(logging.FileHandler("statistics.log"))
+            logger.addHandler(logging.FileHandler("log/statistics.log"))
         logdict = {}
         logdict['query'] = self._cursor.query
         logdict['time'] = t
         logdict['datetime'] = time.strftime("%d.%m.%y %H:%M", time.localtime())
-        logdict['tables'] = kwargs['tables']
-        logdict['columns'] = kwargs['columns']
+        logdict['tables'] = kwargs.get('tables')
+        logdict['columns'] = map(str, kwargs.get('columns', []))
+        logdict['rowcount'] = self._cursor.rowcount
         logger.debug(json.dumps(logdict))
         
         
