@@ -71,8 +71,29 @@ class Improvement(object):
         return 'Improvement: \n\tquery: %s\n\ttotal time reading: %s\n\ttotal time modifying: %s\n\timproved read: %s\n\timproved modify: %s' % (self.query, self.time_read, self.time_modify, self.improved_time_read, self.improved_time_modify)
 
     def run_improvement(self):
+        self._improvement_mview()
+        #result = self._check_column_denormalization()
+        #if result:
+            #self._improvement_add_column(*result)
+        #else:
+            #self._improvement_mview()
+
+    def _check_column_denormalization():
+        if len(self.tables) == 2:
+            columns = [column for column in self.columns if column.startswith(self.tables[0])]
+            columns2 = [column for column in self.columns if column.startswith(self.tables[1])]
+            if len(columns == 1):
+                return self.tables[1], self.tables[0], columns[0]
+            if len(columns2 == 1):
+                return self.tables[0], self.tables[1], columns[0]
+        return None
+
+    def _improvement_mview(self):
         MaterializedView().create_mview('test_mview', TableSelect(self.tables[0], \
                                         self.BuilderMockObject(self.query, self.tables, self.columns)))
+
+    def _improvement_add_column(self, to_table, from_table, column):
+        pass
 
     class BuilderMockObject(object):
 
@@ -122,7 +143,6 @@ class ImprovementCollection(object):
             else:
                 idx = self.collection.index(improvement)
                 self.collection[idx].time_modify = total_modifying_time
-
 
     def __contains__(self, item):
         return item in [improvement.query for improvement in self.collection]
