@@ -10,8 +10,8 @@ class Structure(object):
             if column in Manager.get_scheme()[table]['columns']:
                 return True
             else:
-                error = 'Column "%s" is not a valid column in table "%s". Choices are: "%s".' \
-                        % (column, table, '", "'.join(Structure.get_all_columns(table)))
+                error = 'Column "%s" is not a valid column in table "%s".' \
+                        % (column, table)
                 raise DBException(error)
         else:
             return True
