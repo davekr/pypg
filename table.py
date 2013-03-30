@@ -94,7 +94,7 @@ class TableSelected(TableSelect):
         return '\n'.join([str(row) for row in data])
 
     def _get_data(self):
-        if not self._data:
+        if self._data is None:
             data = Query().execute_and_fetch(**self._sql.build_select())
             if len(self._sql._tables) > 1:
                 cls = ReadOnlyResultSet
