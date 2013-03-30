@@ -1,0 +1,147 @@
+% Nejprve uvedeme tridu dokumentu s volbami
+\documentclass[ing,male,java,dept456]{diploma}						% jednostranny dokument
+%\documentclass[bc,female,java,dept456,twoside]{diploma}		% oboustranny dokument
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc} 
+
+%abstrakt, datovy slovnik
+% Zadame pozadovane vstupy pro generovani titulnich stran.
+\Author{David Krutký}
+
+\Title{Optimalizace datové vrsty aplikací pro PostgreSQL}
+
+\EnglishTitle{Optimization of a Data Layer of an Application Using PostgreSQL}
+
+\SubmissionDate{7. května 2013}
+
+\PrintPublicationAgreement{true}
+
+\Thanks{Rád bych na tomto místě poděkoval všem, kteří mi pomohli, protože bez nich by tato práce nevznikla.}
+
+\CzechAbstract{Abstrakt cz}
+
+\CzechKeywords{Keywords cz}
+
+\EnglishAbstract{Abstrakt en}
+
+\EnglishKeywords{Keywords en}
+
+% Pridame pouzivane zkratky (pokud nejake pouzivame).
+\AddAcronym{TL;DR}{Too long; didn't read}
+
+% Zacatek dokumentu
+\begin{document}
+
+% Nechame vysazet titulni strany.
+\MakeTitlePages
+
+% Asi urcite budeme potrebovat obsah prace.
+\tableofcontents
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+% Jsou v praci tabulky? Pokud ano vysazime jejich seznam.
+% Pokud ne smazeme nasledujici makro.
+\listoftables
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+% Jsou v praci obrazky? Pokud ano vysazime jejich seznam.
+\listoffigures
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+
+% Jsou v praci vypisy programu? Pokud ano vysazime jejich seznam.
+\lstlistoflistings
+\cleardoublepage	% odstrankujeme, u jednostranneho dokumentu o jednu stranku, u oboustrenneho o dve
+
+% Zacneme uvodem
+\section{Úvod}
+\label{sec:Intro}
+Systémy řízení báze dat (SŘBD) jsou dnes nejpoužívanějšími systémy pro ukládání dat v aplikačním softwaru. Nejrozšířenějším typem databázových systému jsou databáze relační. Na problém, který představuje komunikace aplikačního softwaru s relačním databázovým systémem, se zaměřuje tato diplomová práce.
+V kapitole jsou popsány a vysvětleny základní pojmy spojené s relačními databázemi a přístupu k nim.
+Důvod, který mě vedl pro vytvoření nové knihovny popisuje kapitola. 
+
+\section{Vrstvená architektura}
+
+Použití vrstev je jedna z nejčastějších technik využívaných pro zjednodušení komplexnosti složitých systémů \cite{fowler}. Vrstvy ve vrstvené architektuře popisují logické seskupení funkcí a komponent v aplikaci. Shlukují komponenty podle typu funkcí a ulehčují tak jejich znovupoužitelnost. Vrstvy nemusí být přitom ani fyzicky oddělené, pouze vymezují a rozdělují aplikaci do logických celků. Každá z vrstev této architektury komunikuje pouze se svými sousedními vrstvami a nestará se o další části systému. Tato architektura tak umožňuje jednoduše nahradit nebo změnit jednotlivé vrstvy aniž by to ovlivnilo ostatní vrstvy. \\
+Při vytváření aplikace založené na této architektuře je tak možno postupovat ve vývoji jednotlivých vrstev souběžně. Tohoto je dosaženo pomocí předem určeného rozhraní. Mezi další výhody patří také jednodušší údržba a testování, kde lze využít i tzv. mock-up testů. \\
+Vrstvenou architekturu lze aplikovat nezávisle na typu aplikace \cite{msdn}. Příkladem použití této architektury je referenční model ISO/OSI.\\
+
+
+\subsection{Třívrstvá architektura}
+
+Jedním z nejrozšířenějších typů vrstvené architektury v aplikacích je třívrstvá architektura. Mezi vrstvy třívrstvé architektury patří vrstvy prezentační, aplikační a datová. \\
+Úkolem prezentační vrstvy je zobrazovat uživateli data ve srozumitelné a přehledné formě, reagovat na jeho požadavky a propagovat provedené změny. Prezentační vrstva může mít podobu uživatelského rozhraní v aplikaci, webové stránky nebo i jednoduchého rozhraní příkazové řádky. \\
+Aplikační vrstva je srdcem aplikace. V této vrstvě se vyskytuje veškerá aplikační logika, pracuje se zde s daty, které se validují, provádějí se na nich výpočty a připravují se k uložení nebo k zobrazení. Spadají zde funkce jako autentifikace, autorizace, logování a kešování. \\
+Datová vrstva zajišťuje manipulaci se zdrojem dat nebo datovým úložištěm a s daty, které tyto úložiště poskytují. Abstrahuje a centralizuje přístup k tomuto úložišti dat. Důležitým úkolem datové vrstvy je také bezpečnost dat a jejich ochrana před případnými pokusy, které se snaží k těmto datům získat přístup nebo je poškodit. Datová vrstva by se také měla snažit o co nejefektivnější výkonnost a škálovatelnost, jelikož často bývá nejvíce zatěžovaným místem v aplikaci. \\
+Obrázek zobrazuje instanci této architektury v podobě frameworku Django.
+
+\subsection{Datová vrstva aplikačního softwaru}
+
+Velice často je třeba, aby data zpracovávána aplikací byla perzistentní. Tímto pojmem se rozumí trvalé zachování dat po zastavení provozu aplikace nebo i po výpadku systému. Jako nástroje poskytující tuto funkci jsou dnes hojně rozšířené relační databáze. \\
+Princip datové vrstvy při použití relačních databází zůstává stejný. Datová vrstva řeší úkony jako získávání dat z databáze, transakce a správa spojení. Musí také řešit problém, který představuje nekompatibilita objektových jazyků použitých pro aplikační logiku a dotazovacích jazyků využívaných pro získávání dat z relačních databází. Tento problém označujeme pod pojmem \textit{Impedance mismatch}. Do tohoto problému spadá například převod syntaxe, převod datových typů, efektivní interpretace relací a struktur a jejich mapování mezi dvěma nekompatibilními jazyky. \\
+Impedance mismatch se začal více projevovat až při použití objektově orientovaných jazyků. Jazyky používané dříve měly specializované datové struktury optimalizované pro zacházení s relačními daty, kdežto objektově orientovaným jazykům tyto struktury schází \cite{dbprogrammer}. \\
+
+Pro zjednodušení a odstínění od těchto problémů byly vytvořeny rámce a knihovny, které se starají o tyto monotonní činnosti. Rozdíl mezi knihovnou a rámcem definuje Martin Fowler pomocí \textit{Inversion of control}. Knihovna poskytuje funkce, které je možné v aplikační logice využívat. Je tedy řízena aplikační logikou. Naopak při použití rámce je třeba umístit aplikační kód na předem určené místa například pomocí dědičnosti. Tento kód je pak volán a řízen rámcem \cite{fowler-ioc}.  \\
+
+Datová vrstva se v angličtině označuje pod názvem Data-Access Layer (DAL). Tímto pojmem se také někdy nazývají knihovny a rámce, které zastávají funkci této vrstvy. Často se tento název plete s Data-Abstraction Layer. Database-Abstraction Layer je typ DAL, který pomocí svých funkcí abstrahuje rozdíly mezi detaily a specifikacemi podporovanými SŘBD. Umožňuje tak jednodušeji změnit SŘBD bez velkých úprav aplikačního kódu. \\
+
+Samotná datová vrstva je velmi často rozdělena na další podvrstvy. Mezi nejprimitivnější DAL patří knihovny, které označujeme za konektory nebo ovladače. Řeší pouze část problému Impedance mismatch, poskytují základní funkce a zaměřují se pouze na jeden SŘBD. Většinou umožňují zadat pouze syrové SQL ve formě řetězce. Tyto konektory se většinou řídí podle specifikovaných standardů. Mnoho programovacích jazyků má určeno tyto standardy proto, aby sjednotily rozhraní a práci s těmito knihovnami, což umožňuje lehčí přechod mezi SŘBD a jednodušší vytváření Database-abstraction layers. Příkladem standardu pro jazyk Python je specifikace PEP 249\footnote{http://www.python.org/dev/peps/pep-0249/} .\\
+Konektory pak využívají již zmíněné Database-abstraction layers a složitější rámce a knihovny snažící se o větší míru abstrakce. Tyto tak tvoří další vrstvu. \\
+Nad touto vrstvou je dnes velmi často postavena ještě další funkčnost mající za cíl problém Impedance mismatch ještě více ulehčit a abstrahovat. Touto funkčností je objektově relační mapování, v angličtině Object-Relational Mapping (ORM). ORM zle považovat za nejvyšší míru abstrakce ze všech typů DAL.  \\
+
+%Pripadne do budoucna...
+%Pro zjednodušení budu tyto knihovny považovat za první vrstvu datové vrstvy. Tyto knihovny a rámce řadím do vrstvy druhé. Řadím ji do třetí vrstvy datové vrstvy...
+%Obrázek zobrazuje rozdělení známých rámců a knihoven do těchto tří vrstev, které jsem definoval výše.
+
+Příkladem DAL jsou knihovny a rámce psycopg2, MySQL Connector/NET, PDO, JDBC, Hibernate, SQLAlchemy. Z toho lze považovat psycopg2, MySQL Connector/NET za koknektory, PDO, JDBC, Hibernate, SQLAlchemy za Database-Abstraction Layer a Hibernate a SQLAlchemy za ORM.
+
+\subsection{Obejct-Relational Mapping}
+
+Hlavním rozdílem oproti ORM a jiným DAL považuji mapování objektů nebo tříd v aplikaci na databázové tabulky.
+
+\subsection{Návrhové vzory ORM}
+- Popis ORM patternů
+- Rozdíl mezi DAL a ORM
+
+\section{ORM hate, proc novy framework}
+
+Důvody, které mě vedly k vytvoření knihovny
+- vlastní i cizí zkušenosti s pomalostí ORM
+- zaměřeno na více databází
+
+\section{Srovnani frameworku a jejich funkce pro zrychleni vykonu}
+
+\section{DAL Framework}
+
+\section{Implementovane funkce}
+
+-vysvetleni syntaxe, vsech mechanismu do podrobna
+-komentare ve zdrojovem kodu a principy clean code
+
+\section{Dalsi funkce, ktere budou v budoucnu implementovany}
+
+\section{Porovnani rychlosti DAL s ORM a jinyma}
+
+\section{Závěr}
+\label{sec:Conclusion}
+
+
+\begin{thebibliography}{99}
+
+\bibitem{fowler} Martin Fowler Patterns of en. application
+\bibitem{msdn} http://msdn.microsoft.com/en-us/library/ee658109.aspx
+\bibitem{dipl.net} Diplomova prace orm pro .net
+\bibitem{fowler-ioc} http://martinfowler.com/bliki/InversionOfControl.html
+\bibitem{dbprogrammer} http://database-programmer.blogspot.cz/2010/12/historical-perspective-of-orm-and.html
+
+\end{thebibliography}
+
+
+\appendix
+\section{Grafy a měření}
+Tohle je příloha k práci. Většinou se sem dávají grafy, tabulky, které by vzhledem
+ke svému počtu překážely v textu diplomky.
+\clearpage
+
+
+\end{document}
