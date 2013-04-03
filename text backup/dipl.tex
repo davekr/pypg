@@ -65,8 +65,7 @@ Důvod, který mě vedl pro vytvoření nové knihovny popisuje kapitola.
 Použití vrstev je jedna z nejčastějších technik využívaných pro zjednodušení komplexnosti složitých systémů \cite{fowler}. Vrstvy ve vrstvené architektuře popisují logické seskupení funkcí a komponent v aplikaci. Shlukují komponenty podle typu funkcí a ulehčují tak jejich znovupoužitelnost. Vrstvy nemusí být přitom ani fyzicky oddělené, pouze vymezují a rozdělují aplikaci do logických celků. Každá z vrstev této architektury komunikuje pouze se svými sousedními vrstvami a nestará se o další části systému. Vrstva na nižší úrovni poskytuje rozhraní, které je známé vrstvě o úroveň výše. Tato architektura tak umožňuje jednoduše nahradit nebo změnit jednotlivé vrstvy aniž by to ovlivnilo ostatní vrstvy. \\
 Při vytváření aplikace založené na této architektuře je tak možno postupovat ve vývoji jednotlivých vrstev souběžně. Tohoto je dosaženo pomocí předem určeného rozhraní. Mezi další výhody patří také jednodušší údržba a testování, kde lze využít i tzv. mock-up testů. \\
 Nevýhodou vrstev je, že při vysokém počtu se můžou velmi negativně projevovat na výkonu celého systému. Nejvýraznějším vlivem je potřeba rozhraní pro převod dat, jelikož každá z vrstev má vlastní logiku a interpretuje data vlastním způsobem. Dalším problémem jsou změny, které ovlivňují všechny vrstvy o úroveň výše tzv. kaskádové změny \cite{dresler}. V informačních systémech to může být například přidání databázového sloupce. \\
-Vrstvenou architekturu lze aplikovat nezávisle na typu aplikace \cite{msdn}. Příkladem použití této architektury je referenční model ISO/OSI.\\
-%http://standards.iso.org/ittf/PubliclyAvailableStandards/s020269_ISO_IEC_7498-1_1994(E).zip
+Vrstvenou architekturu lze aplikovat nezávisle na typu aplikace \cite{msdn}. Příkladem použití této architektury je referenční model ISO/OSI\footnote{ http://standards.iso.org/ittf/PubliclyAvailableStandards/s020269\_ISO\_IEC\_7498-1\_1994(E).zip}. \\
 
 \subsection{Třívrstvá architektura}
 
@@ -123,30 +122,63 @@ Každé ORM definuje způsob, kterým datová vrstva komunikuje s aplikační vr
 
 \subsubsection{Table Data Gateway}
 
-Table Data Gateway využívá třídy jako bránu k tabulce. Tabulka nebo podobný databázový objekt je namapována pomocí třídy. Jedna instance této třídy přitom určuje rozhraní ke všem záznamům v tabulce. Instance obsahuje metody pouze pro vyhledávání v datech, ukládání a mazání dat. Ke konkrétnímu řádku tabulky se lze dostat jen předáním klíče, jedinečného identifikátoru. Tento návrhový vzor je ve většině případů bezstavový. \\
-Každá metoda třídy skrývá za svým rozhraním SQL. Nejčastěji komunikuje přímo s databázovým ovladačem a předává mu vytvořené SQL. Data jsou pak vrácena ve formě v jaké je vrací ovladač, v objektu typu Record Set. Record Set je reprezentace relačních dat v paměti, většinou podobná poli nebo seznamu. Metody pro vyhledávání v datech pak vracejí vždy tento objekt i pokud se jedná pouze o jediný záznam. Vrácená data navíc neobsahují žádnou referenci k tomuto rozhraní. Toto může být problém a proto se vrácená data někdy obalují dalším objektem. Tento objekt Martin Fowler pojmenoval jako Data Transfer Object \cite{fowler}. \\
-Výhodou při použití tohoto vzoru je, že jeho rozhraní lze využít jak pro manipulaci relačních dat, tak pro uložené procedury. Také shlukuje SQL na jedno místo, což zjednodušuje optimalizaci. Table Data Gateway lze jednoduše využít jako rozhraní datové vrstvy při použití vzorů Table Module nebo Transaction Stript v aplikační logice. \\
-Příkladem tohoto návrhového vzoru je obrázek \ref{fig:TableDataGateway}.
+Table Data Gateway využívá třídy jako brány k tabulkám. Tabulka nebo podobný databázový objekt je namapována pomocí třídy. Třída obsahuje metody pouze pro vyhledávání v datech, ukládání a mazání dat. Jedna instance této třídy přitom poskytuje rozhraní ke všem záznamům v tabulce.  Ke konkrétnímu řádku tabulky se lze dostat jen předáním klíče, jedinečného identifikátoru. Tento návrhový vzor je ve většině případů bezstavový. \\
+Každá metoda třídy skrývá za svým rozhraním SQL. Nejčastěji komunikuje přímo s databázovým ovladačem a předává mu vytvořené SQL. Data jsou pak vrácena ve formě v jaké je vrací ovladač, v objektu typu Record Set. Record Set je generická reprezentace relačních dat v paměti, většinou podobná poli nebo seznamu. Metody pro vyhledávání v datech pak vracejí vždy tento objekt i pokud se jedná pouze o jediný záznam. Vrácená data navíc neobsahují žádnou referenci k tomuto rozhraní. Toto může být problém a proto se vrácená data někdy obalují dalším objektem. Tento objekt se označuje jako Data Transfer Object \cite{fowler}. \\
+Výhodou při použití tohoto vzoru je, že jeho rozhraní lze využít jak pro manipulaci relačních dat, tak pro uložené procedury. Také shlukuje SQL na jedno místo, což zjednodušuje optimalizaci. Table Data Gateway lze lehce využít jako rozhraní datové vrstvy při použití vzorů Table Module nebo Transaction Stript v aplikační logice. \\
+Příkladem tohoto návrhového vzoru je obrázek \ref{fig:TableDataGateway}. Na obrázku je třída PersonGateway, která slouží jako brána k databázové tabulce Person.
 
-\InsertFigure{tabledatagateway.png}{80mm}{Třída v návrhovém vzoru Table Data Gateway \cite[str. 114]{fowler}}{fig:TableDataGateway}
+\InsertFigure{tabledatagateway.png}{80mm}{Třída v návrhovém vzoru Table Data Gateway \cite[str. 148]{fowler}}{fig:TableDataGateway}
 
 \subsubsection{Row Data Gateway}
 
-Row Data Gateway abstrahuje tabulku pomocí třídy, její záznamy pomocí instance této třídy a její sloupce pomocí atributů. Třídy neobsahují žádnou aplikační logiku a slouží pouze jako brána k datům. Jedna instance odpovídá jednomu záznamu. Lze se tak jednoduše dostat ke konkrétnímu řádku. Instance má navíc povědomí o celém rozhraní, není tedy třeba používat Data Transfer Object. Instance obsahuje i metody pro manipulaci s daty, jejich mazání a ukládání.  \\
-Ke každé třídě mapující tabulku je vytvořena další třída, která slouží k vyhledávání záznamů pro konkretní tabulku. Tato třída se v pozadí chová podobně jako třída v Table Data Gateway, je tak možné využívat i některých výhod tohoto vzoru. Namísto objektu Record Set však třída pro vyhledávání vrací instanci třídy mapující konkrétní tabulku. Pro získání záznamu je tedy nejdříve nutné využít vyhledávací třídu. \\
-Instanci návrhového vzoru Row Data Gateway zobrazuje obrázek \ref{fig:RowDataGateway}.
+Row Data Gateway abstrahuje tabulku pomocí třídy, její záznamy pomocí instancí této třídy a její sloupce pomocí atributů. Třídy neobsahují žádnou aplikační logiku a slouží pouze jako brána k datům. Jedna instance odpovídá jednomu záznamu. Lze se tak jednoduše dostat ke konkrétnímu řádku. Instance má navíc povědomí o celém rozhraní, není tedy třeba používat Data Transfer Object. \\
+Instance obsahuje metody pro manipulaci s daty řádku, jejich mazání a ukládání. Datové typy atributů třídy jsou implicitně převáděny na datové typy konkrétních sloupců tabulky. Na základě tříd a jejich atributů, lze i jednoduše pomocí nástrojů ORM vytvořit relační schéma v databázi. \\
+Ke každé třídě mapující tabulku je vytvořena další třída, která slouží k vyhledávání záznamů pro konkretní tabulku. Tato třída se v pozadí chová podobně jako třída v návrhovém vzoru Table Data Gateway, je tak možné využívat i některých výhod tohoto vzoru. Namísto objektu Record Set však třída pro vyhledávání vrací instanci třídy mapující konkrétní tabulku. Pro získání záznamu je tedy nejdříve nutné využít vyhledávací třídu. \\
+Instanci návrhového vzoru Row Data Gateway zobrazuje obrázek \ref{fig:RowDataGateway}. Na obrázku je třída PersonFinder, která vyhledává data v databázové tabulce Person a vrací instanci třídy PersonGateway. PersonGateway pak slouží jako rozhraní pro konkrétní řádek tabulky Person. \\
 
-\InsertFigure{rowdatagateway.png}{40mm}{Třída v návrhovém vzoru Row Data Gateway \cite[str. 120]{fowler}}{fig:RowDataGateway}
+\InsertFigure{rowdatagateway.png}{40mm}{Ukázka použití návrhového vzoru Row Data Gateway \cite[str. 154]{fowler}}{fig:RowDataGateway}
 
 \subsubsection{Active Recod}
 
+Active Record je návrhový vzor podobný Row Data Gateway. Stejně jako Row Data Gateway mapuje struktury v datové vrstvě velmi úzce se strukturou databáze. Třídy tak korespondují s tabulkami v databázi a jejich instance a atributy s řádky a sloupci tabulek. Oproti Row Data Gateway však třídy obsahují navíc i aplikační logiku a většinou jsou tak považovány i za doménové objekty. \\
+\uv{Třída ve vzoru Active Record typicky obsahuje metody, které mají za úkol následující:
+\begin{itemize}
+\item Vytvořit instanci třídy z dat řádku vráceného na SQL dotaz
+\item Vytvořit instanci třídy, která bude později použita pro vložení nového záznamu do tabulky
+\item Statické metody, které obalují často používané SQL dotazy pro vyhledávání dat a které vracejí instance třídy
+\item Aktualizovat databázi daty instance
+\item Metody pro získání a nastavování hodnot atributů
+\item Implementace části aplikační logiky
+\end{itemize}}\cite[str. 160]{fowler} \\
+Tento návrhový vzor je intuitivním přístupem, pokud při návrhu databázového schématu korespondují tabulky s doménovými objekty. Proto a pro svoji jednoduchost je dnes velmi rozšířeným a často používaným vzorem při návrhu ORM. Používá se hlavně pro jednoduché systémy, kterým umožňuje rychlou implementaci rozhraní datové vrstvy. \\
+Mezi nevýhody návrhového vzoru Active Record patří mapování vztahů a dědičnosti, které z části rozbíjí jeho principy a přispívají tak ke špatné struktuře kódu a chybám, které z toho plynou. Podobný problém nastává při složitější aplikační logice, jelikož pak třídy výrazně nabudou na objemu a zastávají nemalý počet funkcí. Toto vede ke špatně testovatelným objektům a nevyhnutelně k chybám. Active Record se nevyplatí používat, pokud se doménové objekty liší od struktur v databázi nebo pokud by v budoucnu mohlo k takovýmto změnám dojít.
+
+\subsubsection{Data Mapper}
+
+Data Mapper se využívá při složitější aplikační logice, při rozdílném objektovém a relačním schématu nebo často i pokud je třeba pracovat s již existující databází. Doménové objekty v aplikační logice se při použití tohoto vzoru nemusí shodovat s databázovým schématem. Lze je vytvořit naprosto nezávisle. Je tak možné kdykoliv změnit databázové schéma nebo struktury v aplikační logice z čehož vyplývá mnoho výhod. \\
+Nevýhodou tohoto přístupu je, že přidává další vrstvu mezi databázi a aplikační vrstvu. Toto se může negativně projevovat na celkovém výkonu a složitosti systému, proto se Data Mapper nedoporučuje používat pro jednoduché případy, které lze vyřešit například pomocí vzoru Active Record.\\
+Data Mapper komunikuje s aplikační vrstvou pomocí mapovací třídy, která poskytuje rozhraní k získávání doménových objektů. Mapovací třída může abstrahovat jednu databázovou tabulku, její část nebo i více tabulek. Většinou je výhodnější pro jednu doménovou třídu vytvořit vždy jednu mapovací třídu. \\
+Obrázek \ref{fig:DataMapper} zobrazuje jednoduchý příklad návrhového vzoru Data Mapper. Na obrázku je  mapovací třída PersonMapper, která získává data z databáze a vrací je ve formě instancí doménové třídy Person. Implementace získávání dat je před třídou Person skrytá a databázové schéma může vypadat jakkoliv. \\
+Data Mapper využívá pro spravování doménových objektů strukturu pojmenovanou Identity map \cite{fowler}. Tato struktura se stará synchronizaci doménových objektů a dat v paměti. Předchází prováděním zbytečných dotazů do databáze, pokud daný objekt již v paměti existuje a zajišťuje, aby v takovém případě místo nového objektu byla vrácena reference na existující objekt. \\
+Tento návrhový vzor má smysl používat jen tehdy, pokud se aplikační logika řídí vzorem Domain Model. Při použití jiných vzorů přináší Data Mapper mnoho nadbytečných komplikací a jeho použití se nevyplácí. \\
+
+\InsertFigure{datamapper.png}{105mm}{Ukázka použití návrhového vzoru Data Mapper \cite[str. 164]{fowler}}{fig:DataMapper}
+
 \subsection{Mapování vztahů}
+
+V relační databázi se používají cizí klíče pro vyjádření relací, ale objekty v objektově orientovaných jazycích dosahují vazeb za pomocí referencí na konkrétní objekt. ORM tento problém řeší mapováním vztahů.\\
+Mapování vztahů a relací je funkce, která dle mého názoru definuje ORM. ORM řídící se podle návrhových vzorů Row Data Gateway, Active Record a Data Mapper potřebují tuto funkci, jelikož používají instance tříd, které abstrahují databázové tabulky, jako záznamy tabulky. ORM se poskytuje tři druhy mapování relací.
+Knihy, které v databázi obsahují cizí klíč na autora jsou pomocí ORM namapovány na objekt autora, který obsahuje kolekci s referencemi na jednotlivé objekty knih. \\
+Problém nastává při získávání objektu autora z databáze. ORM v souvislosti s mapováním vztahů využívají \textit{Lazy Loading}. Lazy Loading je funkce, která zajišťuje, že při načtení objektu z databáze do paměti se data, které tvoří relaci, nenahrají ihned, ale až při přístupu k dané relaci. Při absenci Lazy Loading, hrozí, že by se do paměti načetlo velké množství dat, v nejhorším případě celá databáze.
+
+\subsection{Dědičnost}
 
 \section{Proc novy framework}
 
 Důvody, které mě vedly k vytvoření knihovny
 %- vlastní i cizí zkušenosti s pomalostí ORM
 %- zaměřeno na více databází
+% je nutne znat SQL
 
 \section{Srovnani frameworku a jejich funkce pro zrychleni vykonu}
 
