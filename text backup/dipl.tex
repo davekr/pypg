@@ -2,7 +2,79 @@
 \documentclass[ing,male,java,dept456]{diploma}						% jednostranny dokument
 %\documentclass[bc,female,java,dept456,twoside]{diploma}		% oboustranny dokument
 \usepackage[czech]{babel}
-\usepackage[utf8]{inputenc} 
+\usepackage[utf8]{inputenc}
+
+
+\usepackage{color}
+\usepackage{setspace}
+\usepackage[usenames,dvipsnames]{xcolor}
+\definecolor{SQLKeywords}{RGB}{0,0,127}
+\definecolor{SQLStrings}{RGB}{127,0,127}
+\definecolor{SQLNumbers}{RGB}{0,127,127}
+\definecolor{Code}{rgb}{0,0,0}
+\definecolor{Decorators}{rgb}{0.5,0.5,0.5}
+\definecolor{Numbers}{rgb}{0.5,0,0}
+\definecolor{MatchingBrackets}{rgb}{0.25,0.5,0.5}
+\definecolor{Keywords}{rgb}{0,0,1}
+\definecolor{self}{rgb}{0,0,0}
+\definecolor{Strings}{rgb}{0,0.63,0}
+\definecolor{Comments}{rgb}{0,0.63,1}
+\definecolor{Backquotes}{rgb}{0,0,0}
+\definecolor{Classname}{rgb}{0,0,0}
+\definecolor{FunctionName}{rgb}{0,0,0}
+\definecolor{Operators}{rgb}{0,0,0}
+\definecolor{Background}{rgb}{0.98,0.98,0.98}
+\lstdefinestyle{custompython}{
+showspaces=false,
+showtabs=false,
+showstringspaces=false,
+tabsize=4,
+% Basic
+basicstyle=\ttfamily\small\mdseries\setstretch{1},
+language=Python,
+% Comments
+commentstyle=\color{Gray}\slshape,
+% Strings
+stringstyle=\color{Strings}\slshape,
+morecomment=[s][\color{Strings}\slshape]{"""}{"""},
+morecomment=[s][\color{Strings}\slshape]{'''}{'''},
+% keywords
+morekeywords={import,from,class,def,for,while,if,is,in,elif,else,not,and,or,print,break,continue,return,True,False,None,access,as,,del,except,exec,finally,global,import,lambda,pass,print,raise,try,assert},
+keywordstyle={\color{Keywords}\bfseries},
+% additional keywords
+morekeywords={[2]@invariant},
+keywordstyle={[2]\color{Decorators}\slshape},
+emph={self},
+emphstyle={\color{self}\slshape},
+literate=%
+	{0}{{{\color{Numbers}0}}}1
+    {1}{{{\color{Numbers}1}}}1
+    {2}{{{\color{Numbers}2}}}1
+    {3}{{{\color{Numbers}3}}}1
+    {4}{{{\color{Numbers}4}}}1
+    {5}{{{\color{Numbers}5}}}1
+    {6}{{{\color{Numbers}6}}}1
+    {7}{{{\color{Numbers}7}}}1
+    {8}{{{\color{Numbers}8}}}1
+    {9}{{{\color{Numbers}9}}}1,
+%
+}
+\lstdefinestyle{customsql}{
+language=SQL,
+keywordstyle=\color{SQLKeywords},
+stringstyle=\color{SQLStrings},
+literate=%
+	{0}{{{\color{SQLNumbers}0}}}1
+    {1}{{{\color{SQLNumbers}1}}}1
+    {2}{{{\color{SQLNumbers}2}}}1
+    {3}{{{\color{SQLNumbers}3}}}1
+    {4}{{{\color{SQLNumbers}4}}}1
+    {5}{{{\color{SQLNumbers}5}}}1
+    {6}{{{\color{SQLNumbers}6}}}1
+    {7}{{{\color{SQLNumbers}7}}}1
+    {8}{{{\color{SQLNumbers}8}}}1
+    {9}{{{\color{SQLNumbers}9}}}1,
+}
 
 %abstrakt, datovy slovnik
 % Zadame pozadovane vstupy pro generovani titulnich stran.
@@ -62,7 +134,7 @@ Důvod, který mě vedl pro vytvoření nové knihovny popisuje kapitola.
 
 \section{Vrstvená architektura}
 
-Použití vrstev je jedna z nejčastějších technik využívaných pro zjednodušení komplexnosti složitých systémů \cite{fowler}. Vrstvy ve vrstvené architektuře popisují logické seskupení funkcí a komponent v aplikaci. Shlukují komponenty podle typu funkcí a ulehčují tak jejich znovupoužitelnost. Vrstvy nemusí být přitom ani fyzicky oddělené, pouze vymezují a rozdělují aplikaci do logických celků. Každá z vrstev této architektury komunikuje pouze se svými sousedními vrstvami a nestará se o další části systému. Vrstva na nižší úrovni poskytuje rozhraní, které je známé vrstvě o úroveň výše. Tato architektura tak umožňuje jednoduše nahradit nebo změnit jednotlivé vrstvy aniž by to ovlivnilo ostatní vrstvy. \\
+Použití vrstev je jedna z nejčastějších technik využívaných pro zjednodušení komplexnosti složitých systémů \cite{fowler}. Vrstvy ve vrstvené architektuře popisují logické seskupení funkcí a komponent v aplikaci. Shlukují komponenty podle typu funkcí a ulehčují tak jejich znovupoužitelnost. Vrstvy nemusí být přitom ani fyzicky oddělené, pouze vymezují a rozdělují aplikaci do logických celků. Každá z vrstev této architektury komunikuje pouze se svými sousedními vrstvami a nestará se o další části systému. Vrstva na nižší úrovni poskytuje rozhraní, které je známé vrstvě o úroveň výše. Tato architektura tak umožňuje jednoduše nahradit nebo změnit jednotlivé vrstvy, aniž by to ovlivnilo ostatní vrstvy. \\
 Při vytváření aplikace založené na této architektuře je tak možno postupovat ve vývoji jednotlivých vrstev souběžně. Tohoto je dosaženo pomocí předem určeného rozhraní. Mezi další výhody patří také jednodušší údržba a testování, kde lze využít i tzv. mock-up testů. \\
 Nevýhodou vrstev je, že při vysokém počtu se můžou velmi negativně projevovat na výkonu celého systému. Nejvýraznějším vlivem je potřeba rozhraní pro převod dat, jelikož každá z vrstev má vlastní logiku a interpretuje data vlastním způsobem. Dalším problémem jsou změny, které ovlivňují všechny vrstvy o úroveň výše tzv. kaskádové změny \cite{dresler}. V informačních systémech to může být například přidání databázového sloupce. \\
 Vrstvenou architekturu lze aplikovat nezávisle na typu aplikace \cite{msdn}. Příkladem použití této architektury je referenční model ISO/OSI\footnote{ http://standards.iso.org/ittf/PubliclyAvailableStandards/s020269\_ISO\_IEC\_7498-1\_1994(E).zip}. \\
@@ -76,7 +148,7 @@ Datová vrstva zajišťuje manipulaci se zdrojem dat nebo datovým úložištěm
 
 \subsection{Datová vrstva aplikačního softwaru}
 \label{subsec:Data-layer}
-Velice často je třeba, aby data zpracovávána aplikací byla perzistentní. Tímto pojmem se rozumí trvalé zachování dat po zastavení provozu aplikace nebo i po výpadku systému. Jako nástroje poskytující tuto funkci jsou dnes hojně rozšířené relační databáze. \\
+Velice často je třeba, aby data zpracovávaná aplikací byla perzistentní. Tímto pojmem se rozumí trvalé zachování dat po zastavení provozu aplikace nebo i po výpadku systému. Jako nástroje poskytující tuto funkci jsou dnes hojně rozšířené relační databáze. \\
 Princip datové vrstvy při použití relačních databází zůstává stejný. Mezi její funkce patří:
 \begin{itemize}
 \item správa spojení,
@@ -113,7 +185,7 @@ Příkladem DAL jsou knihovny a rámce psycopg2, MySQL Connector/NET, PDO, JDBC,
 
 Objektově relační (O/R) mapovaní, jak už název napovídá, mapuje entity z relačního modelu na doménové objekty v aplikační logice nejčastěji pomocí objektů nebo tříd. \\
 Pod pojmem doména rozumíme u aplikace oblast z reálného světa, pro kterou se tato aplikace snaží vyřešit nebo zjednodušit specifický problém. Doména vymezuje rozsah působnosti aplikace a určuje doménové objekty. Tyto objekty se v objektově orientovaném jazyce modelují nejčastěji pomocí tříd. Například, pokud je doména nákup a prodej zboží, za doménové objekty lze považovat kupujícího a objednávku. Martin Fowler definuje ve své publikaci několik návrhových vzorů, které popisují modelování doménových objektů a přístup k doménové logice. Mezi tyto vzory patří \textit{Transaction Script}, \textit{Domain Model} a \textit{Table Module} \cite{fowler}. Popis těchto vzorů je nad rámec této diplomové práce. Tyto návrhové vzory se však berou v potaz při návrhu objektově relačního mapování. \\
-Podobně jako u DAL se i pod zkratkou ORM někdy označují rámce implementující O/R mapovaní. Tyto rámce kromě O/R mapování obsahují funkce potřebné pro komunikaci s relační databází popsané výše v sekci \ref{subsec:Data-layer}. Někdy i využívají existujících DAL, které tyto funkce obsahují a přidávají k nim O/R mapování. Většinou obsahují také DBAL. \\
+Podobně jako u DAL se i pod zkratkou ORM (Object-relational mapper) někdy označují rámce implementující O/R mapovaní. Tyto rámce kromě O/R mapování obsahují funkce potřebné pro komunikaci s relační databází popsané výše v sekci \ref{subsec:Data-layer}. Někdy i využívají existujících DAL, které tyto funkce obsahují a přidávají k nim O/R mapování. Většinou obsahují také DBAL. \\
 
 \subsection{Rozhraní datové vrstvy}
 
@@ -122,7 +194,7 @@ Každé ORM definuje způsob, kterým datová vrstva komunikuje s aplikační vr
 \subsubsection{Table Data Gateway}
 
 Table Data Gateway využívá třídy jako brány k tabulkám. Tabulka nebo podobný databázový objekt je namapována pomocí třídy. Třída obsahuje metody pouze pro ukládání, mazání a vyhledávání v datech tabulky. Jedna instance této třídy přitom poskytuje rozhraní ke všem záznamům v tabulce.  Ke konkrétnímu řádku tabulky se lze dostat jen předáním klíče, jedinečného identifikátoru. Tento návrhový vzor je ve většině případů bezstavový. \\
-Každá metoda třídy abstrahující tabulku skrývá za svým rozhraním SQL. Nejčastěji komunikuje přímo s databázovým ovladačem a předává mu vytvořené SQL. Data jsou pak vrácena ve formě v jaké je vrací ovladač, v objektu typu \textit{Record Set}. Record Set je generická reprezentace relačních dat v paměti, většinou podobná poli nebo seznamu. Metody pro vyhledávání v datech pak vracejí vždy tento objekt i pokud se jedná pouze o jediný záznam. Vrácená data navíc neobsahují žádnou referenci k tomuto rozhraní. Toto může být problém a proto se vrácená data někdy obalují dalším objektem. Tento objekt se označuje jako \textit{Data Transfer Object} \cite{fowler}. \\
+Každá metoda třídy abstrahující tabulku skrývá za svým rozhraním SQL. Nejčastěji komunikuje přímo s databázovým ovladačem a předává mu vytvořené SQL. Data jsou pak vrácena ve formě v jaké je vrací ovladač, v objektu typu \textit{Record Set}. Record Set je generická reprezentace relačních dat v paměti, většinou podobná poli nebo seznamu. Metody pro vyhledávání v datech pak vracejí vždy tento objekt, i pokud se jedná pouze o jediný záznam. Vrácená data navíc neobsahují žádnou referenci k tomuto rozhraní. Toto může být problém a proto se vrácená data někdy obalují dalším objektem. Tento objekt se označuje jako \textit{Data Transfer Object} \cite{fowler}. \\
 Výhodou při použití tohoto vzoru je, že jeho rozhraní lze využít jak pro manipulaci relačních dat, tak pro uložené procedury. Také shlukuje SQL na jedno místo, což zjednodušuje optimalizaci. Table Data Gateway lze lehce využít jako rozhraní datové vrstvy při použití vzorů Table Module nebo Transaction Stript v aplikační logice. \\
 Příkladem tohoto návrhového vzoru je obrázek \ref{fig:TableDataGateway}. Na obrázku je třída PersonGateway, která slouží jako brána k databázové tabulce Person.
 
@@ -137,7 +209,7 @@ Příklad návrhového vzoru Row Data Gateway zobrazuje obrázek \ref{fig:RowDat
 
 \InsertFigure{rowdatagateway.png}{40mm}{Ukázka použití návrhového vzoru Row Data Gateway \cite[str. 154]{fowler}}{fig:RowDataGateway}
 
-\subsubsection{Active Recod}
+\subsubsection{Active Record}
 
 Active Record je návrhový vzor podobný Row Data Gateway. Stejně jako Row Data Gateway mapuje struktury v datové vrstvě velmi úzce se strukturou databáze. Třídy tak korespondují s tabulkami v databázi a jejich instance a atributy s řádky a sloupci tabulek. Oproti Row Data Gateway však třídy obsahují navíc i aplikační logiku a většinou jsou tak považovány i za doménové objekty. \\
 \uv{Třída ve vzoru Active Record typicky obsahuje metody, které mají za úkol následující:
@@ -149,12 +221,12 @@ Active Record je návrhový vzor podobný Row Data Gateway. Stejně jako Row Dat
 \item Metody pro získání a nastavování hodnot atributů
 \item Implementace části aplikační logiky
 \end{itemize}}\cite[str. 160]{fowler} \\
-Tento návrhový vzor je intuitivním přístupem, pokud při návrhu databázového schématu korespondují tabulky s doménovými objekty. Proto a pro svoji jednoduchost je dnes velmi rozšířeným a často používaným vzorem při návrhu ORM. Používá se hlavně pro jednoduché systémy, kterým umožňuje rychlou implementaci rozhraní datové vrstvy. \\
+Tento návrhový vzor je intuitivním přístupem, pokud při návrhu databázového schématu korespondují tabulky s doménovými objekty. Proto a pro svou jednoduchost je dnes velmi rozšířeným a často používaným vzorem při návrhu ORM. Používá se hlavně pro jednoduché systémy, kterým umožňuje rychlou implementaci rozhraní datové vrstvy. \\
 Mezi nevýhody návrhového vzoru Active Record patří mapování vztahů a dědičnosti, které z části rozbíjí jeho principy a přispívají tak ke špatné struktuře kódu a chybám, které z toho plynou. Podobný problém nastává při složitější aplikační logice, jelikož pak třídy výrazně nabudou na objemu a zastávají nemalý počet funkcí. Toto vede ke špatně testovatelným objektům a nevyhnutelně k chybám. Active Record se nevyplatí používat, pokud se doménové objekty liší od struktur v databázi nebo pokud by v budoucnu mohlo k takovýmto změnám dojít.
 
 \subsubsection{Data Mapper}
 
-Data Mapper se využívá při složitější aplikační logice, při rozdílném objektovém a relačním schématu nebo často i pokud je třeba pracovat s již existující databází. Doménové objekty v aplikační logice se při použití tohoto vzoru nemusí shodovat s databázovým schématem. Lze je vytvořit naprosto nezávisle. Je tak možné kdykoliv změnit databázové schéma nebo struktury v aplikační logice z čehož vyplývá mnoho výhod. \\
+Data Mapper se využívá při složitější aplikační logice, při rozdílném objektovém a relačním schématu nebo často i pokud je třeba pracovat s již existující databází. Doménové objekty v aplikační logice se při použití tohoto vzoru nemusí shodovat s databázovým schématem. Lze je vytvořit naprosto nezávisle. Je tak možné kdykoliv změnit databázové schéma nebo struktury v aplikační logice, z čehož vyplývá mnoho výhod. \\
 Nevýhodou tohoto přístupu je, že přidává další vrstvu mezi databázi a aplikační vrstvu. Toto se může negativně projevovat na celkovém výkonu a složitosti systému, proto se Data Mapper nedoporučuje používat pro jednoduché případy, které lze vyřešit například pomocí vzoru Active Record.\\
 Data Mapper komunikuje s aplikační vrstvou pomocí mapovací třídy, která poskytuje rozhraní k získávání doménových objektů. Mapovací třída může abstrahovat jednu databázovou tabulku, její část nebo i více tabulek. Většinou je výhodnější pro jednu doménovou třídu vytvořit vždy jednu mapovací třídu. \\
 Obrázek \ref{fig:DataMapper} zobrazuje jednoduchý příklad návrhového vzoru Data Mapper. Na obrázku je  mapovací třída PersonMapper, která získává data z databáze a vrací je ve formě instancí doménové třídy Person. PersonMapper poskytuje metody i pro ukládání a mazání těchto instancí. Implementace získávání dat je před třídou Person skrytá a databázové schéma může vypadat jakkoliv. \\
@@ -166,11 +238,11 @@ Tento návrhový vzor má smysl používat jen tehdy, pokud se aplikační logik
 \subsection{Mapování vztahů}
 
 V relační databázi se používají cizí klíče pro vyjádření relací, ale objekty v objektově orientovaných jazycích dosahují vazeb za pomocí referencí na vazební objekt. ORM tento problém řeší mapováním vztahů.\\
-Mapování vztahů a relací je funkce, která dle mého názoru definuje ORM. ORM řídící se podle návrhových vzorů Row Data Gateway, Active Record a Data Mapper tuto funkci potřebují, jelikož mapují instance tříd, které abstrahují databázové tabulky, na záznamy těchto tabulek. \\
+Mapování vztahů a relací patří mezi základní funkce ORM. ORM řídící se podle návrhových vzorů Row Data Gateway, Active Record a Data Mapper tuto funkci potřebují, jelikož mapují instance tříd, které abstrahují databázové tabulky, na záznamy těchto tabulek. \\
 ORM poskytuje mapování pro všechny druhy binárních relací. \\
 \textbf{Relace N:1 nebo 1:1} se mapuje nejjednodušeji. Řádek s cizím klíčem v relační databázi je namapován pomocí objektu, který obsahuje referenci na objekt mapující záznam odkazovaný cizím klíčem. \\
-\textbf{Relace 1:N} je v relační databázi řešena opačným způsobem než v objektově orientovaných jazycích. Záznamy databázové tabulky Město obsahují cizí klíč na tabulku Stát, ale instance třídy Stát obsahují kolekci s referencemi na objekty třídy Město. ORM mapováním zajišťuje naplnění této kolekce vetšinou pomocí dodatečného dotazu do databáze a nebo spojením tabulek ihned při získávání objektu třídy Stát. \\
-\textbf{Relace N:M} se v relační algebře řeší pomocí vazební tabulky, v objektově orientovaném jazyce to však potřeba není. Objekty mohou totiž jako v případě 1:N obsahovat kolekce s referencemi na vazební objekty. Úkolem ORM je tyto kolekce naplnit, což je zajištěno opět spojením tabulek nebo dodatečným dotazem. Komplikované je v tomto případě i zabezpečení integrity dat. ORM by mělo integritu dat zajišťovat a to nejlépe za pomoci Identity Map. \\
+\textbf{Relace 1:N} je v relační databázi řešena opačným způsobem než v objektově orientovaných jazycích. Záznamy databázové tabulky Město obsahují cizí klíč na tabulku Stát, ale instance třídy Stát obsahují kolekci s referencemi na objekty třídy Město. ORM mapováním zajišťuje naplnění této kolekce vetšinou pomocí dodatečného dotazu do databáze, anebo spojením tabulek ihned při získávání objektu třídy Stát. \\
+\textbf{Relace N:M} se v relační algebře řeší pomocí vazební tabulky, v objektově orientovaném jazyce to však potřeba není. Objekty mohou totiž jako v případě 1:N obsahovat kolekce s referencemi na vazební objekty. Úkolem ORM je tyto kolekce naplnit, což je zajištěno opět spojením tabulek nebo dodatečným dotazem. Komplikované je v tomto případě i zabezpečení integrity dat. ORM by mělo integritu dat zajišťovat, a to nejlépe za pomoci Identity Map. \\
 Problémem, který musí ORM v souvislosti s mapováním vazeb řešit je nahrávání vazebních objektů do paměti. Nelze všechny vazby nahrávat najednou, protože hrozí, že by se do paměti načetlo velké množství dat, v nejhorším případě celá databáze. ORM proto většinou poskytuje funkci \textit{Lazy Loading}. Lazy Loading zajišťuje, že při načtení objektu z databáze do paměti se data, které tvoří relaci, nenahrají ihned, ale až při přístupu k dané relaci. \\
 Toto chování však také není vždy ideální, jelikož v určitých případech tak ORM může generovat mnoho přístupů do databáze, které by se daly jinak ušetřit. ORM by proto mělo sledovat, jak aplikační vrstva pracuje s objekty a podle toho nahrávat jejich vazby. 
 
@@ -178,7 +250,9 @@ Toto chování však také není vždy ideální, jelikož v určitých případ
 
 Objektově relační mapování definuje principy, pomocí kterých je možné mapovat dědičnost objektově orientovaných jazyků v relačních databázích. V současné době většina databází dědičnost přímo nepodporuje a neexistuje standard, který by tuto funkčnost pro databáze specifikoval. ORM proto často obsahuje funkce, které umožňují dědičnost různými způsoby simulovat. \\
 Dědičnost je jedním z hlavních prvků objektově orientovaných jazyků a prostřednictvím ORM je možné ji využívat při definici tříd, kterými ORM abstrahuje databázové tabulky. Mapování dědičnosti je možné dosáhnout třemi způsoby, které Martin Fowler pojmenovává jako \textit{Single Table Inheritance}, \textit{Concrete Table Inheritance} a \textit{Class Table Inheritance} \cite{fowler}. \\
-Nevýhodou mapování dědičnosti je složitější struktura tabulek a z toho plynoucí zhoršení výkonu operací prováděných nad databází. Obrázek zobrazuje příklady těchto tří návrhových vzorů.
+Nevýhodou tohoto mapování je složitější struktura tabulek a z toho plynoucí zhoršení výkonu operací prováděných nad databází. Obrázek \ref{fig:Inheritance} zobrazuje příklady těchto tří návrhových vzorů.
+
+\InsertFigure{inheritance2.png}{150mm}{Ukázka návrhových vzorů pro mapování dědičnosti \cite[str. 78-79]{fowler}}{fig:Inheritance}
 
 \subsubsection{Single Table Inheritance}
 
@@ -197,25 +271,113 @@ Concrete Table Inheritance se někdy označuje také jako horizontální mapová
 Při použití vzoru Class Table Inheritance je vytvořena tabulka v databázi pro každou třídu. Tato tabulka však obsahuje atributy, které jsou definované pouze v dané třídě. Výhodou je velmi jednoduché vytvoření tohoto mapování. Tabulka neobsahuje žádné prázdné sloupce a primární klíče jsou uloženy na jednom místě. Nevýhodou je složitost dotazů a jejich pomalé vyhodnocování, jelikož dochází ke spojování tabulek.  \\
 Jiným názvem pro Class Table Inheritance bývá také Joined Table Inheritance nebo vertikální mapování.
 
-\section{Proc novy framework}
+\section{Motivy vytvoření vlastní knihovny}
 
-Důvody, které mě vedly k vytvoření knihovny
-%- vlastní i cizí zkušenosti s pomalostí ORM
-%- zaměřeno na více databází
-% je nutne znat SQL
+Úkolem této diplomové práce bylo vytvořit knihovnu pracující na datové vrstvě aplikačního softwaru. Je zbytečné znovu vynalézat kolo a proto bych zde chtěl popsat důvody, které mě vedly k vytvoření vlastní knihovny. \\
+Žádná existující knihovna ani rámec nevyhovoval požadavkům.
 
-\section{Srovnani frameworku a jejich funkce pro zrychleni vykonu}
+\subsection{Nevýhody ORM}
 
-\section{DAL Framework}
+Zaměřeno na více databází
+ORM se snaží omezovat psaní SQL a prohlašuje, že k jeho užití není potřeba SQL znát. Toto je však chyba, jelikož bez znalosti SQL lze vytvářet pouze jednoduché aplikace. Je to dáno i tím, že pří složitější logice je třeba ORM obcházet pomocí vlastních dotazů. 
+Je nutne znat SQL
+zdvojnásobuje množství věcí k naučení: musíte umět SQL, abyste chápali, jak položit dotaz, a musíte umět přimět svoje ORM, aby ho za vás položilo
+tak se nakonec mapování na objekty rozbije
+Pokud máte firmu, kde Vám poskoci SQLka a obsluhu naťukají tak potom žádná. Pokud děláte aplikace sám pro sebe je každá ušetřená sekunda vývoje dobrá, optimalizuje se až je to potřeba.
+ORM encourages you do to loops all over the place, by hiding logic in objects that themselves are instantiating other objects
+Data pretrvavaji dele nez program, ktery je vyuziva
+Pouziti databazovych struktur
+\begin{lstlisting}[label=src:init,caption=Vytvoení nového reposite, style=customsql]
+SELECT * FROM customer WHERE customername = 'test' AND customerid = 1; varchar serial
+\end{lstlisting}
+\begin{lstlisting}[label=src:test,caption=Test, style=custompython]
+def f(x):
+	"""Doc"""
+    return "String" #comment
+\end{lstlisting}
 
-\section{Implementovane funkce}
+
+\section{Srovnání ORM rámců a jejich funkce pro zrychlení výkonu}
+
+Jelikož jedním z požadavků byl jazyk Python, budu se zde věnovat srovnání ORM rámců pro jazyk Python.
+
+\subsection{Django ORM}
+
+Django je rámec, vytvořený v jazyce Python pro tvorbu webových aplikací. Je to jeden z nejpopulárnějších a nejpoužívanějších rámců pro tento jazyk \cite{pwiki}. Tvůrci tohoto rámce nazývají Django jako \uv{webový framework pro perfekcionisty s termíny}. \uv{Django podporuje rychlý vývoj a čisté, pragmatické konstrukce} \cite{django.cz}. Jednoho z autorů tohoto rámce, Adriana Holovatyho, inspiroval kytarista Django Reinhard natolik, že po něm pojmenoval tento framework \cite{aholovaty}.  \\
+
+Django je známo hlavně pro své automaticky generované administrační rozhraní, obsáhlou dokumentaci a velkou komunitu uživatelů. Tento rámec se řídí návrhovým vzorem model-view-controller (MVC). ORM, které je součástí rámce představuje modelovou část. \\
+
+\subsubsection{Mapování v Django ORM}
+
+Objektově-relační mapování je v Djangu inspirováno návrhovým vzorem Active Record. Django pojmenovává každou ze tříd, které abstrahují databázovou tabulku, jako model. Model musí dědit z třídy \lstinline[style=custompython]|django.db.models.Model| a jeho atributy jsou definovány pomocí instancí potomků třídy \lstinline[style=custompython]|django.db.models.Field|. Výpis \ref{src:Mapping} zobrazuje příklad modelu Person. Django pomocí tohoto modelu vygeneruje jeho SQL reprezentaci, kterou zobrazuje výpis \ref{src:SQLMapping}. \\
+
+\begin{lstlisting}[style=custompython, emph={Person}, emphstyle={\bfseries}, label=src:Mapping, caption=Model Person]
+from django.db import models
+
+class Person(models.Model):
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+\end{lstlisting}
+
+\begin{lstlisting}[label=src:SQLMapping, caption=Reprezentace modelu Person v SQL, style=customsql]
+CREATE TABLE myapp_person (
+    "id" serial NOT NULL PRIMARY KEY,
+    "first_name" varchar(30) NOT NULL,
+    "last_name" varchar(30) NOT NULL
+);
+\end{lstlisting}
+
+Django lze používat i s existující databází. Z existující databáze lze vygenerovat pro každou tabulku automaticky příslušné modely. Django podporuje i více databází. Mezi podporované databáze patří SQLite, PostgreSQL, MySQL a Oracle. Databáze lze měnit, ale znamená to menší podporu konkrétních funkcí.
+
+\subsubsection{Dotazování}
+
+\subsubsection{Výkon Django ORM}
+
+Active record - models
+execute common queries - not to replace all sql
+iconsistency in syntax
+hard things aren't possible -> i mnoho omezeni
+API is great for simple cases
+lze pouzivat s existujici databazi
+lze vygenerovat databazi pomoci modelu
+nepodporuje vice sloupcovy primarni klic
+vazby - n:1, n:m, 1:1, lze vytvaret vazby na self, existuji zpetne vazby
+dedicnost - podporuje concrete inheritance, class inheritance
+model pro abstrahovani radku tabulek a manager pro staticke metody implicitne s nazvem objects
+QuerySet objekt reprezentuje kolekci objektu z databaze, all, filter, exclude pouzivaji field lookups - syntaxe abstrahujici sql, queryset pouziva lazy loading
+get pouziva stejny input, ale vraci jeden objekt
+limit, offset query set \[offset:limit\], order\_by
+queryset index [idx] db request
+field lookups pouzivaji \_\_, predpoklada nazev policka modelu
+field lookups lze vyuzit i pro joiny, \_\_ pro relaci, funguje i pro backwards relations
+F objekt pro porovnavani s jinymi poli, lze pouzit \_\_ pro relaci
+cache pro queryset, nefunguje uplne 100\%, queryset delete, update
+Q objekt pro specifikace field lookups, pouziva se pri OR
+update posila vse, ne jenom zmeny
+backward relations vraci queryset
+funkce aggregate - Avg, Max, Min, Sum, Count bere stejny argument jako F, vraci agregovane hodnoty
+funkce annotate - vraci agregovane hodnoty pro kazdy radek
+podedit manager a pridat vlastni dotazy pro celou tabulku, lze jich vytvorit vice pro jeden model
+SQL lze napsat pomoci metody raw nebo pomoci cursoru. raw se vola pomoci manageru a vraci instance modelu konkretne rawqueryset, metoda raw se snazi namapovat vysledek na instance - django dal neparsuje dotaz, nelze tedy vyuzit metody jako [:] a filter atd.. django prida i atributy navic, co nejsou v modelu, pokud se pouzi je JOIN intepretuje je se kazdy radek jako jedna instance - duplicitni instance, nevytvori se kolekce a relace se nezakesuji
+lze django uplne obejit a pouzit cursor, pouziva standard pep249
+operace jsou hned commitnuty save a delete, podporuje i transakce pro request, umoznuje transakce ridit manualne, umoznuje vytvare savepoints a rollback nebo commit
+
+indexy, lze je vytvorit z djanga
+defer a only, se nevyplaci pouzivat vsude - django overhead
+bulk create, queryset update, delete
+
+
+\subsection{SQLAlchemy}
+sql oriented
+
+\section{Implementace knihovny pypg}
 
 %-vysvetleni syntaxe, vsech mechanismu do podrobna
 %-komentare ve zdrojovem kodu a principy clean code
 
-\section{Dalsi funkce, ktere budou v budoucnu implementovany}
+\subsection{Dalsi funkce, ktere budou v budoucnu implementovany}
 
-\section{Porovnani rychlosti DAL s ORM a jinyma}
+\section{Porovnani rychlosti pypg s ORM rámci}
 
 \section{Závěr}
 \label{sec:Conclusion}
@@ -229,6 +391,9 @@ Důvody, které mě vedly k vytvoření knihovny
 \bibitem{fowler-ioc} http://martinfowler.com/bliki/InversionOfControl.html
 \bibitem{dbprogrammer} http://database-programmer.blogspot.cz/2010/12/historical-perspective-of-orm-and.html
 \bibitem{dresler} http://www.robertdresler.cz/2011/04/vicevrstve-architektury-aplikaci.html
+\bibitem{pwiki} http://wiki.python.org/moin/WebFrameworks
+\bibitem{django.cz} http://www.djangoproject.cz/
+\bibitem{aholovaty} http://en.wikipedia.org/wiki/Adrian\_Holovaty
 
 \end{thebibliography}
 
