@@ -29,9 +29,22 @@ showspaces=false,
 showtabs=false,
 showstringspaces=false,
 tabsize=4,
+numberstyle=\footnotesize,
+numbersep=1em,
 % Basic
 basicstyle=\ttfamily\small\mdseries\setstretch{1},
 language=Python,
+literate=%
+	{0}{{{\color{Numbers}0}}}1
+    {1}{{{\color{Numbers}1}}}1
+    {2}{{{\color{Numbers}2}}}1
+    {3}{{{\color{Numbers}3}}}1
+    {4}{{{\color{Numbers}4}}}1
+    {5}{{{\color{Numbers}5}}}1
+    {6}{{{\color{Numbers}6}}}1
+    {7}{{{\color{Numbers}7}}}1
+    {8}{{{\color{Numbers}8}}}1
+    {9}{{{\color{Numbers}9}}}1,
 % Comments
 commentstyle=\color{Gray}\slshape,
 % Strings
@@ -46,17 +59,6 @@ morekeywords={[2]@invariant},
 keywordstyle={[2]\color{Decorators}\slshape},
 emph={self},
 emphstyle={\color{self}\slshape},
-literate=%
-	{0}{{{\color{Numbers}0}}}1
-    {1}{{{\color{Numbers}1}}}1
-    {2}{{{\color{Numbers}2}}}1
-    {3}{{{\color{Numbers}3}}}1
-    {4}{{{\color{Numbers}4}}}1
-    {5}{{{\color{Numbers}5}}}1
-    {6}{{{\color{Numbers}6}}}1
-    {7}{{{\color{Numbers}7}}}1
-    {8}{{{\color{Numbers}8}}}1
-    {9}{{{\color{Numbers}9}}}1,
 %
 }
 \lstdefinestyle{customsql}{
@@ -185,7 +187,7 @@ Příkladem DAL jsou knihovny a rámce psycopg2, MySQL Connector/NET, PDO, JDBC,
 
 Objektově relační (O/R) mapovaní, jak už název napovídá, mapuje entity z relačního modelu na doménové objekty v aplikační logice nejčastěji pomocí objektů nebo tříd. \\
 Pod pojmem doména rozumíme u aplikace oblast z reálného světa, pro kterou se tato aplikace snaží vyřešit nebo zjednodušit specifický problém. Doména vymezuje rozsah působnosti aplikace a určuje doménové objekty. Tyto objekty se v objektově orientovaném jazyce modelují nejčastěji pomocí tříd. Například, pokud je doména nákup a prodej zboží, za doménové objekty lze považovat kupujícího a objednávku. Martin Fowler definuje ve své publikaci několik návrhových vzorů, které popisují modelování doménových objektů a přístup k doménové logice. Mezi tyto vzory patří \textit{Transaction Script}, \textit{Domain Model} a \textit{Table Module} \cite{fowler}. Popis těchto vzorů je nad rámec této diplomové práce. Tyto návrhové vzory se však berou v potaz při návrhu objektově relačního mapování. \\
-Podobně jako u DAL se i pod zkratkou ORM (Object-relational mapper) někdy označují rámce implementující O/R mapovaní. Tyto rámce kromě O/R mapování obsahují funkce potřebné pro komunikaci s relační databází popsané výše v sekci \ref{subsec:Data-layer}. Někdy i využívají existujících DAL, které tyto funkce obsahují a přidávají k nim O/R mapování. Většinou obsahují také DBAL. \\
+Podobně jako u DAL se i pod zkratkou ORM někdy označují rámce implementující O/R mapovaní. Tyto rámce kromě O/R mapování obsahují funkce potřebné pro komunikaci s relační databází popsané výše v sekci \ref{subsec:Data-layer}. Někdy i využívají existujících DAL, které tyto funkce obsahují a přidávají k nim O/R mapování. Většinou obsahují také DBAL. \\
 
 \subsection{Rozhraní datové vrstvy}
 
@@ -236,6 +238,7 @@ Tento návrhový vzor má smysl používat jen tehdy, pokud se aplikační logik
 \InsertFigure{datamapper.png}{105mm}{Ukázka použití návrhového vzoru Data Mapper \cite[str. 164]{fowler}}{fig:DataMapper}
 
 \subsection{Mapování vztahů}
+\label{subsec:Relmapping}
 
 V relační databázi se používají cizí klíče pro vyjádření relací, ale objekty v objektově orientovaných jazycích dosahují vazeb za pomocí referencí na vazební objekt. ORM tento problém řeší mapováním vztahů.\\
 Mapování vztahů a relací patří mezi základní funkce ORM. ORM řídící se podle návrhových vzorů Row Data Gateway, Active Record a Data Mapper tuto funkci potřebují, jelikož mapují instance tříd, které abstrahují databázové tabulky, na záznamy těchto tabulek. \\
@@ -252,7 +255,7 @@ Objektově relační mapování definuje principy, pomocí kterých je možné m
 Dědičnost je jedním z hlavních prvků objektově orientovaných jazyků a prostřednictvím ORM je možné ji využívat při definici tříd, kterými ORM abstrahuje databázové tabulky. Mapování dědičnosti je možné dosáhnout třemi způsoby, které Martin Fowler pojmenovává jako \textit{Single Table Inheritance}, \textit{Concrete Table Inheritance} a \textit{Class Table Inheritance} \cite{fowler}. \\
 Nevýhodou tohoto mapování je složitější struktura tabulek a z toho plynoucí zhoršení výkonu operací prováděných nad databází. Obrázek \ref{fig:Inheritance} zobrazuje příklady těchto tří návrhových vzorů.
 
-\InsertFigure{inheritance2.png}{150mm}{Ukázka návrhových vzorů pro mapování dědičnosti \cite[str. 78-79]{fowler}}{fig:Inheritance}
+\InsertFigure{inheritance.png}{150mm}{Ukázka návrhových vzorů pro mapování dědičnosti \cite[str. 78-79]{fowler}}{fig:Inheritance}
 
 \subsubsection{Single Table Inheritance}
 
@@ -271,67 +274,109 @@ Concrete Table Inheritance se někdy označuje také jako horizontální mapová
 Při použití vzoru Class Table Inheritance je vytvořena tabulka v databázi pro každou třídu. Tato tabulka však obsahuje atributy, které jsou definované pouze v dané třídě. Výhodou je velmi jednoduché vytvoření tohoto mapování. Tabulka neobsahuje žádné prázdné sloupce a primární klíče jsou uloženy na jednom místě. Nevýhodou je složitost dotazů a jejich pomalé vyhodnocování, jelikož dochází ke spojování tabulek.  \\
 Jiným názvem pro Class Table Inheritance bývá také Joined Table Inheritance nebo vertikální mapování.
 
-\section{Motivy vytvoření vlastní knihovny}
-
-Úkolem této diplomové práce bylo vytvořit knihovnu pracující na datové vrstvě aplikačního softwaru. Je zbytečné znovu vynalézat kolo a proto bych zde chtěl popsat důvody, které mě vedly k vytvoření vlastní knihovny. \\
-Žádná existující knihovna ani rámec nevyhovoval požadavkům.
-
-\subsection{Nevýhody ORM}
-
-Zaměřeno na více databází
-ORM se snaží omezovat psaní SQL a prohlašuje, že k jeho užití není potřeba SQL znát. Toto je však chyba, jelikož bez znalosti SQL lze vytvářet pouze jednoduché aplikace. Je to dáno i tím, že pří složitější logice je třeba ORM obcházet pomocí vlastních dotazů. 
-Je nutne znat SQL
-zdvojnásobuje množství věcí k naučení: musíte umět SQL, abyste chápali, jak položit dotaz, a musíte umět přimět svoje ORM, aby ho za vás položilo
-tak se nakonec mapování na objekty rozbije
-Pokud máte firmu, kde Vám poskoci SQLka a obsluhu naťukají tak potom žádná. Pokud děláte aplikace sám pro sebe je každá ušetřená sekunda vývoje dobrá, optimalizuje se až je to potřeba.
-ORM encourages you do to loops all over the place, by hiding logic in objects that themselves are instantiating other objects
-Data pretrvavaji dele nez program, ktery je vyuziva
-Pouziti databazovych struktur
-\begin{lstlisting}[label=src:init,caption=Vytvoení nového reposite, style=customsql]
-SELECT * FROM customer WHERE customername = 'test' AND customerid = 1; varchar serial
-\end{lstlisting}
-\begin{lstlisting}[label=src:test,caption=Test, style=custompython]
-def f(x):
-	"""Doc"""
-    return "String" #comment
-\end{lstlisting}
-
-
 \section{Srovnání ORM rámců a jejich funkce pro zrychlení výkonu}
 
 Jelikož jedním z požadavků byl jazyk Python, budu se zde věnovat srovnání ORM rámců pro jazyk Python.
 
 \subsection{Django ORM}
 
-Django je rámec, vytvořený v jazyce Python pro tvorbu webových aplikací. Je to jeden z nejpopulárnějších a nejpoužívanějších rámců pro tento jazyk \cite{pwiki}. Tvůrci tohoto rámce nazývají Django jako \uv{webový framework pro perfekcionisty s termíny}. \uv{Django podporuje rychlý vývoj a čisté, pragmatické konstrukce} \cite{django.cz}. Jednoho z autorů tohoto rámce, Adriana Holovatyho, inspiroval kytarista Django Reinhard natolik, že po něm pojmenoval tento framework \cite{aholovaty}.  \\
+Django je rámec vytvořený v jazyce Python pro tvorbu webových aplikací. Je to jeden z nejpopulárnějších a nejpoužívanějších rámců pro tento jazyk \cite{pwiki}. Tvůrci tohoto rámce nazývají Django jako \uv{webový framework pro perfekcionisty s termíny}. \uv{Django podporuje rychlý vývoj a čisté, pragmatické konstrukce} \cite{django.cz}. Jednoho z autorů tohoto rámce, Adriana Holovatyho, inspiroval kytarista Django Reinhard natolik, že po něm pojmenoval tento framework \cite{aholovaty}.  \\
 
-Django je známo hlavně pro své automaticky generované administrační rozhraní, obsáhlou dokumentaci a velkou komunitu uživatelů. Tento rámec se řídí návrhovým vzorem model-view-controller (MVC). ORM, které je součástí rámce představuje modelovou část. \\
+Django je známo hlavně pro své automaticky generované administrační rozhraní, obsáhlou dokumentaci a velkou komunitu uživatelů. Tento rámec se řídí návrhovým vzorem model-view-controller (MVC). ORM, které je součástí rámce představuje modelovou část. \\ 
+ORM obsahuje i DBDAL a lze jej tak využít nezávisle na konkrétním SŘBD. Mezi podporované SŘBD patří Oracle, MySQL, PostgreSQL a SQLite. Pro SQLite jsou však některé funkce omezeny a nelze tak v případě jeho použití využít celkový potenciál ORM. Je to však dáno i omezenou funkčností tohoto SŘBD ve srovnání s ostatními. \\
+
+V současné době je Django ve verzi 1.5. Následující text tak popisuje vlastnosti, které jsou obsaženy v této verzi.
 
 \subsubsection{Mapování v Django ORM}
 
-Objektově-relační mapování je v Djangu inspirováno návrhovým vzorem Active Record. Django pojmenovává každou ze tříd, které abstrahují databázovou tabulku, jako model. Model musí dědit z třídy \lstinline[style=custompython]|django.db.models.Model| a jeho atributy jsou definovány pomocí instancí potomků třídy \lstinline[style=custompython]|django.db.models.Field|. Výpis \ref{src:Mapping} zobrazuje příklad modelu Person. Django pomocí tohoto modelu vygeneruje jeho SQL reprezentaci, kterou zobrazuje výpis \ref{src:SQLMapping}. \\
+Objektově-relační mapování je v Djangu inspirováno návrhovým vzorem Active Record. Třída, která abstrahuje databázovou tabulku, tedy kromě mapování obsahuje i aplikační logiku. Tuto třídu Django pojmenovává jako \uv{model}. \\
+Aby třída získala vlastnosti modelu musí dědit z třídy \lstinline[style=custompython]|django.db.models.Model|. Při použití existující databáze lze definici této třídy automaticky vygenerovat pro každou tabulku. Django však preferuje přístup, při kterém se nejdříve vytvoří modely, a na základě této definice pak struktura v databázi. \\
+Pro mapování sloupců používá model atributy, které jsou instancemi potomků třídy \lstinline[style=custompython]|django.db.models.Field|. Podporovány jsou pouze nejčastěji používané datové typy, což je dáno nezávislostí ORM na konkrétním SŘBD. Kromě těchto typů Django některé základní typy rozšiřuje a přidává k nim aplikační logiku, například atribut obsahující pouze emailové adresy. \\
 
-\begin{lstlisting}[style=custompython, emph={Person}, emphstyle={\bfseries}, label=src:Mapping, caption=Model Person]
+Příkladem modelu je třída Author ve výpisu \ref{src:Mapping}. Tento model je namapován na databázovou tabulku myapp\_author, kterou Django vygeneruje automaticky. Výpis \ref{src:SQLAuthorMapping} zobrazuje vygenerované SQL pro SŘBD PostgreSQL pro model Author (kompletní SQL lze nalézt ve výpisu \ref{src:SQLMapping}). \\
+Automaticky generován je i primární klíč, toto chování lze však změnit. Je ovšem vyžadováno, aby každá tabulka měla primární klíč. Dále pak musí primární klíč sestávat pouze z jednoho atributu, jelikož ORM nepodporuje složené klíče. \\
+V definici modelu lze zadat i vytvoření indexu nebo unikátního integritního omezení pro konkrétní atribut. ORM indexy automaticky vytváří pro cizí klíče. \\
+
+\begin{lstlisting}[style=custompython, emph={ Blog, Person, Author, Entry, VlogEntry}, emphstyle={\bfseries}, label=src:Mapping, caption=Modely jednoduché aplikace pro vytváření blogů]
 from django.db import models
 
 class Person(models.Model):
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+
+    class Meta:
+        abstract = True
+
+class Author(Person):
+    email = models.EmailField(db_index=True, unique=True)
+    biography = models.TextField()
+    photo = models.ImageField(upload_to="photos/")
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+
+class Entry(models.Model):
+    blog = models.ForeignKey(Blog)
+    headline = models.CharField(max_length=255)
+    body_text = models.TextField()
+    pub_date = models.DateField()
+    mod_date = models.DateField()
+    authors = models.ManyToManyField(Author)
+    comments = models.IntegerField()
+    rating = models.IntegerField()
+
+class VlogEntry(Entry):
+    video = models.URLField()
+
 \end{lstlisting}
 
-\begin{lstlisting}[label=src:SQLMapping, caption=Reprezentace modelu Person v SQL, style=customsql]
-CREATE TABLE myapp_person (
+\begin{lstlisting}[label=src:SQLAuthorMapping, caption=Reprezentace modelu Author v PostgreSQL, style=customsql]
+CREATE TABLE "myapp_author" (
     "id" serial NOT NULL PRIMARY KEY,
-    "first_name" varchar(30) NOT NULL,
-    "last_name" varchar(30) NOT NULL
+    "first_name" varchar(50) NOT NULL,
+    "last_name" varchar(50) NOT NULL,
+    "email" varchar(75) NOT NULL,
+    "biography" text NOT NULL,
+    "photo" varchar(100) NOT NULL
 );
 \end{lstlisting}
 
-Django lze používat i s existující databází. Z existující databáze lze vygenerovat pro každou tabulku automaticky příslušné modely. Django podporuje i více databází. Mezi podporované databáze patří SQLite, PostgreSQL, MySQL a Oracle. Databáze lze měnit, ale znamená to menší podporu konkrétních funkcí.
+Django ORM podporuje i použití více databází najednou. Pro každý model je v takovém případě potřeba určit k jaké databázi náleží. \\
+Výpis \ref{src:Mapping} zobrazuje jednoduchý model aplikace umožňující vytváření vlastních blogů. Tento model je použit pro všechny další příklady v této kapitole.
+
+\begin{lstlisting}[style=custompython, numbers=left, label=src:Basic, caption={Ukázka práce s instancí, relacemi a dědičností}]
+>>> blog = Blog(name="David's new blog.")
+>>> blog.full_clean()
+ValidationError: {'description': [u'This field cannot be blank.']}
+>>> blog.save()
+>>> blog.id
+1
+>>> author = Author.objects.create(first_name="David", last_name="Krutky", email="david.krutky.st@vsb.cz")
+>>> entry = Entry(blog=blog, headline="New entry", pub_date=date(2013, 5, 7), mod_date=date(2013, 5, 7), comments=0, rating=0)
+>>> entry.save()
+>>> entry.authors.add(author)
+
+\end{lstlisting}
+
+\paragraph{Instance modelu}
+
+Instance modelu kromě dat řádku tabulky obsahují i metody pro práci s těmito daty. Mezi nejdůležitější patří metody pro validaci, uložení a mazání dat. Data se tedy před uložením validují i v ORM i v databázi. Toto má za důsledek mírně zvýšenou složitost, jelikož například při validování cizího klíče ORM kontroluje, zda-li v databázi existuje odkazovaný záznam. \\
+Instance používají stejnou metodu pro vytvoření nového záznamu i pro uložení změn. Pokud instance neobsahuje primární klíč, je vytvořen nový záznam. Pokud klíč obsahuje, proběhne nejdříve kontrola, zda-li záznam se stejným primárním klíčem již existuje, a na základě výsledku se provede daný SQL příkaz. \\
+Změny dat v instanci se v databázi projevují až při zavolání metody pro uložení. 
+
+\paragraph{Mapování relací} Django ORM umožňuje definovat relace pro všechny způsoby popsané výše v sekci \ref{subsec:Relmapping}. Pro definování relace je potřeba využít tříd z balíku \lstinline[style=custompython]|django.db.models| a to \lstinline[style=custompython]|OneToOneField| pro relaci 1:1, \lstinline[style=custompython]|ForeignKey| pro 1:N nebo \lstinline[style=custompython]|ManyToManyField| pro N:M. Přístup k relačnímu objektu je pak realizován pomocí relačního atributu, jak zobrazuje výpis \ref{src:InstanceAttrs}. Pro získání relace je proveden dotaz do databáze. \\
+K relaci lze přistoupit i přes tzv. zpětnou relaci, kdy je možné se z odkazovaného objektu dostat na odkazující. V případě relace 1:N nebo N:M je možné relaci dále filtrovat pomocí stejných pravidel jako při dotazování. \\
+Při použití relace N:M je automaticky vytvořena vazební tabulka. Tuto tabulku lze předefinovat, pokud je potřeba, aby obsahovala doplňkové informace o vazbě. \\
+Je možno vytvořit i rekurzivní relaci, relaci na objekty stejného typu. \\
+
+\paragraph{Mapování děčnosti}
+
+ORM frameworku Django podporuje dva typy z výše popsaných návrhových vzorů mapování dědičnosti. Concrete Table Inheritance a Class Table Inheritance. \\
 
 \subsubsection{Dotazování}
 
-\subsubsection{Výkon Django ORM}
+\subsubsection{Optimalizace v Django ORM}
 
 Active record - models
 execute common queries - not to replace all sql
@@ -362,13 +407,49 @@ SQL lze napsat pomoci metody raw nebo pomoci cursoru. raw se vola pomoci manager
 lze django uplne obejit a pouzit cursor, pouziva standard pep249
 operace jsou hned commitnuty save a delete, podporuje i transakce pro request, umoznuje transakce ridit manualne, umoznuje vytvare savepoints a rollback nebo commit
 
-indexy, lze je vytvorit z djanga
+indexy a unique, lze je vytvorit z djanga i na vice poli
 defer a only, se nevyplaci pouzivat vsude - django overhead
 bulk create, queryset update, delete
+new in 1.5 specifikace poli, ktere se maji ulozit
+Avoiding Instantiation
 
+validace probiha v orm a pak i v db, nektera validace pouze v orm (unique for date), typy validace - nejdrive policka, pak cela tabulka a pak unique
+update vs insert - nejdrive se provede select a podle toho pak u/i. pouziva SELECT (1)
+queryset se evaluuje az pri iter, len atd..
+vyzkouset, jestli funguje limit a filter pro select\_related
+dotaz lze omezit ruznymi zpusoby - values vraci dict, values nevytvari instance modelu
+prefetch related nejde dale omezovat
+Raw - SQLBy definition, these extra lookups may not be portable to different database engines (because you’re explicitly writing SQL code) and violate the DRY principle, so you should avoid them if possible.
+because of the (probably correct) desire not to express things in terms of SQL
 
 \subsection{SQLAlchemy}
 sql oriented
+
+\section{Návrh knihovny pypg}
+
+Úkolem této diplomové práce bylo vytvořit knihovnu pracující na datové vrstvě aplikačního softwaru. Je zbytečné znovu vynalézat kolo a proto bych zde chtěl popsat důvody, které mě vedly k vytvoření vlastní knihovny. \\
+Žádná existující knihovna ani rámec nevyhovoval požadavkům.
+
+\subsection{Motivy vytvoření vlastní knihovny}
+
+Zaměřeno na více databází
+ORM se snaží omezovat psaní SQL a prohlašuje, že k jeho užití není potřeba SQL znát. Toto je však chyba, jelikož bez znalosti SQL lze vytvářet pouze jednoduché aplikace. Je to dáno i tím, že pří složitější logice je třeba ORM obcházet pomocí vlastních dotazů. 
+Je nutne znat SQL
+zdvojnásobuje množství věcí k naučení: musíte umět SQL, abyste chápali, jak položit dotaz, a musíte umět přimět svoje ORM, aby ho za vás položilo
+tak se nakonec mapování na objekty rozbije
+Pokud máte firmu, kde Vám poskoci SQLka a obsluhu naťukají tak potom žádná. Pokud děláte aplikace sám pro sebe je každá ušetřená sekunda vývoje dobrá, optimalizuje se až je to potřeba.
+ORM encourages you do to loops all over the place, by hiding logic in objects that themselves are instantiating other objects
+Data pretrvavaji dele nez program, ktery je vyuziva
+Pouziti databazovych struktur
+\begin{lstlisting}[label=src:init,caption=Vytvoení nového reposite, style=customsql]
+SELECT * FROM customer WHERE customername = 'test' AND customerid = 1; varchar serial
+\end{lstlisting}
+\begin{lstlisting}[label=src:test,caption=Test, style=custompython]
+def f(x):
+	"""Doc"""
+    return "String" #comment
+>>> Place.filter(10)
+\end{lstlisting}
 
 \section{Implementace knihovny pypg}
 
@@ -399,9 +480,49 @@ sql oriented
 
 
 \appendix
-\section{Grafy a měření}
-Tohle je příloha k práci. Většinou se sem dávají grafy, tabulky, které by vzhledem
-ke svému počtu překážely v textu diplomky.
+\section{SQL vygenerované pomocí Django ORM z výpisu \ref{src:Mapping}}
+\begin{lstlisting}[label=src:SQLMapping, caption=Reprezentace modelů z výpisu \ref{src:Mapping} v PostgreSQL, style=customsql]
+CREATE TABLE "myapp_blog" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "name" varchar(100) NOT NULL,
+    "description" text NOT NULL
+)
+;
+CREATE TABLE "myapp_author" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "first_name" varchar(50) NOT NULL,
+    "last_name" varchar(50) NOT NULL,
+    "email" varchar(75) NOT NULL,
+    "biography" text NOT NULL,
+    "photo" varchar(100) NOT NULL
+)
+;
+CREATE TABLE "myapp_entry_authors" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "entry_id" integer NOT NULL,
+    "author_id" integer NOT NULL REFERENCES "myapp_author" ("id") DEFERRABLE INITIALLY DEFERRED,
+    UNIQUE ("entry_id", "author_id")
+)
+;
+CREATE TABLE "myapp_entry" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "blog_id" integer NOT NULL REFERENCES "myapp_blog" ("id") DEFERRABLE INITIALLY DEFERRED,
+    "headline" varchar(255) NOT NULL,
+    "body_text" text NOT NULL,
+    "pub_date" date NOT NULL,
+    "mod_date" date NOT NULL,
+    "comments" integer NOT NULL,
+    "rating" integer NOT NULL
+)
+;
+ALTER TABLE "myapp_entry_authors" ADD CONSTRAINT "entry_id_refs_id_162c5c54" FOREIGN KEY ("entry_id") REFERENCES "myapp_entry" ("id") DEFERRABLE INITIALLY DEFERRED;
+CREATE TABLE "myapp_vlogentry" (
+    "entry_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "myapp_entry" ("id") DEFERRABLE INITIALLY DEFERRED,
+    "video" varchar(200) NOT NULL
+)
+;
+CREATE INDEX "myapp_entry_blog_id" ON "myapp_entry" ("blog_id");
+\end{lstlisting}
 \clearpage
 
 
