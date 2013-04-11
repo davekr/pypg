@@ -44,7 +44,23 @@ literate=%
     {6}{{{\color{Numbers}6}}}1
     {7}{{{\color{Numbers}7}}}1
     {8}{{{\color{Numbers}8}}}1
-    {9}{{{\color{Numbers}9}}}1,
+    {9}{{{\color{Numbers}9}}}1
+    {á}{{\'a}}1 
+	{é}{{\'e}}1 
+	{í}{{\'i}}1 
+	{ó}{{\'o}}1 
+	{ú}{{\'u}}1 
+	{ý}{{\'y}}1
+	{č}{{\v{c}}}1
+%	{ď}{{\v{d}}}1
+	{ě}{{\v{e}}}1
+%	{ň}{{\v{n}}}1	
+	{ř}{{\v{r}}}1
+	{š}{{\v{s}}}1
+%	{t}{{\v{ť}}}1
+	{ž}{{\v{z}}}1
+	{ě}{{\v{e}}}1
+	{ů}{\r u}1,
 % Comments
 commentstyle=\color{Gray}\slshape,
 % Strings
@@ -59,10 +75,12 @@ morekeywords={[2]@invariant},
 keywordstyle={[2]\color{Decorators}\slshape},
 emph={self},
 emphstyle={\color{self}\slshape},
-%
+inputencoding=utf8,
+extendedchars=true,
 }
 \lstdefinestyle{customsql}{
 language=SQL,
+morekeywords={DEFERRED, REFERENCES, text},
 keywordstyle=\color{SQLKeywords},
 stringstyle=\color{SQLStrings},
 literate=%
@@ -77,7 +95,6 @@ literate=%
     {8}{{{\color{SQLNumbers}8}}}1
     {9}{{{\color{SQLNumbers}9}}}1,
 }
-
 %abstrakt, datovy slovnik
 % Zadame pozadovane vstupy pro generovani titulnich stran.
 \Author{David Krutký}
@@ -250,7 +267,7 @@ Problémem, který musí ORM v souvislosti s mapováním vazeb řešit je nahrá
 Toto chování však také není vždy ideální, jelikož v určitých případech tak ORM může generovat mnoho přístupů do databáze, které by se daly jinak ušetřit. ORM by proto mělo sledovat, jak aplikační vrstva pracuje s objekty a podle toho nahrávat jejich vazby. 
 
 \subsection{Mapování dědičnosti}
-
+\label{subsec:Inhmapping}
 Objektově relační mapování definuje principy, pomocí kterých je možné mapovat dědičnost objektově orientovaných jazyků v relačních databázích. V současné době většina databází dědičnost přímo nepodporuje a neexistuje standard, který by tuto funkčnost pro databáze specifikoval. ORM proto často obsahuje funkce, které umožňují dědičnost různými způsoby simulovat. \\
 Dědičnost je jedním z hlavních prvků objektově orientovaných jazyků a prostřednictvím ORM je možné ji využívat při definici tříd, kterými ORM abstrahuje databázové tabulky. Mapování dědičnosti je možné dosáhnout třemi způsoby, které Martin Fowler pojmenovává jako \textit{Single Table Inheritance}, \textit{Concrete Table Inheritance} a \textit{Class Table Inheritance} \cite{fowler}. \\
 Nevýhodou tohoto mapování je složitější struktura tabulek a z toho plynoucí zhoršení výkonu operací prováděných nad databází. Obrázek \ref{fig:Inheritance} zobrazuje příklady těchto tří návrhových vzorů.
@@ -308,20 +325,20 @@ class Person(models.Model):
         abstract = True
 
 class Author(Person):
-    email = models.EmailField(db_index=True, unique=True)
+    email = models.EmailField(unique=True)
     biography = models.TextField()
     photo = models.ImageField(upload_to="photos/")
 
 class Blog(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, db_index=True)
     description = models.TextField()
 
 class Entry(models.Model):
     blog = models.ForeignKey(Blog)
     headline = models.CharField(max_length=255)
     body_text = models.TextField()
-    pub_date = models.DateField()
-    mod_date = models.DateField()
+    pub_date = models.DateField(auto_now_add=True)
+    mod_date = models.DateField(auto_now=True)
     authors = models.ManyToManyField(Author)
     comments = models.IntegerField()
     rating = models.IntegerField()
@@ -336,7 +353,7 @@ CREATE TABLE "myapp_author" (
     "id" serial NOT NULL PRIMARY KEY,
     "first_name" varchar(50) NOT NULL,
     "last_name" varchar(50) NOT NULL,
-    "email" varchar(75) NOT NULL,
+    "email" varchar(75) NOT NULL UNIQUE,
     "biography" text NOT NULL,
     "photo" varchar(100) NOT NULL
 );
@@ -345,54 +362,120 @@ CREATE TABLE "myapp_author" (
 Django ORM podporuje i použití více databází najednou. Pro každý model je v takovém případě potřeba určit k jaké databázi náleží. \\
 Výpis \ref{src:Mapping} zobrazuje jednoduchý model aplikace umožňující vytváření vlastních blogů. Tento model je použit pro všechny další příklady v této kapitole.
 
+\paragraph{Instance modelu}
+
+Instance modelu kromě dat řádku tabulky obsahují i metody pro práci s těmito daty. Mezi nejdůležitější patří metody pro validaci, uložení a mazání dat. Data se tedy před uložením validují i v ORM i v databázi. Toto má za důsledek mírně zvýšenou složitost, jelikož například při validování cizího klíče ORM kontroluje, zda-li v databázi existuje odkazovaný záznam. \\
+Ukázku validace zobrazuje výpis \ref{src:Basic}. Na řádku 3 je provedena validace instance modelu Blog. Validace vypíše, že nebyl nastaven atribut \uv{description}, ale přesto se povede na řádku 5 objekt uložit do databáze. ORM totiž pro textová pole bez hodnoty vkládá prázdný řetězec. \\
+Instance používají stejnou metodu pro vytvoření nového záznamu i pro uložení změn. Pokud instance neobsahuje primární klíč, je vytvořen nový záznam. Pokud klíč obsahuje, proběhne nejdříve kontrola, zda-li záznam se stejným primárním klíčem již existuje, a na základě výsledku se provede daný SQL příkaz. Ve výpisu \ref{src:Basic} je tedy na řádku 5 proveden \lstinline[style=customsql]|INSERT| a na řádku 9 proveden \lstinline[style=customsql]|UPDATE|. Tento výpis také zobrazuje na řádku 10 jiný způsob pro vytvoření nového záznamu.\\
+Změny dat v instanci se v databázi projeví až při zavolání metody pro uložení. 
+
+\paragraph{Mapování relací} Django ORM umožňuje definovat relace pro všechny způsoby popsané výše v sekci \ref{subsec:Relmapping}. Pro definování relace je potřeba využít tříd z balíku \lstinline[style=custompython]|django.db.models| a to \lstinline[style=custompython]|OneToOneField| pro relaci 1:1, \lstinline[style=custompython]|ForeignKey| pro 1:N nebo \lstinline[style=custompython]|ManyToManyField| pro N:M. Přístup k relačnímu objektu je pak realizován pomocí relačního atributu, jak zobrazuje výpis \ref{src:Basic} na řádku 13, kde je přistupováno k blogu konkrétního příspěvku. Pro získání relace je proveden dotaz do databáze. \\
+K relaci lze přistoupit i přes tzv. zpětnou relaci, kdy je možné se z odkazovaného objektu dostat na odkazující. V případě relace 1:N nebo N:M je možné relaci dále filtrovat pomocí stejných pravidel jako při dotazování. Řádek 15 ve výpisu \ref{src:Basic} zobrazuje přístup pomocí zpětné relace ke všem příspěvkům v blogu, a dále tyto příspěvky filtruje jen na ty, které nemají žádné komentáře.\\
+Při použití relace N:M je automaticky vytvořena vazební tabulka. Tuto tabulku lze předefinovat, pokud je potřeba, aby obsahovala doplňkové informace o vazbě. Ve výpisu \ref{src:Mapping} je mezi modely Author a Entry automaticky vytvořena vazební tabulka. Řádek 17 ve výpisu \ref{src:Basic} zobrazuje, jak do této vazební tabulky uložit záznam. Na řádku 18 je pak zase zobrazen přístup přes vazební tabulku ke všem relačním objektům, konkrétně je přistupováno ke všem autorům, kteří se podíleli na tvorbě příspěvku. \\
+Je možno vytvořit i rekurzivní relaci, relaci na objekty stejného typu. \\
+
+\paragraph{Mapování děčnosti}
+
+ORM frameworku Django podporuje dva typy z výše popsaných návrhových vzorů mapování dědičnosti v sekci \ref{subsec:Inhmapping}. Concrete Table Inheritance a Class Table Inheritance. Oba dva případy jsou použity ve výpisu \ref{src:Mapping}. \\
+Vzoru Concrete Table Inheritance využívá model Author, který dědí z abstraktního modelu Person. Model Person je označen jako abstraktní pomocí meta třídy. Instance tohoto modelu nelze ukládat, slouží pouze pro společné definice modelů, které z něj dědí. \\
+Modely Entry a VlogEntry využívají Class Table Inheritance. Mezi těmito modely ORM automaticky vytvoří relaci 1:1. Pokud je instance nadřazeného modelu instancí i podřazeného modelu, je možné přistoupit přes relaci k datům podřazeného modelu. Řádek 20 ve výpisu \ref{src:Basic} zobrazuje přístup k instanci nadřazeného modelu. Řádek 22 pak přístup k instanci podřazeného modelu. Při získávání instance modelu VlogEntry z databáze, ORM automaticky získá data spojením tabulek i z modelu Entry.
+
 \begin{lstlisting}[style=custompython, numbers=left, label=src:Basic, caption={Ukázka práce s instancí, relacemi a dědičností}]
->>> blog = Blog(name="David's new blog.")
+>>> blog = Blog()
+>>> blog.name = "David's new blog"
 >>> blog.full_clean()
 ValidationError: {'description': [u'This field cannot be blank.']}
 >>> blog.save()
 >>> blog.id
 1
->>> author = Author.objects.create(first_name="David", last_name="Krutky", email="david.krutky.st@vsb.cz")
->>> entry = Entry(blog=blog, headline="New entry", pub_date=date(2013, 5, 7), mod_date=date(2013, 5, 7), comments=0, rating=0)
+>>> blog.name = "Better name for the blog"
+>>> blog.save()
+>>> author = Author.objects.create(first_name="David", last_name="Krutký", email="david.krutky.st@vsb.cz")
+>>> entry = VlogEntry(blog=blog, headline="New entry", comments=0, rating=0, video="http://example.com")
 >>> entry.save()
+>>> entry.blog
+<Blog: Blog object>
+>>> blog.entry_set.filter(comments=0)
+[<Entry: Entry object>]
 >>> entry.authors.add(author)
-
+>>> entry.authors.all()
+[<Author: Author object>]
+>>> entry.entry_prt
+<Entry: Entry object>
+>>> entry.entry_prt.vlogentry
+<VlogEntry: VlogEntry object>
 \end{lstlisting}
-
-\paragraph{Instance modelu}
-
-Instance modelu kromě dat řádku tabulky obsahují i metody pro práci s těmito daty. Mezi nejdůležitější patří metody pro validaci, uložení a mazání dat. Data se tedy před uložením validují i v ORM i v databázi. Toto má za důsledek mírně zvýšenou složitost, jelikož například při validování cizího klíče ORM kontroluje, zda-li v databázi existuje odkazovaný záznam. \\
-Instance používají stejnou metodu pro vytvoření nového záznamu i pro uložení změn. Pokud instance neobsahuje primární klíč, je vytvořen nový záznam. Pokud klíč obsahuje, proběhne nejdříve kontrola, zda-li záznam se stejným primárním klíčem již existuje, a na základě výsledku se provede daný SQL příkaz. \\
-Změny dat v instanci se v databázi projevují až při zavolání metody pro uložení. 
-
-\paragraph{Mapování relací} Django ORM umožňuje definovat relace pro všechny způsoby popsané výše v sekci \ref{subsec:Relmapping}. Pro definování relace je potřeba využít tříd z balíku \lstinline[style=custompython]|django.db.models| a to \lstinline[style=custompython]|OneToOneField| pro relaci 1:1, \lstinline[style=custompython]|ForeignKey| pro 1:N nebo \lstinline[style=custompython]|ManyToManyField| pro N:M. Přístup k relačnímu objektu je pak realizován pomocí relačního atributu, jak zobrazuje výpis \ref{src:InstanceAttrs}. Pro získání relace je proveden dotaz do databáze. \\
-K relaci lze přistoupit i přes tzv. zpětnou relaci, kdy je možné se z odkazovaného objektu dostat na odkazující. V případě relace 1:N nebo N:M je možné relaci dále filtrovat pomocí stejných pravidel jako při dotazování. \\
-Při použití relace N:M je automaticky vytvořena vazební tabulka. Tuto tabulku lze předefinovat, pokud je potřeba, aby obsahovala doplňkové informace o vazbě. \\
-Je možno vytvořit i rekurzivní relaci, relaci na objekty stejného typu. \\
-
-\paragraph{Mapování děčnosti}
-
-ORM frameworku Django podporuje dva typy z výše popsaných návrhových vzorů mapování dědičnosti. Concrete Table Inheritance a Class Table Inheritance. \\
 
 \subsubsection{Dotazování}
 
+Django ORM používá pro dotazování do databáze třídy, které pojmenovává jako \uv{manažery}. Každý manažer musí dědit z třídy \lstinline[style=custompython]|django.db.models.Manager| a každý model obsahuje jeden nebo více těchto manažerů. Implicitně lze manažer nalézt pod atributem modelu \uv{objects}. Takováto struktura tak odděluje manipulaci s celou tabulkou a manipulaci s řádkem tabulky. \\
+Manažer poskytuje aplikační programové rozhraní (API) pomocí kterého abstrahuje SQL. Toto rozhraní nemá za úkol nahradit veškeré SQL, pouze usnadnit provádění častých dotazů. ORM však jako celek instruuje svými strukturami snahu nevyjadřovat výrazy pomocí SQL. \\
+API obsahuje metody pomocí, kterých lze objekty filtrovat, agregovat, řadit, limitovat a na pozadí provádí SQL. Každá z těchto metod vrací objekt typu \uv{QuerySet}. QuerySet se stará o samotné provedení dotazu, získání dat z databáze a vytváření instancí modelů. QuerySet otálí s provedením dotazu, dokud data nejsou opravdu potřeba. Toto umožňuje jednotlivé metody pro dotazování řetězit. Je také možné QuerySet uložit do proměnné a vždy získat aktuální data, jelikož při řetězení metod je pokaždé vracen nový QuerySet. Ve výpisu \ref{src:Query} se tedy dotaz provede až na řádku 3, kdy je požadováno, aby se vypsal na terminál obsah objektu QuerySet. Na řádku 4 je pak zobrazeno jaký dotaz provedlo ORM. \\
+Mezi nejdůležitější metody patří all, filter, exclude a get. Metoda all vrací všechny objekty daného modelu, filter jenom objekty, které splňují podmínku, exclude objekty, které podmínku nesplňují a get vrací jediný objekt pro danou podmínku. Podrobnosti zobrazuje výpis \ref{src:Query}. \\
+QuerySet je možné dále omezovat pomocí standardní konstrukce používané pro objekty typu pole v jazyce Python. Řádky 11-14 ve výpisu \ref{src:Query} zobrazují toto limitování a SQL generované při dotazování do databáze. \\
+ORM poskytuje i možnost zadat vlastní SQL, z jehož výsledku se pak vytvoří instance konkrétního modelu. Příklad zobrazuje řádek 15 ve výpisu \ref{src:Query}.
+
+\begin{lstlisting}[style=custompython, numbers=left, label=src:Query, caption={Malá ukázka získávání dat z databáze}]
+>>> queryset = Blog.objects.all() #Neprovádí se dotaz.
+>>> filtered = queryset.filter(name="Better name for the blog")
+>>> print filtered
+#SELECT "myapp_blog"."id", "myapp_blog"."name", "myapp_blog"."description" FROM "myapp_blog" WHERE "myapp_blog"."name" = \'Better name for the blog\'
+[<Blog: Blog object>] 
+>>> queryset.exclude(name="Better name for the blog")
+#SELECT "myapp_blog"."id", ... WHERE NOT ("myapp_blog"."name" = \'Better name\' )
+>>> print Blog.objects.get(id=1)
+#SELECT "myapp_blog"."id", ... WHERE "myapp_blog"."id" = 1
+<Blog: Blog object>
+>>> queryset[0]
+#SELECT "myapp_blog"."id", ... FROM "myapp_blog" LIMIT 1
+>>> queryset[2:5]
+#SELECT "myapp_blog"."id", ... FROM "myapp_blog" LIMIT 3 OFFSET 2
+>>> print Blog.objects.raw('SELECT * FROM "myapp_blog" ORDER BY "myapp_blog"."name"')
+[<Blog: Blog object>, <Blog: Blog object>, ...] 
+\end{lstlisting}
+
+API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Cílem této sekce bylo pouze nastínit základní principy a ukázat základy syntaxe. 
+
 \subsubsection{Optimalizace v Django ORM}
 
-Active record - models
+Django ORM umožňuje svými funkcemi optimalizovat některé náročnější operace. Přihlédnutím k těmto optimalizacím lze ve většině případů zlepšit výkon ORM. 
+
+\paragraph{Ukládání do mezipaměti}
+
+Pro každý provedený dotaz ORM automaticky kešuje výsledná data. Data nejsou uložená ve společné keši, ale ve výsledném objektu QuerySet nebo v konkrétní instanci. Jelikož však ORM při řetězení metod vrací vždy nový QuerySet, keš je při každé změně dotazu zahozena a data jsou načtena znovu. \\
+Keš je použita v instanci v případě přístupu k relaci atributu cizího klíče. Toto však platí pouze, pokud relace odkazuje na konkrétní objekt. Keš se u relací M:N nebo zpětných relací u instance nepoužije \cite{dj-qscache}. \\
+V případech, kdy výsledný QuerySet obsahuje mnoho záznamů, lze vypnutím této keše předejít zahlcení paměti \cite{dj-iterator}.
+
+\paragraph{Načítání relací} 
+
+\paragraph{Omezení sloupců}
+
+Implicitně se ORM pro každou tabulku dotazuje na všechny její atributy. Tento přístup může být obzvlášť náročný při obsáhlých tabulkách nebo objemných atributech, proto je možné dotazy omezit na konkrétní atributy tabulky. Tento postup se však doporučuje používat pouze, pokud není jisté, které konkrétní atributy budou použity. V opačném případě se doporučuje tabulku rozdělit, jelikož tato funkce mírně zvyšuje režijní náklady ORM \cite{dj-defer}.
+
+\paragraph{Hromadné operace}
+
+ORM umožňuje pro objekty stejného typu hromadné operace. Mezi poskytované funkce patří hromadné vytváření, mazání i ukládání. Ve všech případech je však generován vždy jen jeden dotaz a ORM tak neumožňuje zpracovávání po dávkách. Další nevýhodou je, že při provedení těchto operací je přeskočena aplikační logika v modelech \cite{dj-bulk}.
+
+\paragraph{Ukládání změn} Od verze 1.5 Django ORM umožňuje při ukládání instance uložit pouze specifikované atributy. Je tak možno uložit pouze změněná data a nezatěžovat databázi odesíláním všech atributů, což se v případě obsáhlého modelu může negativně projevit na výkonu. ORM však neposkytuje žádný mechanismus, který by tento přístup automatizoval, je tak potřeba implementovat vlastní sledování změn \cite{dj-save}.
+
+\paragraph{Nevytváření instancí} ORM poskytuje možnost vyhnout se vytváření instancí z dat vrácených databází. Jelikož je proces vytváření instancí náročný, může tento postup v případech, kdy je potřeba získat pouze data, zlepšit celkový výkon \cite{dj-values}.
+
+\paragraph{Zjišťování existence} Pro zjišťování existence záznamů v databázi používá ORM úsporný dotaz \lstinline[style=customsql]|SELECT (1) ... |. Využití této funkce je tedy většinou výhodnější než porovnávání výsledku obyčejného dotazu \cite{dj-exists}.
+
+\subsubsection{Nevýhody Django ORM}
+
+Django ORM je velmi... avšak má i své nevýhody.
+
 execute common queries - not to replace all sql
 iconsistency in syntax
 hard things aren't possible -> i mnoho omezeni
 API is great for simple cases
-lze pouzivat s existujici databazi
-lze vygenerovat databazi pomoci modelu
-nepodporuje vice sloupcovy primarni klic
-vazby - n:1, n:m, 1:1, lze vytvaret vazby na self, existuji zpetne vazby
-dedicnost - podporuje concrete inheritance, class inheritance
-model pro abstrahovani radku tabulek a manager pro staticke metody implicitne s nazvem objects
-QuerySet objekt reprezentuje kolekci objektu z databaze, all, filter, exclude pouzivaji field lookups - syntaxe abstrahujici sql, queryset pouziva lazy loading
-get pouziva stejny input, ale vraci jeden objekt
-limit, offset query set \[offset:limit\], order\_by
-queryset index [idx] db request
+nefunguje limit a filter pro prefetch\_related
+Raw - SQLBy definition, these extra lookups may not be portable to different database engines (because you’re explicitly writing SQL code) and violate the DRY principle, so you should avoid them if possible.
+because of the (probably correct) desire not to express things in terms of SQL
+
+
+QuerySet objekt reprezentuje kolekci objektu z databaze, all, filter, exclude pouzivaji field lookups - 
 field lookups pouzivaji \_\_, predpoklada nazev policka modelu
 field lookups lze vyuzit i pro joiny, \_\_ pro relaci, funguje i pro backwards relations
 F objekt pro porovnavani s jinymi poli, lze pouzit \_\_ pro relaci
@@ -402,25 +485,10 @@ update posila vse, ne jenom zmeny
 backward relations vraci queryset
 funkce aggregate - Avg, Max, Min, Sum, Count bere stejny argument jako F, vraci agregovane hodnoty
 funkce annotate - vraci agregovane hodnoty pro kazdy radek
-podedit manager a pridat vlastni dotazy pro celou tabulku, lze jich vytvorit vice pro jeden model
+
 SQL lze napsat pomoci metody raw nebo pomoci cursoru. raw se vola pomoci manageru a vraci instance modelu konkretne rawqueryset, metoda raw se snazi namapovat vysledek na instance - django dal neparsuje dotaz, nelze tedy vyuzit metody jako [:] a filter atd.. django prida i atributy navic, co nejsou v modelu, pokud se pouzi je JOIN intepretuje je se kazdy radek jako jedna instance - duplicitni instance, nevytvori se kolekce a relace se nezakesuji
 lze django uplne obejit a pouzit cursor, pouziva standard pep249
-operace jsou hned commitnuty save a delete, podporuje i transakce pro request, umoznuje transakce ridit manualne, umoznuje vytvare savepoints a rollback nebo commit
 
-indexy a unique, lze je vytvorit z djanga i na vice poli
-defer a only, se nevyplaci pouzivat vsude - django overhead
-bulk create, queryset update, delete
-new in 1.5 specifikace poli, ktere se maji ulozit
-Avoiding Instantiation
-
-validace probiha v orm a pak i v db, nektera validace pouze v orm (unique for date), typy validace - nejdrive policka, pak cela tabulka a pak unique
-update vs insert - nejdrive se provede select a podle toho pak u/i. pouziva SELECT (1)
-queryset se evaluuje az pri iter, len atd..
-vyzkouset, jestli funguje limit a filter pro select\_related
-dotaz lze omezit ruznymi zpusoby - values vraci dict, values nevytvari instance modelu
-prefetch related nejde dale omezovat
-Raw - SQLBy definition, these extra lookups may not be portable to different database engines (because you’re explicitly writing SQL code) and violate the DRY principle, so you should avoid them if possible.
-because of the (probably correct) desire not to express things in terms of SQL
 
 \subsection{SQLAlchemy}
 sql oriented
@@ -441,14 +509,15 @@ Pokud máte firmu, kde Vám poskoci SQLka a obsluhu naťukají tak potom žádn�
 ORM encourages you do to loops all over the place, by hiding logic in objects that themselves are instantiating other objects
 Data pretrvavaji dele nez program, ktery je vyuziva
 Pouziti databazovych struktur
+API zakryva skutecne dotazy a to muze vest ke snizeni vykonu
 \begin{lstlisting}[label=src:init,caption=Vytvoení nového reposite, style=customsql]
 SELECT * FROM customer WHERE customername = 'test' AND customerid = 1; varchar serial
 \end{lstlisting}
 \begin{lstlisting}[label=src:test,caption=Test, style=custompython]
 def f(x):
 	"""Doc"""
-    return "String" #comment
->>> Place.filter(10)
+    return "String" #comment 
+>>> Place.filter(10) 
 \end{lstlisting}
 
 \section{Implementace knihovny pypg}
@@ -475,6 +544,13 @@ def f(x):
 \bibitem{pwiki} http://wiki.python.org/moin/WebFrameworks
 \bibitem{django.cz} http://www.djangoproject.cz/
 \bibitem{aholovaty} http://en.wikipedia.org/wiki/Adrian\_Holovaty
+\bibitem{dj-qscache} https://docs.djangoproject.com/en/1.5/topics/db/queries/\#caching-and-querysets
+\bibitem{dj-iterator} https://docs.djangoproject.com/en/1.5/ref/models/querysets/\#django.db.models.query.QuerySet.iterator
+\bibitem{dj-values} https://docs.djangoproject.com/en/1.5/ref/models/querysets/\#django.db.models.query.QuerySet.values
+\bibitem{dj-exists} https://docs.djangoproject.com/en/1.5/ref/models/querysets/\#exists
+\bibitem{dj-defer} https://docs.djangoproject.com/en/1.5/ref/models/querysets/\#defer
+\bibitem{dj-save} https://docs.djangoproject.com/en/1.5/ref/models/instances/\#specifying-which-fields-to-save
+\bibitem{dj-bulk} https://docs.djangoproject.com/en/dev/topics/db/queries/\#updating-multiple-objects-at-once
 
 \end{thebibliography}
 
@@ -492,7 +568,7 @@ CREATE TABLE "myapp_author" (
     "id" serial NOT NULL PRIMARY KEY,
     "first_name" varchar(50) NOT NULL,
     "last_name" varchar(50) NOT NULL,
-    "email" varchar(75) NOT NULL,
+    "email" varchar(75) NOT NULL UNIQUE,
     "biography" text NOT NULL,
     "photo" varchar(100) NOT NULL
 )
@@ -521,6 +597,51 @@ CREATE TABLE "myapp_vlogentry" (
     "video" varchar(200) NOT NULL
 )
 ;
+CREATE INDEX "myapp_entry_blog_id" ON "myapp_entry" ("blog_id");
+COMMIT;
+dave@edge:~/workspace/dj-ng-shop/server$ python manage.py sqlall myapp
+BEGIN;
+CREATE TABLE "myapp_blog" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "name" varchar(100) NOT NULL,
+    "description" text NOT NULL
+)
+;
+CREATE TABLE "myapp_author" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "first_name" varchar(50) NOT NULL,
+    "last_name" varchar(50) NOT NULL,
+    "email" varchar(75) NOT NULL UNIQUE,
+    "biography" text NOT NULL,
+    "photo" varchar(100) NOT NULL
+)
+;
+CREATE TABLE "myapp_entry_authors" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "entry_id" integer NOT NULL,
+    "author_id" integer NOT NULL REFERENCES "myapp_author" ("id") DEFERRABLE INITIALLY DEFERRED,
+    UNIQUE ("entry_id", "author_id")
+)
+;
+CREATE TABLE "myapp_entry" (
+    "id" serial NOT NULL PRIMARY KEY,
+    "blog_id" integer NOT NULL REFERENCES "myapp_blog" ("id") DEFERRABLE INITIALLY DEFERRED,
+    "headline" varchar(255) NOT NULL,
+    "body_text" text NOT NULL,
+    "pub_date" date NOT NULL,
+    "mod_date" date NOT NULL,
+    "comments" integer NOT NULL,
+    "rating" integer NOT NULL
+)
+;
+ALTER TABLE "myapp_entry_authors" ADD CONSTRAINT "entry_id_refs_id_162c5c54" FOREIGN KEY ("entry_id") REFERENCES "myapp_entry" ("id") DEFERRABLE INITIALLY DEFERRED;
+CREATE TABLE "myapp_vlogentry" (
+    "entry_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "myapp_entry" ("id") DEFERRABLE INITIALLY DEFERRED,
+    "video" varchar(200) NOT NULL
+)
+;
+CREATE INDEX "myapp_blog_name" ON "myapp_blog" ("name");
+CREATE INDEX "myapp_blog_name_like" ON "myapp_blog" ("name" varchar_pattern_ops);
 CREATE INDEX "myapp_entry_blog_id" ON "myapp_entry" ("blog_id");
 \end{lstlisting}
 \clearpage
