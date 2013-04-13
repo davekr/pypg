@@ -302,8 +302,7 @@ Django je rámec vytvořený v jazyce Python pro tvorbu webových aplikací. Je 
 
 Django je známo hlavně pro své automaticky generované administrační rozhraní, obsáhlou dokumentaci a velkou komunitu uživatelů. Tento rámec se řídí návrhovým vzorem model-view-controller (MVC). ORM, které je součástí rámce představuje modelovou část. \\ 
 ORM obsahuje i DBDAL a lze jej tak využít nezávisle na konkrétním SŘBD. Mezi podporované SŘBD patří Oracle, MySQL, PostgreSQL a SQLite. Pro SQLite jsou však některé funkce omezeny a nelze tak v případě jeho použití využít celkový potenciál ORM. Je to však dáno i omezenou funkčností tohoto SŘBD ve srovnání s ostatními. \\
-
-V současné době je Django ve verzi 1.5. Následující text tak popisuje vlastnosti, které jsou obsaženy v této verzi.
+ORM lze používat nezávisle na rámci Django. V současné době je Django ve verzi 1.5. Následující text tak popisuje vlastnosti, které jsou obsaženy v této verzi.
 
 \subsubsection{Mapování v Django ORM}
 
@@ -507,6 +506,90 @@ Navzdory nevýhodám uvedeným výše Django ORM funguje skvěle pro jednoduché
 
 \subsection{web2py DBAL}
 
+web2py je rámec pro tvorbu webových aplikací napsaný v jazyce Python, který vznikl původně jako univerzitní projekt vytvořený profesorem Massimem Di Peirrem pro výukové účely \cite{wikiw2p}. Byl vytvořen s úmyslem co nejvíce usnadnit vývoj webových aplikací a problémy s tím spojené. Celý rámec je tak distribuován pomocí balíku, který v základu obsahuje integrované vývojové prostředí (IDE), webový server, relační databázi SQLite a dokonce i interpret jazyka Python. Není tedy potřeba nic instalovat, balík se rozbalí a ihned lze tento rámec používat \cite{web2py}. Rámec se řídí návrhovým vzorem MVC. \\
+IDE sestává z administračního rozhraní, které je spuštěno na webovém serveru. Kód lze tak měnit v tomto IDE přímo na serveru a změny jsou viditelné ihned. Rámec obsahuje pro vytvořené aplikace i automaticky generované administrační rozhraní nad daty podobně jako Django. \\
+web2py implementuje DBAL pro komunikaci s databází. Odlišnost této vrstvy od ORM je popisována jako \uv{mapování databázových tabulek a záznamů na instance a třídy reprezentující množiny a záznamy namísto vysoko-úrovňové abstrakce} \cite{wikiw2p}. Mezi podporované SŘBD podle oficiální dokumentace patří Firebird, IBM DB2, Informix, Ingres, Microsoft SQL Server, MySQL, Oracle, PostgreSQL, Google App Engine a mnoho dalších. Stejně jako Django ORM lze tuto vrstvu používat nezávisle na rámci.
+
+\subsubsection{Mapování ve web2py DBAL}
+
+\begin{lstlisting}[style=custompython, label=src:w2p-mapping, caption=Modely jednoduché aplikace pro vytváření blogů]
+db = DAL("postgres://username:password@localhost/database")
+
+person = db.Table(db, 'person',
+	Field('first_name',  'string', length=50),
+	Field('first_name',  'string', length=50))
+
+db.define_table('author', 
+	Field('email', 'string', unique=True), 
+	Field('biography', 'text'),
+	Field('photo', 'upload'),
+	person)
+	
+db.define_table('blog', 
+	Field('name', 'string', length=100), 
+	Field('description', 'text'))
+
+now = lambda: datetime.datetime.now()
+db.define_table('entry', 
+	Field('blog_id', 'relation blog'), 
+	Field('headline', 'string'),
+	Field('bodytext', 'text'),
+	Field('pub_date', 'date', default=now),
+	Field('mod_date', 'date', default=now, update=now),
+	Field('bodytext', 'text'),
+	Field('comments', 'integer'),
+	Field('rating', 'integer'))
+	
+db.define_table('vblog', db.entry, Field('video', 'string'))
+
+db.define_table('entry_author',
+    Field('entry', 'reference entry'),
+	Field('author', 'reference author'))
+\end{lstlisting}
+
+SQLite is included in Python and is the default web2py database. A connection string change allows connection to 
+automaticke migrace
+obsahuje skoro vse - jquery http://www.web2py.com/init/default/what
+vytvari tabulky za behu
+obsahuje datove typy, ktere jsou nefunkcni pro jine databaze
+django i web2py umoznuji pouziti orm jako standalone
+tabulky si ukladaji connection? a dokonce i sloupce, obsahuji referenci na connection, coz omezuje
+sloupce maji metody pro validaci
+migrace - define table vytvori tabulku pokud neexistuje, pokud ano provede ALTER, data ve sloupecku se snazi prevest, pro sloupce funguje i DROP, migrace pouze pro pridani, smazani nebo zmeny typu sloupce, neni to uplne automaticke nastavaji problemy je treba pouzivat fake\_migrate
+migrace lze zakazat, pri migraci se ukladaji data do souboru
+hodne se spoleha na to, ze se databaze nezmeni...
+commit a rollback neni automaticky musi se volat
+povoluje vykonavani raw SQL
+umoznuje pracovat i s tabulkami
+nepodporuje automaticke vytvareni indexu
+umoznuje praci s existujicimi databazemi - unikatni autoincrement id, relace za pouziti pouze id
+omezena podpora pro vsechny databaze,nektere funkce pouze pro nektere db, mnoho funkci je takovych
+pri selectu automaticky zjistuje potrebne tabulky
+do selectu se specifikujou sloupce, co se stane pokud specifikuji sloupce z ruzne tabulky?
+obsahuje zkratky pro jednodussi kod
+n+1 resi explicitnim joinem, funguji i zpetne relace - je to pouze zkratka
+syntaxe je blizsi SQL umoznuje sirsi spektrum dotazu
+%oddeleni carko v where nefunguje, jinak pouziva & a |
+isempty method SQL pouziva normalni dotaz ne SELECT (1)
+v nekterych mistech micha aplikacni logiku do DAL neni to ciste jenom na dotazovani
+id neni vzdy ziskano z db
+design kodu je velmi nepekny 1 soubor 10000 radku
+obsahuje vlastni filtrovaci system, filtruje objekty, ktere jsou dotazany z db
+update\_or\_insert funguje trochu jinak, pro vsechny sloupce, lze specifikovat
+modely slouzi pouze pro definovani struktury, migrace a pro DBAL aby vedelo o strukture, pri existujici databazi je to opruz
+parsovani natural language queries
+web2py performs joins automatically and transparently when the query links two or more tables: db(db.person.id==db.thing.owner\_id).select() je to implicitni db join? je to stejne jako db(db.person).select(join=db.thing.on(db.person.id==db.thing.owner\_id)) ? neni to stejne
+Many to many tabulka se musi specifikovat, joiny nejsou automaticke
+list:<type>, and contains
+konstrukce raw SQL, sestavovani dotazu je line, provedeni se vola pri db()
+umoznuje import/export dat, i cele databaze do cvs, export do xml, html - mnoho nepotrebnych funkci, umoznuje verzovani pomoci db tabulky
+umoznuje kesovat dotazy
+relace lze definovat rekurzivne
+dva typy dedicnosti - concrete, class
+DAL si uklada metadata do souboru, lze pouzit bez definic tabulek avsak je potreba tyto soubory, coz je na prd, protoze soubory nemam jak ziskat
+umoznuje kopirovat data mezi databazemi - i ruzne srbd, avsak myslim, ze to nefunguje 100%
+mnoho nepodporovanych funkci v jinych dtabazich
+
 \subsection{SQLAlchemy}
 sql oriented
 
@@ -543,7 +626,11 @@ def f(x):
 %-komentare ve zdrojovem kodu a principy clean code
 
 \subsection{Dalsi funkce, ktere budou v budoucnu implementovany}
-
+Connection pooling
+tabulky a sloupce prece jen nakonec vypisovat pri chybach jenom pokud debug=True
+pokud tabulka obsahuje vice relaci, zpetna vazba nefunguje uplne presne
+sloupce pri joinu, ktere se jmenuji stejne podobne jako u web2py
+raw sql, parsing sql
 \section{Porovnani rychlosti pypg s ORM rámci}
 
 \section{Závěr}
@@ -570,6 +657,8 @@ def f(x):
 \bibitem{dj-save} https://docs.djangoproject.com/en/1.5/ref/models/instances/\#specifying-which-fields-to-save
 \bibitem{dj-bulk} https://docs.djangoproject.com/en/dev/topics/db/queries/\#updating-multiple-objects-at-once
 \bibitem{dj-dis} http://www.youtube.com/watch?v=GxL9MnWlCwo
+\bibitem{wikiw2p} http://en.wikipedia.org/wiki/Web2py
+\bibitem{web2py} http://web2py.com/init/default/what
 
 \end{thebibliography}
 
@@ -577,49 +666,6 @@ def f(x):
 \appendix
 \section{SQL vygenerované pomocí Django ORM z výpisu \ref{src:Mapping}}
 \begin{lstlisting}[label=src:SQLMapping, caption=Reprezentace modelů z výpisu \ref{src:Mapping} v PostgreSQL, style=customsql]
-CREATE TABLE "myapp_blog" (
-    "id" serial NOT NULL PRIMARY KEY,
-    "name" varchar(100) NOT NULL,
-    "description" text NOT NULL
-)
-;
-CREATE TABLE "myapp_author" (
-    "id" serial NOT NULL PRIMARY KEY,
-    "first_name" varchar(50) NOT NULL,
-    "last_name" varchar(50) NOT NULL,
-    "email" varchar(75) NOT NULL UNIQUE,
-    "biography" text NOT NULL,
-    "photo" varchar(100) NOT NULL
-)
-;
-CREATE TABLE "myapp_entry_authors" (
-    "id" serial NOT NULL PRIMARY KEY,
-    "entry_id" integer NOT NULL,
-    "author_id" integer NOT NULL REFERENCES "myapp_author" ("id") DEFERRABLE INITIALLY DEFERRED,
-    UNIQUE ("entry_id", "author_id")
-)
-;
-CREATE TABLE "myapp_entry" (
-    "id" serial NOT NULL PRIMARY KEY,
-    "blog_id" integer NOT NULL REFERENCES "myapp_blog" ("id") DEFERRABLE INITIALLY DEFERRED,
-    "headline" varchar(255) NOT NULL,
-    "body_text" text NOT NULL,
-    "pub_date" date NOT NULL,
-    "mod_date" date NOT NULL,
-    "comments" integer NOT NULL,
-    "rating" integer NOT NULL
-)
-;
-ALTER TABLE "myapp_entry_authors" ADD CONSTRAINT "entry_id_refs_id_162c5c54" FOREIGN KEY ("entry_id") REFERENCES "myapp_entry" ("id") DEFERRABLE INITIALLY DEFERRED;
-CREATE TABLE "myapp_vlogentry" (
-    "entry_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "myapp_entry" ("id") DEFERRABLE INITIALLY DEFERRED,
-    "video" varchar(200) NOT NULL
-)
-;
-CREATE INDEX "myapp_entry_blog_id" ON "myapp_entry" ("blog_id");
-COMMIT;
-dave@edge:~/workspace/dj-ng-shop/server$ python manage.py sqlall myapp
-BEGIN;
 CREATE TABLE "myapp_blog" (
     "id" serial NOT NULL PRIMARY KEY,
     "name" varchar(100) NOT NULL,
