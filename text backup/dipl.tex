@@ -293,7 +293,7 @@ Při použití vzoru Class Table Inheritance je vytvořena tabulka v databázi p
 Jiným názvem pro Class Table Inheritance bývá také Joined Table Inheritance nebo vertikální mapování.
 
 \section{Srovnání existujících technologií pracujících na datové vrstvě}
-
+\label{sec:Comparison}
 Jelikož jedním z požadavků byl jazyk Python, budu se zde věnovat srovnání ORM rámců pro jazyk Python.
 
 \subsection{Django ORM}
@@ -573,7 +573,7 @@ Datová vrstva web2py umožňuje pouze nejjednodušší z návrhových vzorů pr
 Pro dotazování do databáze se používá stejný objekt jako pro práci s tabulkami. Tento objekt přijímá jako parametr podmínku a vrací instanci třídy \lstinline[style=custompython]|web2py.gluon.dal.Set| která poskytuje metodu \lstinline[style=custompython]|select|. Metoda \lstinline[style=custompython]|select| pak přijímá široké spektrum atributů, kterými lze dotaz dále filtrovat a limitovat. Na řádku 2 ve výpisu \ref{src:w2p-query} je zobrazeno vytvoření podmínky a na řádku 3 pak provedení dotazu do databáze. Výsledkem jsou objekty řádků, jak bylo popsáno v sekci \ref{par:Row}. \\
 V dotazu na řádku 3 chybí specifikace tabulky. Je to proto, protože DBAL dokáže automaticky zjistit potřebné tabulky z ostatních parametrů předaných do dotazu. To platí i u složitějších dotazů jako je například spojení tabulek. \\
 Výsledná data získaná z databáze lze dále filtrovat a to bez potřeby nového dotazu do databáze. DBAL k těmto účelům poskytuje speciální API, které pracuje s výslednými daty v paměti. Řádek 8 ve výpisu \ref{src:w2p-query} zobrazuje filtrování dotázaných blogů na blogy, jejichž popis začíná písmenem \uv{B}. \\
-DBAL umožňuje pokládat dotazy i za pomocí vlastně vytvořeného SQL. Příklad lze vidět ve výpisu \ref{src:w2p-query} na řádku 20. Tento dotaz však nevrací data ve formě instancí třídy \lstinline[style=custompython]|web2py.gluon.dal.Row|, ale v nejzákladnější formě jakou vrací konkrétní databázový ovladač. \\
+DBAL umožňuje pokládat dotazy i za pomocí vlastně vytvořeného SQL. Příklad lze vidět ve výpisu \ref{src:w2p-query} na řádku 20. Tento dotaz však nevrací data ve formě instancí třídy \lstinline[style=custompython]|web2py.gluon.dal.Row|, ale v základní formě, kterou vrací konkrétní databázový ovladač. \\
 
 \paragraph{Transakce} 
 Transakce DBAL neřeší automaticky jako Django ORM, je tak potřeba explicitně provést commit nebo rollback. Na řádku 1 je ve výpisu \ref{src:w2p-query} vložen do databáze nový záznam. Jelikož je však poté na řádku 10 proveden rollback, nový záznam v databázi není, což dokazuje řádek 11-13.
@@ -623,16 +623,29 @@ Mezi jeho výhody patří dotazovací API, které má bliž k SQL, funkce jako m
 
 \clearpage
 \subsection{SQLAlchemy}
+Dodělám popis a srovnání během následujícího týdne.
 %sql oriented
 
 \section{Návrh knihovny pypg}
 
-Úkolem této diplomové práce bylo vytvořit knihovnu pracující na datové vrstvě aplikačního softwaru. Je zbytečné znovu vynalézat kolo a proto bych zde chtěl popsat důvody, které mě vedly k vytvoření vlastní knihovny. \\
-Žádná existující knihovna ani rámec nevyhovoval požadavkům.
+Úkolem této diplomové práce bylo vytvořit vlastní knihovnu pracující na datové vrstvě aplikačního softwaru. Téma bylo původně diskutováno s firmou deving\footnote{http://deving.cz}. Tato firma se věnuje tvorbě informačních systémů (IS), systémů pro správu obsahu (CMS) a podnikových aplikací. Požadavkem firmy bylo vytvořit novou knihovnu nebo rámec na datové vrstvě, který by splňoval nároky na specifické použití pro tyto systémy. \\
+Konkrétními požadavky firmy byly:
+\begin{itemize}
+\item \textbf{jazyk Python} Firma vytváří své aplikace pomocí programovacího jazyka Python. Pro zachování kompatibility a jednoduchosti je potřeba, aby datová vrstva byla implementována za použití tohoto jazyka.
+\item \textbf{rychlost získávání dat} Jedním z nejdůležitějších požadavků byl požadavek na celkový výkon datové vrstvy. Systémy vytvářené firmou jsou typické pro časté čtení a občasný zápis. Je tedy potřeba, aby vrstva urychlovala hlavně operace pro čtení. 
+\item \textbf{konzistentní data, která drží relační schéma} Firma nesouhlasí s použitím objektové nebo dokumentově orientované databáze, jelikož výhody, které poskytují relační databázové systémy jsou pro vytváření aplikací kritické. Datová vrstva by se tedy měla zaměřovat na databáze relační.
+\item \textbf{jednoduchost použití a čitelnost syntaxe} Datová vrstva by měla vyžadovat minimální znalosti pro její použití a měla by obsahovat pouze funkce, které se využijí při implementaci systémů. Syntaxe dotazovacího API by měla být čitelná a mělo by být jasné jaký dotaz se při spustění provede. Syntaxe by měla být také jednodušší než samotné SQL nebo zápis SQL zjednodušovat.
+\item \textbf{stabilita} Výsledný produkt by měl být stabilní a dodržovat základní principy čistého kódu. Struktura datové vrstvy a programového kódu by měla být přehledná a umožňovat jednoduché změny.
+\item \textbf{relační databáze PostgreSQL} Jako úložiště dat pro své systémy firma využívá SŘBD PostgreSQL. Firma SŘBD měnit neplánuje a nehodlá a proto požaduje, aby se datová vrstva zaměřovala pouze na PostgreSQL.
+\end{itemize}
 
-\subsection{Motivy vytvoření vlastní knihovny}
+Důvodem vytvoření nové knihovny byly neuspokojivé vlastnosti existujících rámců a knihoven. V sekci \ref{sec:Comparison} byly popsány jedny z nejpoužívanější existujících řešení pracujících na datové vrstvě pro jazyk Python. Žádné z těchto řešení nevyhovuje těmto požadavkům a jednotlivé nevýhody jsou popsané u každého řešení. Kromě těchto specifických nevýhod mají i další nevýhody, které znemožňují jejich použití v případě výše uvedených požadavků. Mezi tyto nevýhody patří podpora několika SŘBD a O/R mapování.
 
-Zaměřeno na více databází
+\subsection{Objektově-relační mapování}
+
+Na základě požadavků jsem se rozhodl nevyužít funkcí objektově-relačního mapování. Pro O/R mapování existuje mnoho kritiky \cite{seldo, fowler-orm, dbprogrammer-orm, mehdi}. Ve většině těchto případů se však jedná o špatné použití O/R mapování. O/R mapování není řešením pro všechny případy a snaha o jeho využití pro všechny situace vede k brzkému odhalení jeho limitů. ORM má své výhody a nevýhody. Pro mnoho projektů je ORM idelaním řešením, které ulehčí mnoho práce a času, pro některé případy však není vhodné. \\
+Problémem, který při použití ORM vidím, je nedostatečná kontrola nad dotazováním do databáze. schováváním SQL za API, nedostatečná kontrola nad SQL, Abstrakce, která se při větších požadavcích rozpadá, dvojnásobný počet znalostí, odstínění od funkcí databáze, které neumožňují využívat všechny funkce databáze, což znemožňuje rychlý výkon. 
+
 ORM se snaží omezovat psaní SQL a prohlašuje, že k jeho užití není potřeba SQL znát. Toto je však chyba, jelikož bez znalosti SQL lze vytvářet pouze jednoduché aplikace. Je to dáno i tím, že pří složitější logice je třeba ORM obcházet pomocí vlastních dotazů. 
 Je nutne znat SQL
 zdvojnásobuje množství věcí k naučení: musíte umět SQL, abyste chápali, jak položit dotaz, a musíte umět přimět svoje ORM, aby ho za vás položilo
@@ -642,15 +655,12 @@ ORM encourages you do to loops all over the place, by hiding logic in objects th
 Data pretrvavaji dele nez program, ktery je vyuziva
 Pouziti databazovych struktur
 API zakryva skutecne dotazy a to muze vest ke snizeni vykonu
-\begin{lstlisting}[label=src:init,caption=Vytvoení nového reposite, style=customsql]
-SELECT * FROM customer WHERE customername = 'test' AND customerid = 1; varchar serial
-\end{lstlisting}
-\begin{lstlisting}[label=src:test,caption=Test, style=custompython]
-def f(x):
-	"""Doc"""
-    return "String" #comment 
->>> Place.filter(10) 
-\end{lstlisting}
+
+\subsection{Podpora různých SŘBD}
+
+\subsubsection{Vlastnosti PostgreSQL}
+
+\subsection{Funkce pro zlepšení výkonu při čtení z databáze}
 
 \section{Implementace knihovny pypg}
 
@@ -692,6 +702,10 @@ raw sql, parsing sql
 \bibitem{wikiw2p} http://en.wikipedia.org/wiki/Web2py
 \bibitem{web2py} http://web2py.com/init/default/what
 \bibitem{web2py-dal} http://web2py.com/books/default/chapter/29/06
+\bibitem{seldo} http://seldo.com/weblog/2011/08/11/orm\_is\_an\_antipattern
+\bibitem{fowler-orm} http://martinfowler.com/bliki/OrmHate.html
+\bibitem{dbprogrammer-orm} http://database-programmer.blogspot.cz/2008/06/why-i-do-not-use-orm.html
+\bibitem{mehdi} http://www.mehdi-khalili.com/orm-anti-patterns-series
 
 \end{thebibliography}
 
