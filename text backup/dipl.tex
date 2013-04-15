@@ -415,7 +415,7 @@ Mezi nejdůležitější metody patří all, filter, exclude a get. Metoda all v
 QuerySet je možné dále omezovat pomocí standardní konstrukce používané pro objekty typu pole v jazyce Python. Řádky 11-14 ve výpisu \ref{src:Query} zobrazují toto limitování a SQL generované při dotazování do databáze. \\
 ORM poskytuje i možnost zadat vlastní SQL, z jehož výsledku se pak vytvoří instance konkrétního modelu. Příklad zobrazuje řádek 15 ve výpisu \ref{src:Query}.
 
-\begin{lstlisting}[style=custompython, numbers=left, label=src:Query, caption={Malá ukázka získávání dat z databáze}]
+\begin{lstlisting}[style=custompython, numbers=left, label=src:Query, caption={Ukázka získávání dat z databáze}]
 >>> queryset = Blog.objects.all() #Neprovádí se dotaz.
 >>> filtered = queryset.filter(name="Better name for the blog")
 >>> print filtered
@@ -506,92 +506,124 @@ Navzdory nevýhodám uvedeným výše Django ORM funguje skvěle pro jednoduché
 
 \subsection{web2py DBAL}
 
-web2py je rámec pro tvorbu webových aplikací napsaný v jazyce Python, který vznikl původně jako univerzitní projekt vytvořený profesorem Massimem Di Peirrem pro výukové účely \cite{wikiw2p}. Byl vytvořen s úmyslem co nejvíce usnadnit vývoj webových aplikací a problémy s tím spojené. Celý rámec je tak distribuován pomocí balíku, který v základu obsahuje integrované vývojové prostředí (IDE), webový server, relační databázi SQLite a dokonce i interpret jazyka Python. Není tedy potřeba nic instalovat, balík se rozbalí a ihned lze tento rámec používat \cite{web2py}. Rámec se řídí návrhovým vzorem MVC. \\
+web2py je rámec pro tvorbu webových aplikací napsaný v jazyce Python, který vznikl původně jako univerzitní projekt vytvořený profesorem Massimem Di Peirrem pro výukové účely \cite{wikiw2p}. Byl stvořen s úmyslem co nejvíce usnadnit vývoj webových aplikací a problémy s tím spojené. Celý rámec je tak distribuován pomocí balíku, který v základu obsahuje integrované vývojové prostředí (IDE), webový server, relační databázi SQLite a dokonce i interpret jazyka Python. Není tedy potřeba nic instalovat, balík se rozbalí a ihned lze tento rámec používat \cite{web2py}. Rámec se řídí návrhovým vzorem MVC. \\
 IDE sestává z administračního rozhraní, které je spuštěno na webovém serveru. Kód lze tak měnit v tomto IDE přímo na serveru a změny jsou viditelné ihned. Rámec obsahuje pro vytvořené aplikace i automaticky generované administrační rozhraní nad daty podobně jako Django. \\
 web2py implementuje DBAL pro komunikaci s databází. Odlišnost této vrstvy od ORM je popisována jako \uv{mapování databázových tabulek a záznamů na instance a třídy reprezentující množiny a záznamy namísto vysoko-úrovňové abstrakce} \cite{wikiw2p}. Mezi podporované SŘBD podle oficiální dokumentace patří Firebird, IBM DB2, Informix, Ingres, Microsoft SQL Server, MySQL, Oracle, PostgreSQL, Google App Engine a mnoho dalších. Stejně jako Django ORM lze tuto vrstvu používat nezávisle na rámci.
 
 \subsubsection{Mapování ve web2py DBAL}
+Třída \lstinline[style=custompython]|web2py.gluon.dal.DAL| je vstupním bodem pro komunikaci s databází. Inicializací objektu této třídy je vytvořeno spojení s danou databází. DBAL obsahuje \textit{connection pool}, do kterého se spojení uloží. Connection pool je možno konfigurovat podle potřeby. \\
+Rámec vyžaduje pro správnou funkčnost datové vrstvy nejdříve definovat strukturu tabulek v databázi. Definice struktury slouží jako metadata při dotazování do databáze a umožňuje tabulky v databázi automaticky generovat i měnit. Definice tabulek si DBAL ukládá do speciálních souborů. Pomocí těchto souborů lze pak provádět migrace databáze. \\
+Migracemi lze měnit datové typy konkrétních sloupců, odstraňovat nebo přidávat nové sloupce k tabulkám a nebo i přesouvat celé databáze do jiných SŘBD. Migrace však nejsou úplně automatizované a mohou při nich nastat problémy, které je potřeba řešit explicitně. Kromě migrací umožňuje DBAL i export dat do XML, HTML nebo CVS formátu. \\
+DBAL umožňuje používat i existující databázi, je však potřeba, aby splňovala určité podmínky. Konkrétně musí databáze obsahovat pro každou tabulku primární klíč a všechny relace musí být řešené pomocí primárního klíče. \\
+Výpis \ref{src:w2p-mapping} zobrazuje definici tabulek jednoduché aplikace pro vytváření blogů. Tabulky lze definovat pomocí instance třídy \lstinline[style=custompython]|web2py.gluon.dal.DAL|. Je také možné pomocí tohoto objektu tabulkám dále nastavovat další parametry, měnit jejich strukturu nebo je i smazat. Primární klíč je automaticky vygenerován pro každou tabulku. Sloupce tabulky pak obsahují metody pro validaci, které lze využit před ukládáním do databáze. \\
+DBAL však neumožňuje pomocí této definice určit databázové indexy. Celkový výpis SQL, které DBAL vygeneruje z této definice je možné nalézt v příloze ve výpisu \ref{src:w2p-mappingSQL}.
 
 \begin{lstlisting}[style=custompython, label=src:w2p-mapping, caption=Modely jednoduché aplikace pro vytváření blogů]
 db = DAL("postgres://username:password@localhost/database")
 
 person = db.Table(db, 'person',
-	Field('first_name',  'string', length=50),
-	Field('first_name',  'string', length=50))
+    Field('first_name',  'string', length=50),
+    Field('last_name',  'string', length=50))
 
 db.define_table('author', 
-	Field('email', 'string', unique=True), 
-	Field('biography', 'text'),
-	Field('photo', 'upload'),
-	person)
-	
+    Field('email', 'string', unique=True), 
+    Field('biography', 'text'),
+    Field('photo', 'upload'),
+    person)
+    
 db.define_table('blog', 
-	Field('name', 'string', length=100), 
-	Field('description', 'text'))
+    Field('name', 'string', length=100), 
+    Field('description', 'text'))
 
 now = lambda: datetime.datetime.now()
 db.define_table('entry', 
-	Field('blog_id', 'relation blog'), 
-	Field('headline', 'string'),
-	Field('bodytext', 'text'),
-	Field('pub_date', 'date', default=now),
-	Field('mod_date', 'date', default=now, update=now),
-	Field('bodytext', 'text'),
-	Field('comments', 'integer'),
-	Field('rating', 'integer'))
-	
-db.define_table('vblog', db.entry, Field('video', 'string'))
+    Field('blog_id', db.blog), 
+    Field('headline', 'string'),
+    Field('bodytext', 'text'),
+    Field('pub_date', 'date', default=now),
+    Field('mod_date', 'date', default=now, update=now),
+    Field('bodytext', 'text'),
+    Field('comments', 'integer'),
+    Field('rating', 'integer'))
+    
+db.define_table('vlog_entry', db.entry, Field('video', 'string'))
 
 db.define_table('entry_author',
-    Field('entry', 'reference entry'),
-	Field('author', 'reference author'))
+    Field('entry', db.entry),
+    Field('author', db.author))
 \end{lstlisting}
 
-SQLite is included in Python and is the default web2py database. A connection string change allows connection to 
-automaticke migrace
-obsahuje skoro vse - jquery http://www.web2py.com/init/default/what
-vytvari tabulky za behu
-obsahuje datove typy, ktere jsou nefunkcni pro jine databaze
-django i web2py umoznuji pouziti orm jako standalone
-tabulky si ukladaji connection? a dokonce i sloupce, obsahuji referenci na connection, coz omezuje
-sloupce maji metody pro validaci
-migrace - define table vytvori tabulku pokud neexistuje, pokud ano provede ALTER, data ve sloupecku se snazi prevest, pro sloupce funguje i DROP, migrace pouze pro pridani, smazani nebo zmeny typu sloupce, neni to uplne automaticke nastavaji problemy je treba pouzivat fake\_migrate
-migrace lze zakazat, pri migraci se ukladaji data do souboru
-hodne se spoleha na to, ze se databaze nezmeni...
-commit a rollback neni automaticky musi se volat
-povoluje vykonavani raw SQL
-umoznuje pracovat i s tabulkami
-nepodporuje automaticke vytvareni indexu
-umoznuje praci s existujicimi databazemi - unikatni autoincrement id, relace za pouziti pouze id
-omezena podpora pro vsechny databaze,nektere funkce pouze pro nektere db, mnoho funkci je takovych
-pri selectu automaticky zjistuje potrebne tabulky
-do selectu se specifikujou sloupce, co se stane pokud specifikuji sloupce z ruzne tabulky?
-obsahuje zkratky pro jednodussi kod
-n+1 resi explicitnim joinem, funguji i zpetne relace - je to pouze zkratka
-syntaxe je blizsi SQL umoznuje sirsi spektrum dotazu
-%oddeleni carko v where nefunguje, jinak pouziva & a |
-isempty method SQL pouziva normalni dotaz ne SELECT (1)
-v nekterych mistech micha aplikacni logiku do DAL neni to ciste jenom na dotazovani
-id neni vzdy ziskano z db
-design kodu je velmi nepekny 1 soubor 10000 radku
-obsahuje vlastni filtrovaci system, filtruje objekty, ktere jsou dotazany z db
-update\_or\_insert funguje trochu jinak, pro vsechny sloupce, lze specifikovat
-modely slouzi pouze pro definovani struktury, migrace a pro DBAL aby vedelo o strukture, pri existujici databazi je to opruz
-parsovani natural language queries
-web2py performs joins automatically and transparently when the query links two or more tables: db(db.person.id==db.thing.owner\_id).select() je to implicitni db join? je to stejne jako db(db.person).select(join=db.thing.on(db.person.id==db.thing.owner\_id)) ? neni to stejne
-Many to many tabulka se musi specifikovat, joiny nejsou automaticke
-list:<type>, and contains
-konstrukce raw SQL, sestavovani dotazu je line, provedeni se vola pri db()
-umoznuje import/export dat, i cele databaze do cvs, export do xml, html - mnoho nepotrebnych funkci, umoznuje verzovani pomoci db tabulky
-umoznuje kesovat dotazy
-relace lze definovat rekurzivne
-dva typy dedicnosti - concrete, class
-DAL si uklada metadata do souboru, lze pouzit bez definic tabulek avsak je potreba tyto soubory, coz je na prd, protoze soubory nemam jak ziskat
-umoznuje kopirovat data mezi databazemi - i ruzne srbd, avsak myslim, ze to nefunguje 100%
-mnoho nepodporovanych funkci v jinych dtabazich
+\paragraph{Práce se řádkem tabulky}
+\label{par:Row}
+Každý dotaz do databáze vrací množinu objektů třídy \lstinline[style=custompython]|web2py.gluon.dal.Row|. Tento objekt nepředstavuje záznam tabulky, ale řádek výsledku vráceného na dotaz. Data je možné získat přes atributy řádku, a pokud řádek obsahuje primární klíč, lze s řádkem dále pracovat, modifikovat jeho data nebo řádek v databázi smazat. \\
+Nová data se neukládají pomocí řádku, ale pomocí objektu tabulky. Řádek však obsahuje metodu, která automaticky zjistí, zda-li řádek v databázi vytvořit nebo aktualizovat novými daty. Tato metoda se nemusí řídit pouze pomocí primárního klíče jako v případě Django ORM, ale lze určit atributy, podle kterých metoda provede buď vytvoření nebo aktualizaci.
 
+\paragraph{Mapování relací}
+
+DBAL podporuje implicitně pouze relace 1:N. Relační záznam lze získat přes atribut řádku, který obsahuje cizí klíč. DBAL provede dotaz do databáze a výsledek je k tomuto atributu přiřazen. \\
+K relaci lze přistoupit i z odkazovaného objektu. Pro realizaci zpětné relace je potřeba přistoupit přes atribut řádku, jehož název je totožný s názvem tabulky, do které náleží vazební objekty. Vazební objekty je pak možné získat všechny nebo jejich množinu dále limitovat stejným způsobem jako při dotazování. \\
+Jak zobrazuje výpis \ref{src:w2p-mapping}, pro relaci N:M bylo potřeba definovat vazební tabulku. DBAL automaticky vazbu N:M nevytváří ani nepodporuje. Pro získání vazebních objektů je v případě N:M potřeba explicitně provést spojení tabulek. Řádek 14-16 ve výpisu \ref{src:w2p-query} zobrazuje dotaz, kterým lze získat všechny záznamy a autory, kteří se podíleli na vytváření těchto záznamů. \\
+Rekurzivní relace pomocí DBAL definovat lze. \\
+
+\paragraph{Mapování dědičnosti}
+Datová vrstva web2py umožňuje pouze nejjednodušší z návrhových vzorů pro mapování dědičnosti, a to Concrete Table Inheritance. Příklad zobrazuje výpis \ref{src:w2p-mapping}, kde tabulka author dědí z abstraktní definice person. Tabulka person se v databázi neobjeví a tabulka author obsahuje všechny své definované sloupce i sloupce z definice person. V tomto výpisu je dále definována tabulka vlog\_entry, která dědí z konkrétní třídy entry. Obě tyto tabulky jsou v databázi vytvořeny. Tabulka vlog\_entry pak obsahuje všechny sloupce definované ve své definici a navíc i všechny sloupce tabulky entry.
+
+\subsubsection{Dotazování}
+
+Pro dotazování do databáze se používá stejný objekt jako pro práci s tabulkami. Tento objekt přijímá jako parametr podmínku a vrací instanci třídy \lstinline[style=custompython]|web2py.gluon.dal.Set| která poskytuje metodu \lstinline[style=custompython]|select|. Metoda \lstinline[style=custompython]|select| pak přijímá široké spektrum atributů, kterými lze dotaz dále filtrovat a limitovat. Na řádku 2 ve výpisu \ref{src:w2p-query} je zobrazeno vytvoření podmínky a na řádku 3 pak provedení dotazu do databáze. Výsledkem jsou objekty řádků, jak bylo popsáno v sekci \ref{par:Row}. \\
+V dotazu na řádku 3 chybí specifikace tabulky. Je to proto, protože DBAL dokáže automaticky zjistit potřebné tabulky z ostatních parametrů předaných do dotazu. To platí i u složitějších dotazů jako je například spojení tabulek. \\
+Výsledná data získaná z databáze lze dále filtrovat a to bez potřeby nového dotazu do databáze. DBAL k těmto účelům poskytuje speciální API, které pracuje s výslednými daty v paměti. Řádek 8 ve výpisu \ref{src:w2p-query} zobrazuje filtrování dotázaných blogů na blogy, jejichž popis začíná písmenem \uv{B}. \\
+DBAL umožňuje pokládat dotazy i za pomocí vlastně vytvořeného SQL. Příklad lze vidět ve výpisu \ref{src:w2p-query} na řádku 20. Tento dotaz však nevrací data ve formě instancí třídy \lstinline[style=custompython]|web2py.gluon.dal.Row|, ale v nejzákladnější formě jakou vrací konkrétní databázový ovladač. \\
+
+\paragraph{Transakce} 
+Transakce DBAL neřeší automaticky jako Django ORM, je tak potřeba explicitně provést commit nebo rollback. Na řádku 1 je ve výpisu \ref{src:w2p-query} vložen do databáze nový záznam. Jelikož je však poté na řádku 10 proveden rollback, nový záznam v databázi není, což dokazuje řádek 11-13.
+
+\begin{lstlisting}[style=custompython, numbers=left, label=src:w2p-query, caption={Ukázka získávání dat z databáze}]
+>>> db.blog.insert(name="Better name for the blog")
+>>> where = db.blog.name == "Better name for the blog"
+>>> result = db(where).select()
+#SELECT  blog.id, blog.name, blog.description FROM blog WHERE (blog.name = 'Better name for the blog'); 
+>>> print result
+blog.id,blog.name,blog.description
+10,"Better name for the blog",<NULL>
+>>> result.find(lambda row: row.description[0] == 'B')
+#Nebyl proveden SELECT. Data jsou filtrována v paměti.
+>>> db.rollback()
+>>> print db(where).select()
+blog.id,blog.name,blog.description
+
+>>> db().select(db.entry.ALL, db.author.ALL, join=[
+...			db.entry_author.on(db.entry.id==db.entry_author.entry),
+...			db.author.on(db.author.id==db.entry_author.author)])
+#SELECT entry.id, ... FROM entry JOIN entry_author ON (entry.id = entry_author.entry) JOIN author ON (author.id = entry_author.author) WHERE (entry.id IS NOT NULL);
+>>> db().select((db.entry.mod_date-db.entry.pub_date).sum(), groupby=db.entry.blog_id)
+#SELECT SUM((entry.mod_date - entry.pub_date)) FROM entry GROUP BY entry.blog_id;
+>>> print db.executesql('SELECT * FROM blog ORDER BY blog.name;')
+[(1,"Blog", "Popis blogu"), ...]
+\end{lstlisting}
+
+\subsubsection{Optimalizace ve web2py DBAL}
+DBAL neposkytuje mnoho optimalizací pro dotazování do databáze, jelikož syntaxe API je velmi podobná SQL a je tak možné pomocí tohoto API vytvořit skoro jakýkoliv SQL dotaz. Řádek 18 výpisu \ref{src:w2p-query} zobrazuje dotaz z výpisu \ref{src:SimpleSQL}, který nebylo možno sestavit pomocí Django ORM API.  \\
+Problém N+1 DBAL nijak neulehčuje, a je ho potřeba řešit explicitním spojením tabulek. Jelikož je však ze syntaxe skoro jasné jaké dotazy se provádí, lze se tomuto problému jednodušeji vyhnout. \\
+Mezi optimalizace, které DBAL poskytuje patří kešování výsledku dotazů. \\
+
+\subsubsection{Nevýhody web2py DBAL}
+
+web2py DBAL poskytuje velmi dobré API pro dotazování do databáze. Tento fakt však zastiňuje mnoho nevýhod. \\
+Vytváření nebo změny tabulek jsou bohužel prováděny za běhu aplikace. DBAL také neulehčuje použití existující databáze, jelikož neposkytuje nástroj, který by automaticky vygeneroval definice tabulek a je tak potřeba tyto definice vytvořit ručně. \\
+Jelikož jsou metadata databázové struktury tabulek používány pro dotazování, není možné se bez těchto definic obejít, i pokud není potřeba vytvářet nebo měnit databázové tabulky. Pouze pokud již má rámec uložené metadata ve svých souborech, lze se definicím vyhnout \cite{web2py-dal}. Tyto metadata však vznikají z definic tabulek, proto nelze použít DBAL jen jako dotazovací nástroj. \\
+Další nevýhodou DBAL je, že jeho databázová abstrakce je nedostatečná. Přehršel funkcí, které obsahuje nelze použít pro všechny SŘBD a mnoho SŘBD lze používat pouze s omezením. Příkladem jsou některé datové typy, které jsou nefunkční pro polovinu podporovaných SŘBD. DBAL tedy spoléhá hodně na fakt, že se SŘBD nebude měnit. \\
+Nejhorší nevýhodu však vidím v návrhu této vrstvy. Obsahuje mnoho návrhových chyb, které se můžou projevit negativně na projektech vytvořených pomocí této vrstvy a dokonce i na stabilitě samotné vrstvy. Všechny instance tříd na datové vrstvě obsahují referenci na spojení do databáze. DBAL míchá dohromady funkce spadající na datovou vrstvu s funkcemi, které spadají do jiných vrstev a obsahuje mnoho nepotřebných funkcí, které by měly být distribuovány spíše pomocí přídavných modulů. \\
+Navíc je samotná struktura kódu DBAL velice nepěkná. Skládá se z jednoho souboru o 10000 řádcích.
+
+\subsubsection{Zhodnocení}
+
+Rámec web2py vznikl jako školní projekt pro výukové účely. Bohužel tento fakt a nevýhody z toho plynoucí jsou stále znát na kvalitě celého rámce i přesto, že od doby vzniku prošel mnoha změnami. \\
+Mezi jeho výhody patří dotazovací API, které má bliž k SQL, funkce jako migrace a verzování databázových záznamů. Jeho využití je pro ukázkové nebo velmi jednoduché projekty. Pro seriózní projekty se web2py DBAL však kvůli výše uvedeným nevýhodám nevyplatí používat. 
+
+\clearpage
 \subsection{SQLAlchemy}
-sql oriented
+%sql oriented
 
 \section{Návrh knihovny pypg}
 
@@ -659,6 +691,7 @@ raw sql, parsing sql
 \bibitem{dj-dis} http://www.youtube.com/watch?v=GxL9MnWlCwo
 \bibitem{wikiw2p} http://en.wikipedia.org/wiki/Web2py
 \bibitem{web2py} http://web2py.com/init/default/what
+\bibitem{web2py-dal} http://web2py.com/books/default/chapter/29/06
 
 \end{thebibliography}
 
@@ -708,6 +741,47 @@ CREATE TABLE "myapp_vlogentry" (
 CREATE INDEX "myapp_blog_name" ON "myapp_blog" ("name");
 CREATE INDEX "myapp_blog_name_like" ON "myapp_blog" ("name" varchar_pattern_ops);
 CREATE INDEX "myapp_entry_blog_id" ON "myapp_entry" ("blog_id");
+\end{lstlisting}
+\clearpage
+\begin{lstlisting}[label=src:w2p-mappingSQL, caption=Reprezentace modelů z výpisu \ref{src:w2p-mapping} v PostgreSQL, style=customsql]
+CREATE TABLE author(
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(512) UNIQUE,
+    biography TEXT,
+    photo VARCHAR(512),
+    first_name VARCHAR(50)
+);
+CREATE TABLE blog(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    description TEXT
+);
+CREATE TABLE entry(
+    id SERIAL PRIMARY KEY,
+    blog_id INTEGER REFERENCES blog (id) ON DELETE CASCADE,
+    headline VARCHAR(512),
+    bodytext TEXT,
+    pub_date DATE,
+    mod_date DATE,
+    comments INTEGER,
+    rating INTEGER
+);
+CREATE TABLE vblog(
+    id SERIAL PRIMARY KEY,
+    blog_id INTEGER REFERENCES blog (id) ON DELETE CASCADE,
+    headline VARCHAR(512),
+    bodytext TEXT,
+    pub_date DATE,
+    mod_date DATE,
+    comments INTEGER,
+    rating INTEGER,
+    video VARCHAR(512)
+);
+CREATE TABLE entry_author(
+    id SERIAL PRIMARY KEY,
+    entry INTEGER REFERENCES entry (id) ON DELETE CASCADE,
+    author INTEGER REFERENCES author (id) ON DELETE CASCADE
+);
 \end{lstlisting}
 \clearpage
 
