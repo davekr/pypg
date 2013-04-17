@@ -213,7 +213,7 @@ Rozdělení existujících rámců a knihoven do těchto tří vrstev znázorňu
 \section{Objektově relační mapování}
 
 Objektově relační (O/R) mapovaní, jak už název napovídá, mapuje entity z relačního modelu na doménové objekty v aplikační logice nejčastěji pomocí objektů nebo tříd. \\
-Pod pojmem doména rozumíme u aplikace oblast z reálného světa, pro kterou se tato aplikace snaží vyřešit nebo zjednodušit specifický problém. Doména vymezuje rozsah působnosti aplikace a určuje doménové objekty. Tyto objekty se v objektově orientovaném jazyce modelují nejčastěji pomocí tříd. Například, pokud je doména nákup a prodej zboží, za doménové objekty lze považovat kupujícího a objednávku. Martin Fowler definuje ve své publikaci několik návrhových vzorů, které popisují modelování doménových objektů a přístup k doménové logice. Mezi tyto vzory patří \textit{Transaction Script}, \textit{Domain Model} a \textit{Table Module} \cite{fowler}. Popis těchto vzorů je nad rámec této diplomové práce. Tyto návrhové vzory se však berou v potaz při návrhu objektově relačního mapování. \\
+Pod pojmem doména rozumíme u aplikace oblast z reálného světa, pro kterou se tato aplikace snaží vyřešit nebo zjednodušit specifický problém. Doména vymezuje rozsah působnosti aplikace a určuje doménové objekty. Tyto objekty se v objektově orientovaném jazyce modelují nejčastěji pomocí tříd. Například, pokud je doména nákup a prodej zboží, za doménové objekty lze považovat kupujícího a objednávku. Martin Fowler definuje ve své publikaci několik návrhových vzorů, které popisují modelování doménových objektů a přístup k doménové logice. Mezi tyto vzory patří \textit{Transaction Script}, \textit{Domain Model} a \textit{Table Module}. Popis těchto vzorů je nad rámec této diplomové práce. Tyto návrhové vzory se však berou v potaz při návrhu objektově relačního mapování. Více informací o těchto vzorech lze najít v knize Martina Fowlera \cite{fowler}.\\
 Podobně jako u DAL se i pod zkratkou ORM někdy označují rámce implementující O/R mapovaní. Tyto rámce kromě O/R mapování obsahují funkce potřebné pro komunikaci s relační databází popsané výše v sekci \ref{subsec:Data-layer}. Někdy i využívají existujících DAL, které tyto funkce obsahují a přidávají k nim O/R mapování. Většinou obsahují také DBAL. \\
 
 \subsection{Rozhraní datové vrstvy}
@@ -388,7 +388,7 @@ Je možno vytvořit i rekurzivní relaci, relaci na objekty stejného typu. \\
 
 ORM frameworku Django podporuje dva typy z výše popsaných návrhových vzorů mapování dědičnosti v sekci \ref{subsec:Inhmapping}. Concrete Table Inheritance a Class Table Inheritance. Oba dva případy jsou použity ve výpisu \ref{src:Mapping}. \\
 Vzoru Concrete Table Inheritance využívá model Author, který dědí z abstraktního modelu Person. Model Person je označen jako abstraktní pomocí meta třídy. Instance tohoto modelu nelze ukládat, slouží pouze pro společné definice modelů, které z něj dědí. \\
-Modely Entry a VlogEntry využívají Class Table Inheritance. Mezi těmito modely ORM automaticky vytvoří relaci 1:1. Pokud je instance nadřazeného modelu instancí i podřazeného modelu, je možné přistoupit přes relaci k datům podřazeného modelu. Řádek 20 ve výpisu \ref{src:Basic} zobrazuje přístup k instanci nadřazeného modelu. Řádek 22 pak přístup k instanci podřazeného modelu. Při získávání instance modelu VlogEntry z databáze, ORM automaticky získá data spojením tabulek i z modelu Entry.
+Modely Entry a VlogEntry využívají Class Table Inheritance. Mezi těmito modely ORM automaticky vytvoří relaci 1:1. Pokud je instance bázového modelu instancí i odvozeného modelu, je možné přistoupit přes relaci k datům odvozeného modelu. Řádek 20 ve výpisu \ref{src:Basic} zobrazuje přístup k instanci bázového modelu. Řádek 22 pak přístup k instanci odvozeného modelu. Při získávání instance modelu VlogEntry z databáze, ORM automaticky získá data spojením tabulek i z modelu Entry.
 
 \begin{lstlisting}[style=custompython, numbers=left, label=src:Basic, caption={Ukázka práce s instancí, relacemi a dědičností}]
 >>> blog = Blog()
@@ -444,7 +444,7 @@ ORM poskytuje i možnost zadat vlastní SQL, z jehož výsledku se pak vytvoří
 [<Blog: Blog object>, <Blog: Blog object>, ...] 
 \end{lstlisting}
 
-API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Cílem této sekce bylo pouze nastínit základní principy a ukázat základy syntaxe. 
+API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Cílem této sekce bylo pouze nastínit základní principy a ukázat základy syntaxe. Další informace lze nalézt v oficiální dokumentaci \cite{djangodoc}.
 
 \subsubsection{Optimalizace v Django ORM}
 
@@ -653,32 +653,118 @@ Důvodem vytvoření nové knihovny byly neuspokojivé vlastnosti existujících
 
 \subsection{Objektově-relační mapování}
 
-Na základě požadavků jsem se rozhodl nevyužít funkcí objektově-relačního mapování. Pro O/R mapování existuje mnoho kritiky \cite{seldo, fowler-orm, dbprogrammer-orm, mehdi}. Ve většině těchto případů se však jedná o špatné použití O/R mapování. O/R mapování není řešením pro všechny případy a snaha o jeho využití pro všechny situace vede k brzkému odhalení jeho limitů. ORM má své výhody a nevýhody. Pro mnoho projektů je ORM idelaním řešením, které ulehčí mnoho práce a času, pro některé případy však není vhodné. \\
-Při použití O/R mapování je složité vytvořit dotazovací API do databáze, které by bylo jednoduché a čitelné, a aby se operace, které pracují s databází neskrývali za API ORM a bylo tak jasné jaké dotazy se provádějí. Také je velmi pravděpodobné, že API nebude dostatečně abstrahovat databázi, což by znamenalo v případě složitějších struktur rozpad této abstrakce. Je to dáno vzájemnou nekompatibilitou relačních a objektových struktur. Toto se tedy neslučuje s požadavkem na jednoduchost a čitelnost. \\
+Na základě požadavků jsem se rozhodl nevyužít funkcí objektově-relačního mapování. Požadavky odpovídají spíše datové vrstvě bez O/R mapování. \\
+Pro O/R mapování existuje mnoho kritiky \cite{seldo, fowler-orm, dbprogrammer-orm, mehdi}. Ve většině těchto případů se však jedná o špatné použití O/R mapování. O/R mapování není řešením pro všechny případy a snaha o jeho využití pro všechny situace vede k brzkému odhalení jeho limitů. ORM má své výhody a nevýhody. Pro mnoho projektů je ORM ideálním řešením, které ulehčí mnoho práce a času, pro některé případy však není vhodné. \\
+Při použití O/R mapování je složité vytvořit jednoduché a čitelné dotazovací API do databáze tak, aby se operace, které pracují s databází neskrývaly za API ORM a bylo tak jasné, jaké dotazy se provádějí. Také je velmi pravděpodobné, že API nebude dostatečně abstrahovat databázi, což by znamenalo v případě složitějších struktur rozpad této abstrakce. Tento fakt je dán vzájemnou nekompatibilitou relačních a objektových struktur. Toto se tedy neslučuje s požadavkem na jednoduchost a čitelnost. \\
 Databáze je pomocí ORM abstrahována, což většinou znamená, že všechny funkce databáze nejsou podporovány. Pokud je tomu tak, není využit maximální potenciál výkonu databáze, což se neslučuje s požadavkem na rychlost získávání dat. \\
 Vytvořená knihovna tedy nebude implementovat O/R mapování. 
 
 \subsection{Podpora různých SŘBD}
 
-Rámce nebo knihovny pracující na datové vrstvě často podporují mnoho různých SŘBD a abstrahují aplikační logiku od specifikací a detailů, aby tak umožnily SŘBD měnit podle potřeby. Aby bylo dosaženo nezávislosti aplikační logiky na konkrétní databázi, mohou tak abstrahovat pouze společnou množinu vlastností a funkcí podporovaných SŘBD. Dle požadavků je však vyžadována podpora pouze jediného SŘBD, což umožňuje zaměřit se více na tento konkrétní SŘBD, podporovat jeho specifické vlastnosti a optimalizovat datovou vrstvu tak, aby co nejvíce využívala konkrétního SŘBD a zvýšila tak celkový výkon systému. \\
-Výsledná knihovna tedy bude implementována s myšlenkou, že bude vždy podporovat pouze jediný SŘBD.
+Rámce nebo knihovny pracující na datové vrstvě často podporují mnoho různých SŘBD a abstrahují aplikační logiku od specifikací a detailů, aby tak umožnily SŘBD měnit podle potřeby. Aby bylo dosaženo nezávislosti aplikační logiky na konkrétní databázi, je možné abstrahovat pouze společnou množinu vlastností a funkcí všech podporovaných SŘBD. Dle požadavků je však vyžadována podpora pouze jediného SŘBD, což umožňuje zaměřit se více na tento konkrétní SŘBD, podporovat jeho specifické vlastnosti a optimalizovat datovou vrstvu tak, aby co nejvíce využívala konkrétního SŘBD a zvýšila tak celkový výkon systému. \\
+Výsledná knihovna tedy bude implementována s myšlenkou, že bude vždy podporovat pouze jediný SŘBD. Tímto SŘBD je PostgreSQL.
 
 \subsubsection{Specifické vlastnosti PostgreSQL}
 
-SŘBD PostreSQL obsahuje specifické vlastnosti, které by knihovna mohla implementovat.
+SŘBD PostreSQL obsahuje oproti jiným SŘBD mnoho specifických vlastností a funkcí. Některé z těchto vlastností by vytvořená knihovna mohla podporovat nebo jich využívat pro zlepšení rychlosti dotazování.
+
+\begin{description}
+  \item[Flexibilní datové typy] PostgreSQL umožňuje vytváření vlastních datových typů. Kromě toho již obsahuje různé datové typy, které umožňují ukládat například geografická data, JavaScriptový objektový zápis (JSON), XML nebo binární data. Vlastností, kterou však předčí ostatní SŘBD je podpora pro složené datové typy a objekty typu pole. Je tak možné do jednoho databázového sloupce uložit například všechny telefonní čísla pro konkrétního uživatele.
+  \item[Fukce použité při dotazování] Mezi nejzajímavější funkce, které lze použít při dotazování patří například funkce pro agregování jako \lstinline[style=inlinepython]|array_agg|, která vrací objekt typu pole, \lstinline[style=inlinepython]|bool_and|, který pro všechny prvky provede logický součin a nebo funkce \lstinline[style=inlinepython]|row_to_json|, která vrací každý řádek výsledku dotazu ve formátu JSON.
+  \item[Podpora různých jazyků] PostgreSQL umožňuje vytváření uživatelských funkcí pomocí procedurálních jazyků. Kromě standardního PL/pgSQL je možno využít i Python (PL/Python), Perl (PL/Perl) nebo i Ruby (PL/Ruby) \cite{pllanguages}. 
+  \item[Podpora NoSQL] Pomocí datového typu \lstinline[style=inlinepython]|hstore| umožňuje SŘBD ukládat data podobně jako v NoSQL databázích. Tento datový typ je bez schématu a ukládá data ve formě klíč-hodnota. PostgreSQL navíc poskytuje pro tento datový typ speciální dotazovací syntaxi ne nepodobnou syntaxi NoSQL.
+  \item[Funkce nad okny] Funkce nad okny (v angličtině Window Functions) fungují podobně jako v SŘBD Oracle. Pomocí těchto funkcí je možné provádět výpočty nad daty podobně jako u agregačních funkcí, ovšem s tím rozdílem, že data není nutné seskupovat do skupin.
+  \item[Dědičnost tabulek] PostgreSQL dovoluje vytvářet tabulky s využitím dědičnosti. Tabulka tak získá všechny sloupce z děděné tabulky. Funguje zde i určitý druh polymorfismu, kdy na dotaz do bázové tabulky lze získat data i z odvozené tabulky.
+  \item[Částečné indexy a omezení] Při vytváření omezení je možné zadat podmínku, která bude určovat, kdy má dané omezení platit. Podobným způsobem lze vytvořit i indexy, což se hodí v případě, pokud není potřeba vytvářet index pro všechny hodnoty.
+\end{description}
+
+PostgreSQL obsahuje mnoho dalších funkcí a vlastností, jejich popis je však nad rámec této diplomové práce. Pro tento SŘBD navíc existuje i mnoho zásuvných modulů, které mu dodávají další funkce. Proč používat PostgreSQL a další jeho vlastnosti pěkně popisují dva články na internetu \cite{postgre, postgre2}.
 
 \subsection{Funkce pro zlepšení výkonu při čtení z databáze}
 
-\subsubsection{Simulace editovatelných pohledů}
+Jedním z požadavků na vlastnosti vytvořené knihovny byla rychlá komunikace s databází, konkrétně rychlé načítání dat. Aby byl tento požadavek splněn, bude knihovna obsahovat funkce urychlující čtení dat. Mezi tyto funkce bude patřit simulace materializovaných pohledů a minimalizace přenášených dat.
+
+\subsubsection{Simulace materializovaných pohledů}
+
+SŘBD PostgreSQL obsahuje mnoho funkcí, ovšem materializované pohledy mezi nimi nejsou. Materializované pohledy jsou jednou z denormalizačních technik, které se používají pro urychlení čtení dat z databáze. Jsou podobné obyčejným databázovým pohledům, ale od těchto pohledů se liší realizací, která je řešená pomocí konstrukce podobné databázové tabulce. Tato tabulka pak slouží jako keš pro data. Výhodou oproti obyčejným pohledům je možnost vytváření indexů nad touto tabulku a rychlost čtení dat. \\
+Pro zajištění konzistence dat je potřeba, aby v případě změny dat v tabulkách, které tvoří základ pro materializovaný pohled, byly aktualizovány i data v samotném materializovaném pohledu. To je možné buď ihned při změně dat nebo až při explicitním pokynutí. \\
+
+Výsledná knihovna bude implementovat simulaci materializovaných pohledů, které budou aplikovat změny ihned při změně bázových dat. Materializovaný pohled bude simulován pomocí tabulky, která bude vytvořená na základě SQL dotazu, a pomocí trigrů, které budou aktualizovat materializovaný pohled v případě změny bázových tabulek. \\
+
+Celý proces bude automatizovaný. 
+
+\subsubsection{Automatická denormalizace}
+
+Knihovna bude obsahovat mechanismus, který bude navrhovat denormalizační změny. Na základě vstupních dat, které budou ve formě SQL dotazů a struktury databáze, mechanismus automaticky rozhodne, pro které struktury a jakou formou by bylo vhodné provést změny vedoucí k denormalizaci a ke zlepšení rychlosti čtení dat. Mechanismus se nebude soustředit pouze na zlepšení rychlosti čtení, ale bude brát v potaz i rychlost změn dat, kterým případná denormalizace neprospěje. Výstupem této funkce budou zjištěné údaje, doporučené denormalizační změny a hodnoty časů ukazující, o kolik bude celkový výkon systému zlepšen. \\
+Tato funkce tak zjednoduší uživateli rozhodování, na jakém místě by měl vytvořit výše popsaný simulovaný materializovaný pohled nebo jiné denormalizace.
 
 \subsubsection{Minimalizace přenášených dat}
+
+Knihovna se bude svými funkcemi snažit o co nejmenší objem přenášených dat. V případě dlouhé odezvy databázového serveru je pro rychlost komunikace nesmírně kritické co nejméně přenesených dat pro získání výsledku dotazu. \\
+Při pokládání dotazu pomocí spojení tabulek může nastat situace, kdy se přenáší stejná data vícekrát. V případě dlouhé odezvy nebo mnoha sloupců, lze data získat rychleji rozdělením dotazu na samostatné dotazy pro každou tabulku. Příklad zobrazuje tabulka \ref{tab:JoinTable}. Tabulka je výsledkem dotazu z testovací databáze world\footnote{http://pgfoundry.org/projects/dbsamples/}, který využívá spojení tabulek. Dotazem byla získána pro každé město i země do, které náleží. Tabulka vypisuje pro přehlednost pouze část výsledku, ale i na tomto výsledku je však vidět, že každý záznam tabulky country se přenáší několikrát a vznikají několikanásobné kopie dat. \\
+Tento problém popsal Jakub Vrána na svém webu a řešení implementoval do své knihovny NotOrm \cite{notorm}. V odkazovaném článku je proveden test, který dokazuje, že je přístup samostatných dotazů v některých případech výhodnější než spojení tabulek. Test byl spouštěn na SŘBD MySQL. Vyzkoušel jsem tedy podobný test pro PostgreSQL a výsledek zobrazuje tabulka. \\
+Řešením tohoto problému jsou tedy samostatné dotazy na každou tabulku. Pro efektivnější provedení dotazu, jehož výsledek zobrazuje tabulka \ref{tab:JoinTable} se tedy provede nejdříve dotaz do databázové tabulky city, poté se uloží cizí klíče všech získaných záznamů odkazující na záznam v tabulce country a použijí se jako parametr podmínky dotazu do tabulky country. Výsledky obou dotazů se však dále musí před vypsáním finálního výsledku ještě sloučit podle cizího klíče. Konkrétní postup zobrazuje výpis \ref{src:selectin}. \\
+Kód obstarávající tuto funkčnost je však monotónní a stává se komplikovaným při použití více tabulek a různých typů vazeb. Vytvořená knihovna tedy bude implementovat funkčnost, která tento monotónní kód bude provádět na pozadí a bude pro provádění samostatných dotazů poskytovat jednoduché API.
+
+\begin{table}
+  \centering
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    city\_id & city\_name & country\_name & country\_continent & country\_region \\
+    \hline
+    201 & Sarajevo & Bosnia ... & Europe & Southern Europe \\
+    \hline
+	202 & Banja Luka & Bosnia ... & Europe & Southern Europe \\
+	\hline
+	203 & Zenica & Bosnia ... & Europe & Southern Europe \\
+	\hline
+	204 & Gaborone & Botswana & Africa & Southern Africa \\
+	\hline
+	205 & Francistown & Botswana & Africa & Southern Africa \\
+	\hline
+	206 & São Paulo & Brazil & South America & South America \\
+	\hline
+	207 & Rio de Janeiro & Brazil & South America & South America \\
+	\hline
+	208 & Salvador & Brazil & South America & South America \\
+	\hline
+	209 & Belo Horizonte & Brazil & South America & South America \\
+	\hline
+	210 & Fortaleza & Brazil & South America & South America \\
+	\hline
+  \end{tabular}
+  \caption{Ukázka multiplicity dat při spojení tabulek}
+  \label{tab:JoinTable}
+\end{table}
+
+\begin{lstlisting}[style=custompython, label=src:selectin, caption={Získávání dat pomocí samostatných dotazů}]
+...
+cursor.execute("SELECT id, countrycode, name FROM city")
+cities = cursor.fetchall()
+countrycodes = set([city['countrycode'] for city in cities])
+cursor.execute("SELECT code, name, continent, region FROM country WHERE code IN ('%s')" % "','".join(countrycodes))
+countries = cursor.fetchall()
+countries_dict = {}
+for country in countries:
+    pk = country['code']
+    countries_dict[pk] = country
+for city in cities:
+    fk = city['countrycode']
+    country = countries_dict[fk]
+    print city['name'], country['name'], country['continent'], country['region']
+...
+\end{lstlisting}
+
 
 \section{Implementace knihovny pypg}
 
 %-vysvetleni syntaxe, vsech mechanismu do podrobna
 %-komentare ve zdrojovem kodu a principy clean code
+se nestará o ukládání a tím pádem ani validaci dat.
 
 \subsection{Dalsi funkce, ktere budou v budoucnu implementovany}
+
+Tyto funkce byly původně obsaženy v návrhu knihovny. 
 Connection pooling
 tabulky a sloupce prece jen nakonec vypisovat pri chybach jenom pokud debug=True
 pokud tabulka obsahuje vice relaci, zpetna vazba nefunguje uplne presne
@@ -701,6 +787,7 @@ raw sql, parsing sql
 \bibitem{pwiki} http://wiki.python.org/moin/WebFrameworks
 \bibitem{django.cz} http://www.djangoproject.cz/
 \bibitem{aholovaty} http://en.wikipedia.org/wiki/Adrian\_Holovaty
+\bibitem{djangodoc} https://docs.djangoproject.com/en/1.5/
 \bibitem{dj-qscache} https://docs.djangoproject.com/en/1.5/topics/db/queries/\#caching-and-querysets
 \bibitem{dj-queries} https://docs.djangoproject.com/en/1.5/topics/db/queries/
 \bibitem{dj-iterator} https://docs.djangoproject.com/en/1.5/ref/models/querysets/\#django.db.models.query.QuerySet.iterator
@@ -717,7 +804,10 @@ raw sql, parsing sql
 \bibitem{fowler-orm} http://martinfowler.com/bliki/OrmHate.html
 \bibitem{dbprogrammer-orm} http://database-programmer.blogspot.cz/2008/06/why-i-do-not-use-orm.html
 \bibitem{mehdi} http://www.mehdi-khalili.com/orm-anti-patterns-series
-
+\bibitem{postgre} http://craigkerstiens.com/2012/04/30/why-postgres/
+\bibitem{postgre2} http://craigkerstiens.com/2012/05/07/why-postgres-part-2/
+\bibitem{pllanguages} http://www.postgresql.org/docs/9.0/static/xplang.html
+\bibitem{notorm} http://php.vrana.cz/srovnani-dotazu-do-zavislych-tabulek.php
 \end{thebibliography}
 
 
