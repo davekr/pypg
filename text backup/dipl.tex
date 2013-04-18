@@ -635,8 +635,11 @@ Mezi jeho výhody patří dotazovací API, které má blízko k SQL, funkce jako
 \subsection{SQLAlchemy}
 Dodělám popis a srovnání během následujícího týdne.
 %sql oriented
+% jedno vlakno vice trasakci, django jenom 1 a 1
+%
 
 \section{Návrh knihovny pypg}
+\label{sec:Design}
 
 Úkolem této diplomové práce bylo vytvořit vlastní knihovnu pracující na datové vrstvě aplikačního softwaru. Téma bylo původně diskutováno s firmou deving\footnote{http://deving.cz}. Tato firma se věnuje tvorbě informačních systémů (IS), systémů pro správu obsahu (CMS) a podnikových aplikací. Požadavkem firmy bylo vytvořit novou knihovnu nebo rámec na datové vrstvě, který by splňoval nároky na specifické použití pro tyto systémy. \\
 Konkrétními požadavky firmy byly:
@@ -673,7 +676,7 @@ SŘBD PostreSQL obsahuje oproti jiným SŘBD mnoho specifických vlastností a f
   \item[Fukce použité při dotazování] Mezi nejzajímavější funkce, které lze použít při dotazování patří například funkce pro agregování jako \lstinline[style=inlinepython]|array_agg|, která vrací objekt typu pole, \lstinline[style=inlinepython]|bool_and|, který pro všechny prvky provede logický součin a nebo funkce \lstinline[style=inlinepython]|row_to_json|, která vrací každý řádek výsledku dotazu ve formátu JSON.
   \item[Podpora různých jazyků] PostgreSQL umožňuje vytváření uživatelských funkcí pomocí procedurálních jazyků. Kromě standardního PL/pgSQL je možno využít i Python (PL/Python), Perl (PL/Perl) nebo i Ruby (PL/Ruby) \cite{pllanguages}. 
   \item[Podpora NoSQL] Pomocí datového typu \lstinline[style=inlinepython]|hstore| umožňuje SŘBD ukládat data podobně jako v NoSQL databázích. Tento datový typ je bez schématu a ukládá data ve formě klíč-hodnota. PostgreSQL navíc poskytuje pro tento datový typ speciální dotazovací syntaxi ne nepodobnou syntaxi NoSQL.
-  \item[Funkce nad okny] Funkce nad okny (v angličtině Window Functions) fungují podobně jako v SŘBD Oracle. Pomocí těchto funkcí je možné provádět výpočty nad daty podobně jako u agregačních funkcí, ovšem s tím rozdílem, že data není nutné seskupovat do skupin.
+  \item[Funkce nad okny] Funkce nad okny (v angličtině Window Functions) fungují podobně jako v SŘBD Oracle. Pomocí těchto funkcí je možné provádět výpočty nad daty obdobně jako u agregačních funkcí, ovšem s tím rozdílem, že data není nutné seskupovat do skupin.
   \item[Dědičnost tabulek] PostgreSQL dovoluje vytvářet tabulky s využitím dědičnosti. Tabulka tak získá všechny sloupce z děděné tabulky. Funguje zde i určitý druh polymorfismu, kdy na dotaz do bázové tabulky lze získat data i z odvozené tabulky.
   \item[Částečné indexy a omezení] Při vytváření omezení je možné zadat podmínku, která bude určovat, kdy má dané omezení platit. Podobným způsobem lze vytvořit i indexy, což se hodí v případě, pokud není potřeba vytvářet index pro všechny hodnoty.
 \end{description}
@@ -700,11 +703,8 @@ Tato funkce tak zjednoduší uživateli rozhodování, na jakém místě by měl
 
 \subsubsection{Minimalizace přenášených dat}
 
-Knihovna se bude svými funkcemi snažit o co nejmenší objem přenášených dat. V případě dlouhé odezvy databázového serveru je pro rychlost komunikace nesmírně kritické co nejméně přenesených dat pro získání výsledku dotazu. \\
-Při pokládání dotazu pomocí spojení tabulek může nastat situace, kdy se přenáší stejná data vícekrát. V případě dlouhé odezvy nebo mnoha sloupců, lze data získat rychleji rozdělením dotazu na samostatné dotazy pro každou tabulku. Příklad zobrazuje tabulka \ref{tab:JoinTable}. Tabulka je výsledkem dotazu z testovací databáze world\footnote{http://pgfoundry.org/projects/dbsamples/}, který využívá spojení tabulek. Dotazem byla získána pro každé město i země do, které náleží. Tabulka vypisuje pro přehlednost pouze část výsledku, ale i na tomto výsledku je však vidět, že každý záznam tabulky country se přenáší několikrát a vznikají několikanásobné kopie dat. \\
-Tento problém popsal Jakub Vrána na svém webu a řešení implementoval do své knihovny NotOrm \cite{notorm}. V odkazovaném článku je proveden test, který dokazuje, že je přístup samostatných dotazů v některých případech výhodnější než spojení tabulek. Test byl spouštěn na SŘBD MySQL. Vyzkoušel jsem tedy podobný test pro PostgreSQL a výsledek zobrazuje tabulka. \\
-Řešením tohoto problému jsou tedy samostatné dotazy na každou tabulku. Pro efektivnější provedení dotazu, jehož výsledek zobrazuje tabulka \ref{tab:JoinTable} se tedy provede nejdříve dotaz do databázové tabulky city, poté se uloží cizí klíče všech získaných záznamů odkazující na záznam v tabulce country a použijí se jako parametr podmínky dotazu do tabulky country. Výsledky obou dotazů se však dále musí před vypsáním finálního výsledku ještě sloučit podle cizího klíče. Konkrétní postup zobrazuje výpis \ref{src:selectin}. \\
-Kód obstarávající tuto funkčnost je však monotónní a stává se komplikovaným při použití více tabulek a různých typů vazeb. Vytvořená knihovna tedy bude implementovat funkčnost, která tento monotónní kód bude provádět na pozadí a bude pro provádění samostatných dotazů poskytovat jednoduché API.
+Knihovna se bude svými funkcemi snažit o co nejmenší objem přenášených dat. V případě pomalé odezvy databázového serveru je pro rychlost komunikace nesmírně kritické co nejméně přenesených dat pro získání výsledku dotazu. \\
+Při pokládání dotazu pomocí spojení tabulek může nastat situace, kdy se přenáší stejná data vícekrát. V případě dlouhé odezvy nebo mnoha sloupců, lze data získat rychleji rozdělením dotazu na samostatné dotazy pro každou tabulku. Příklad zobrazuje tabulka \ref{tab:JoinTable}. Tabulka je výsledkem dotazu z testovací databáze world\footnote{http://pgfoundry.org/projects/dbsamples/}, který využívá spojení tabulek. Dotazem byla získána pro každé město i země do, které město náleží. Tabulka vypisuje pro přehlednost pouze část výsledku, ale i na tomto výsledku je však vidět, že každý záznam tabulky country se přenáší několikrát a vznikají několikanásobné kopie dat. \\
 
 \begin{table}
   \centering
@@ -737,6 +737,25 @@ Kód obstarávající tuto funkčnost je však monotónní a stává se kompliko
   \label{tab:JoinTable}
 \end{table}
 
+Tento problém popsal podrobněji Jakub Vrána na svém webu a řešení implementoval do své knihovny NotOrm \cite{notorm}. V odkazovaném článku je proveden test, který dokazuje, že je přístup samostatných dotazů v některých případech výhodnější než spojení tabulek. Test byl spouštěn na SŘBD MySQL. Vyzkoušel jsem tedy podobný test pro PostgreSQL a výsledek zobrazuje tabulka \ref{tab:ProofTable}. \\
+V tomto testu byla použita opět databáze world a pro otestování byly položeny dotazy na získání prvních deseti měst, zemí, do kterých tyto města patří a jazyků, kterými se v těchto zemích mluví. Dotazy byly položeny pomocí spojení tabulek a pomocí samostatných dotazů. Tabulka obsahuje výsledné časy v sekundách pro tisíc spuštění a výsledek je nejmenším časem z pěti provedení. \\
+Je potřeba podotknout, že rozdíly mezi výslednými časy jsou minimální. Je to však dáno poměrně jednoduchými testovacími dotazy. V praxi jsou používány daleko složitější konstrukce a rozdíly mezi těmito přístupy se tak projeví více. \\
+
+\begin{table}
+  \centering
+  \begin{tabular}{|c|c|c|}
+    \hline
+    Podmínky & Spojení tabulek (s) & Samostatné dotazy (s)\\
+    \hline
+    Lokální server (PostgreSQL 8.4) & 12.22 & 5.26 \\
+    \hline
+    Vzdálený server (PostgreSQL 8.4) & - & - \\
+    \hline
+  \end{tabular}
+  \caption{Výsledky testování vlivu objemu přenášených dat na celkový výkon}
+  \label{tab:ProofTable}
+\end{table}
+
 \begin{lstlisting}[style=custompython, label=src:selectin, caption={Získávání dat pomocí samostatných dotazů}]
 ...
 cursor.execute("SELECT id, countrycode, name FROM city")
@@ -755,14 +774,35 @@ for city in cities:
 ...
 \end{lstlisting}
 
+Optimálním řešením jsou tedy samostatné dotazy na každou tabulku. Pro efektivnější provedení dotazu, jehož výsledek zobrazuje tabulka \ref{tab:JoinTable} se tedy provede nejdříve dotaz do databázové tabulky city, poté se uloží cizí klíče všech získaných záznamů odkazující na záznam v tabulce country a použijí se jako parametr podmínky dotazu do tabulky country. Výsledky obou dotazů se však dále musí před vypsáním finálního výsledku ještě sloučit podle cizího klíče. Konkrétní postup zobrazuje výpis \ref{src:selectin}. \\
+Kód obstarávající tuto funkčnost je však monotónní a stává se komplikovaným při použití více tabulek a různých typů vazeb. Vytvořená knihovna tedy bude implementovat funkčnost, která tento monotónní kód bude provádět na pozadí a bude pro provádění samostatných dotazů poskytovat jednoduché API.
 
 \section{Implementace knihovny pypg}
 
-%-vysvetleni syntaxe, vsech mechanismu do podrobna
-%-komentare ve zdrojovem kodu a principy clean code
+Vytvořenou knihovnu jsem nazval pypg. Knihovna splňuje všechny požadavky uvedené v návrhu v sekci \ref{sec:Design}. Je napsaná v jazyce Python a specializuje se na komunikaci se SŘBD PostgreSQL. Dále obsahuje jednoduché dotazovací API do databáze, které je velmi podobné SQL. Knihovna je malá, její architektura přehledná a požadavky na spuštění jsou minimální. Obsahuje pouze funkce, které budou využívány při tvorbě systému firmou deving a svými funkcemi urychluje operace pro čtení dat z databáze. \\
+
+\subsection{Mapování v pypg}
+
+Knihovna neobsahuje objektově-relační mapování a podobně jako web2py DBAL mapuje tabulky a záznamy na instance a třídy reprezentující množiny a záznamy. \\
+Definice a generování struktury databáze za pomocí modelů knihovna nepodporuje a slouží pouze jako generátor dotazů. Knihovna nechává vytvoření tabulek na uživateli. Při jejím používání tak není nutné definovat strukturu a je ji možné jednoduše použít i pro existující databázi. 
+
+při používání je potřeba načist struktur nebo se ridit podle pravidel.
 se nestará o ukládání a tím pádem ani validaci dat.
 
-\subsection{Dalsi funkce, ktere budou v budoucnu implementovany}
+\subsection{Dotazování}
+
+Při tvorbě syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelnost dotazů, které se provádějí na pozadí. Z části byla syntaxe inspirována dotazovacím API web2py DBAL a SQLAlchemy a knihovnou NotORM. Podle mého názoru je tedy k jejímu porozumění potřeba minimum znalostí, pokud je uživatel již obeznámený se syntaxí SQL.
+
+\begin{lstlisting}[style=custompython, label=src:pypg, caption={Ukázka získávání dat z databáze pomocí knihovny pypg}]
+
+\end{lstlisting}
+
+\subsection{Architektura}
+%-komentare ve zdrojovem kodu a principy clean code
+
+\subsection{Funkce pro zrychlení čtení dat}
+
+\subsection{Funkce, které budou v budoucnu implementovány}
 
 Tyto funkce byly původně obsaženy v návrhu knihovny. 
 Connection pooling
@@ -770,7 +810,8 @@ tabulky a sloupce prece jen nakonec vypisovat pri chybach jenom pokud debug=True
 pokud tabulka obsahuje vice relaci, zpetna vazba nefunguje uplne presne
 sloupce pri joinu, ktere se jmenuji stejne podobne jako u web2py
 raw sql, parsing sql
-\section{Porovnani rychlosti pypg s ORM rámci}
+
+\section{Porovnani rychlosti pypg s ostatními rámci}
 
 \section{Závěr}
 \label{sec:Conclusion}
