@@ -3,20 +3,6 @@ from exception import DBException
 import settings
 import logging
 
-class Naming(object):
-
-    def get_pk_naming(self, table):
-        return "id"
-
-    def get_fk_naming(self, table, foreign_table):
-        return "%s_id" % foreign_table
-
-    def match_fk_naming(self, table, attr):
-        return attr.endswith("_id")
-
-    def get_fk_column(self, table, foreign_key):
-        return foreign_key.rstrip("_id")
-
 class Manager(object):
 
     _CONNECTION = None
@@ -48,7 +34,7 @@ class Manager(object):
                            ) AS t2 
                            ON t1.column_name = t2.column_name AND t1.table_name = t2.table_name;
                            """
-    _NAMING = Naming()
+    _NAMING = None
     
     @staticmethod
     def set_connection(conn):
@@ -84,11 +70,14 @@ class Manager(object):
 
     @staticmethod
     def set_naming(naming):
+        from structure import Naming
         if naming: 
             if not isinstance(naming, Naming):
                 raise DBException('Naming must be instance of class utils.Naming')
             else:
                 Manager._NAMING = naming
+        else:
+            Manager._NAMING = Naming()
             
     @staticmethod
     def get_scheme():

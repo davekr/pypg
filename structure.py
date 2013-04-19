@@ -110,5 +110,17 @@ class Structure(object):
         except IndexError:
             return None
     
+class Naming(object):
+
+    def get_pk_naming(self, table):
+        return "id"
+
+    def get_fk_naming(self, table, foreign_table):
+        return "%s_id" % foreign_table
+
+    def match_fk_naming(self, table, attr):
+        return attr.endswith("_id")
+
+    def get_fk_column(self, table, foreign_key):
+        return foreign_key.rstrip("_id")
                 
-            
