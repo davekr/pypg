@@ -747,9 +747,9 @@ Je potřeba podotknout, že rozdíly mezi výslednými časy jsou minimální. J
     \hline
     Podmínky & Spojení tabulek (s) & Samostatné dotazy (s)\\
     \hline
-    Lokální server (PostgreSQL 8.4) & 12.22 & 5.26 \\
+    Lokální server (PostgreSQL 9.2) & 12.22 & 5.26 \\
     \hline
-    Vzdálený server (PostgreSQL 8.4) & - & - \\
+    Vzdálený server (PostgreSQL 9.2) & 54.34 & 38.71 \\
     \hline
   \end{tabular}
   \caption{Výsledky testování vlivu objemu přenášených dat na celkový výkon}
@@ -784,21 +784,78 @@ Vytvořenou knihovnu jsem nazval pypg. Knihovna splňuje všechny požadavky uve
 \subsection{Mapování v pypg}
 
 Knihovna neobsahuje objektově-relační mapování a podobně jako web2py DBAL mapuje tabulky a záznamy na instance a třídy reprezentující množiny a záznamy. \\
-Definice a generování struktury databáze za pomocí modelů knihovna nepodporuje a slouží pouze jako generátor dotazů. Knihovna nechává vytvoření tabulek na uživateli. Při jejím používání tak není nutné definovat strukturu a je ji možné jednoduše použít i pro existující databázi. 
+Definice a generování struktury databáze za pomocí modelů knihovna nepodporuje a slouží pouze jako generátor dotazů. Knihovna nechává vytvoření tabulek na uživateli. Při jejím používání tak není nutné definovat strukturu a je ji možné jednoduše použít i pro existující databázi. \\
+Knihovna pro správnou funkčnost potřebuje před spuštěním zjistit strukturu databáze. Toho je dosaženo buď pomocí introspekce, kdy si knihovna strukturu načte do paměti a nebo pomocí sady pravidel, které struktura databáze dodržuje. Implicitně sada pravidel určuje pro každou tabulku primární klíč s názvem \lstinline[style=inlinepython]|id| a cizí klíč s názvem \lstinline[style=inlinepython]|'tabulka'_id| odkazující na primární klíč tabulky \lstinline[style=inlinepython]|'tabulka'|. Tuto sadu pravidel lze uzpůsobit potřebám poděděním třídy \lstinline[style=inlinepython]|pypg.structure.Naming| a přepsáním jednotlivých metod pro získávání informací o struktuře. Instanci této třídy je pak potřeba předat při inicializaci knihovny. Knihovna momentálně nepodporuje složené klíče. \\
+Vstupním bodem pro práci s knihovnou je třída \lstinline[style=inlinepython]|PyPg|. Konstruktor této třídy přijímá jako parametr spojení do databáze vytvořené pomocí ovladače psycopg2, jak zobrazuje řádek 5 ve výpisu \ref{src:pypg}. Při vytváření instance lze předat i další parametry, které slouží pro nastavení různých vlastností knihovny. Příkladem je parametr \lstinline[style=inlinepython]|debug|, který určuje zda má knihovna logovat dotazy prováděné do databáze. Pro logování je využito standardního logování v jazyce Python. Implicitně je logování nastaveno na standardní výstup. \\ 
+Dalším možným nastavením je parametr \lstinline[style=inlinepython]|strict|. Tento parametr určuje, zda se má provádět introspekce, jejíž výsledky se ukládají v paměti, a na základě této introspekce pak validace dotazů před jejich spuštěním nad databází. Seznam všech nastavení a podrobnější informace lze nalézt v programátorské příručce v příloze \ref{sec:Appendixcd} na CD/DVD. \\
+Kromě validace dotazů knihovna neposkytuje žádnou validaci dat. Pro zajištění konzistence dat je lepší, pokud se data validují pouze v databázi, jelikož při přístupu do databáze přes jinou aplikaci může dojít k inkonzistenci dat \cite{notorm-why}. \\
 
-při používání je potřeba načist struktur nebo se ridit podle pravidel.
-se nestará o ukládání a tím pádem ani validaci dat.
+\subsubsection{Práce s řádkem tabulky}
+
+Knihovna na dotaz do databáze vrací data ve formě instancí třídy \lstinline[style=inlinepython]|pypg.row.Row|. Tato třída podobně jako ve web2py DBAL umožňuje základní manipulaci s řádkem. Ukázku zobrazují ve výpisu \ref{src:pypg} řádky 6-11. Instance obsahuje metody pro aktualizaci a mazání řádku. Při aktualizaci se do databáze zasílají pouze změněné atributy. \\
+Přes instanci řádku se lze dostat také k vazebním záznamům. Knihovna podporuje i zpětné relace, kdy je možné vazební objekty dále filtrovat. Příklad je zobrazen na řádku 9, kdy je přistupováno k prvním deseti záznamům blogu \lstinline[style=inlinepython]|blog|.
 
 \subsection{Dotazování}
 
-Při tvorbě syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelnost dotazů, které se provádějí na pozadí. Z části byla syntaxe inspirována dotazovacím API web2py DBAL a SQLAlchemy a knihovnou NotORM. Podle mého názoru je tedy k jejímu porozumění potřeba minimum znalostí, pokud je uživatel již obeznámený se syntaxí SQL.
+Při tvorbě syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelnost dotazů, které se provádějí na pozadí. Zčásti byla syntaxe inspirována dotazovacím API web2py DBAL a SQLAlchemy a knihovnou NotORM. Podle mého názoru je tedy k jejímu porozumění potřeba minimum znalostí, pokud je uživatel již obeznámený se syntaxí SQL. \\
 
-\begin{lstlisting}[style=custompython, label=src:pypg, caption={Ukázka získávání dat z databáze pomocí knihovny pypg}]
-
+\begin{lstlisting}[style=custompython, numbers=left, label=src:pypg, caption={Základy práce s knihovnou pypg}]
+>>> import psycopg2
+>>> from pypg import PyPg
+>>> conn = psycopg2.connect("dbname=database user=username")
+>>> db = PyPg(conn, debug=True, strict=True)
+>>> db.blog.insert(name="David's new blog")
+>>> blog = db.blog.insert_and_get(name="Another blog")[0]
+>>> blog['id']
+2
+>>> blog.entry.limit(10).select()
+#SELECT * FROM "entry" WHERE entry.blog_id =2 LIMIT 10
+>>> blog.update(name = "Better name for the blog")
+>>> db.blog.where(db.blog.id == 2).update(name = "Better name for the blog")
+>>> db.blog.where(db.blog.id == 1).delete()
+>>> query = db.blog.select().where(db.blog.name == "Better name for the blog") #Neprovádí se dotaz
+>>> query.limit(10) #Neprovádí se dotaz
+>>> print query[0]
+#SELECT * FROM "blog"  WHERE blog.name = 'Better name for the blog' LIMIT 10
+[2, 'Better name for the blog', None]
+>>> db.blog.order(db.blog.name).where(db.blog.name.like("%blog")).select(db.blog.name)[0]
+#SELECT blog.name FROM "blog" WHERE blog.name LIKE '%blog' ORDER BY blog.name
+>>> db.blog.join(db.entry).select()[0]
+#SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.blog_id
+>>> db.blog.join(db.entry, on=db.entry.id == db.blog.id).select()[0]
+#SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.id
 \end{lstlisting}
 
+Přes instanci třídy \lstinline[style=inlinepython]|PyPg| se lze dostat k objektům třídy \lstinline[style=inlinepython]|pypg.table.Table| představující databázové tabulky a v případě zapnuté introspekce je možné zobrazit seznam všech tabulek. Objekty tabulek poskytují metody k vytvoření SQL dotazů. Dotazy, které čtou data z databáze se vyhodnocují až v případě, kdy je to opravdu potřeba. Je tedy možné dotazy řetězit. Řádky 14-16 ve výpisu \ref{src:pypg} zobrazují toto chování. \\
+Knihovna podporuje nejpoužívanější konstrukce pro sestavování dotazu. Řádek 19 zobrazuje dotaz na seřazené názvy všech blogů, které končí slovem \uv{blog}. Je zde také vidět, že při řetězení jednotlivých podmínek nezáleží na jejich pořadí. \\
+Přes instanci třídy představující databázovou tabulku lze přistoupit na objekty typu \lstinline[style=inlinepython]|pypg.column.Column|. Tyto objekty lze porovnávat a vytvářet tak podmínky při dotazování a obsahují i metody, které generují příslušné SQL jako například metoda \lstinline[style=inlinepython]|like|. \\
+API poskytuje možnost vytvářet dotazy i pomocí spojení tabulek. Ukázka je zobrazena na řádku 21 a 23 ve výpisu \ref{src:pypg}. Metoda \lstinline[style=inlinepython]|join| přijímá jako argument instanci třídy \lstinline[style=inlinepython]|pypg.table.Table| a nepovinný argument \lstinline[style=inlinepython]|on|. Pokud je nepovinný argument prázdný, knihovna se pokusí podmínku spojení doplnit implicitně za pomocí introspekce nebo sady pravidel. \\
+Knihovna obsahuje mnoho dalších možností pro sestavování dotazů a jejich kompletní popis lze nalézt v příloze \ref{sec:Appendixcd} v programátorské příručce.
+
 \subsection{Architektura}
-%-komentare ve zdrojovem kodu a principy clean code
+
+Při vytváření knihovny byl kladem zřetel na čistotu a jednoduchou strukturu kódu. Kniha Roberta Martina posloužila jako zdroj pravidel a postupů při vytváření knihovny pypg \cite{cleancode}. Celková funkčnost je tak rozdělena do kompaktních jednoduchých tříd, které jsou většinou v samostatných modulech. Názvy funkcí, metod a proměnných jsou vytvořeny s rozvahou, tak aby nepotřebovaly komentáře. Komentáře v kódu zastarávají a často jim není věnována stejná pozornost při změnách, což vede ke zmateným informacím  \cite{cleancode}. Jediným zdrojem pravdivých informací (SSOT) je kód. Knihovna tedy neobsahuje mnoho komentářů, ale byla napsána se snahou, aby kód popisoval sám sebe. \\
+Architektura knihovny obsahuje mnoho tříd. Níže jsou popsány pouze třídy, které zastávají v rámci knihovny důležitou funkci.
+
+\begin{description}
+\item[PyPg] Třída je vstupním bodem celé knihovny. Umožňuje nastavovat vlastnosti knihovny a poskytuje přístup k objektům třídy \lstinline[style=inlinepython]|Table|. Pomocí této třídy se spouští i vytváření materializovaných pohledů a automatická denormalizace.
+\item[Table] Třída je rozhraním nad databázovou tabulkou. Pomocí svých metod umožňuje vytvářet dotazy do databáze. Poskytuje přístup k objektům třídy \lstinline[style=inlinepython]|Column|.
+\item[TableValidator] Třída, která validuje dotazy před prováděním nad databází. Je využívána třídou \lstinline[style=inlinepython]|Table| a třídou \lstinline[style=inlinepython]|Row|.
+\item[RestrictedTableSelect] Třída, která se používá při přístupu k relacím. Umožňuje vazební objekty filtrovat a poskytuje podobné metody jako třída \lstinline[style=inlinepython]|Table|. 
+\item[ResultSet] Reprezentace výsledku vráceného na SQL dotaz. Umožňuje funkci samostatných dotazů, která minimalizuje objem přenášených dat, a poskytuje přístup k instancím třídy \lstinline[style=inlinepython]|Row|.
+\item[Row] Třída představuje řádek výsledku vráceného na SQL dotaz. Umožňuje s řádkem dále pracovat, poskytuje metody pro aktualizaci a mazání a metody pro přístup k vazebním objektům řádků.
+\item[ReadOnlyRow] Reprezentace řádku z výsledku SQL dotazu, který používal spojení tabulek nebo neobsahuje primární klíče. Umožňuje data řádku pouze číst.
+\item[Column] Třída představující databázový sloupec. Používá se při tvoření dotazů a poskytuje různé metody pro vyhledávání řádku. Vrací objekt třídy \lstinline[style=inlinepython]|Literal|.
+\item[Literal] Reprezentace podmínky dotazu obsahující text a hodnoty. Třída \lstinline[style=inlinepython]|SQLBuilder| z instancí této třídy sestavuje SQL dotaz.
+\item[SQLBuilder] Třída pro sestavování SQL dotazu.
+\item[Query] Třída, která přijímá hodnoty vrácené instancí třídy \lstinline[style=inlinepython]|SQLBuilder|, provádí SQL dotaz a získává výsledná data. Také shromažďuje statistky pro automatickou denormalizaci.
+\item[Manager] Třída, která se stará o správu spojení a o nastavení knihovny.
+\item[PyPgCursor] Třída dědí ze třídy \lstinline[style=inlinepython]|psycopg2.extras.DictCursor| a pokud je to nastaveno loguje dotazy pomocí standardního logování jazyka Python.
+\item[PyPgException] Třída vytvořená pro výjimky vyvolané knihovnou.
+\item[Structure] Třída, která abstrahuje strukturu databáze a poskytuje metody pro vyhledávání v této struktuře. 
+\item[Naming] Třída obsahuje pravidla, podle kterých se řídí struktura databáze. Pokud není povolena introspekce, je využívána třídou \lstinline[style=inlinepython]|Structure|.
+\item[ResultCache] Třída uchovává data při použití funkce samostatných dotazů. Umožňuje v těchto datech vyhledávat a rozdělovat je podle příslušných vazeb. Je využívána třídou \lstinline[style=inlinepython]|ResultSet|.
+\end{description}
 
 \subsection{Funkce pro zrychlení čtení dat}
 
@@ -807,6 +864,7 @@ Při tvorbě syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelno
 Tyto funkce byly původně obsaženy v návrhu knihovny. 
 Connection pooling
 tabulky a sloupce prece jen nakonec vypisovat pri chybach jenom pokud debug=True
+dodelat limitovani relaci u row
 pokud tabulka obsahuje vice relaci, zpetna vazba nefunguje uplne presne
 sloupce pri joinu, ktere se jmenuji stejne podobne jako u web2py
 raw sql, parsing sql
@@ -849,6 +907,8 @@ raw sql, parsing sql
 \bibitem{postgre2} http://craigkerstiens.com/2012/05/07/why-postgres-part-2/
 \bibitem{pllanguages} http://www.postgresql.org/docs/9.0/static/xplang.html
 \bibitem{notorm} http://php.vrana.cz/srovnani-dotazu-do-zavislych-tabulek.php
+\bibitem{notorm-why} http://www.notorm.com/\#why
+\bibitem{cleancode} Robert C. Martin Clean Code
 \end{thebibliography}
 
 
@@ -941,5 +1001,7 @@ CREATE TABLE entry_author(
 \end{lstlisting}
 \clearpage
 
+\section{Obsah přiloženého CD/DVD}
+\label{sec:Appendixcd}
 
 \end{document}
