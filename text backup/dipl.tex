@@ -95,6 +95,7 @@ extendedchars=true,
 language=SQL,
 morekeywords={DEFERRED, REFERENCES, text},
 keywordstyle=\color{SQLKeywords},
+commentstyle=\color{Gray}\slshape,
 stringstyle=\color{SQLStrings},
 literate=%
 	{0}{{{\color{SQLNumbers}0}}}1
@@ -106,7 +107,23 @@ literate=%
     {6}{{{\color{SQLNumbers}6}}}1
     {7}{{{\color{SQLNumbers}7}}}1
     {8}{{{\color{SQLNumbers}8}}}1
-    {9}{{{\color{SQLNumbers}9}}}1,
+    {9}{{{\color{SQLNumbers}9}}}1
+    {á}{{\'a}}1 
+	{é}{{\'e}}1 
+	{í}{{\'i}}1 
+	{ó}{{\'o}}1 
+	{ú}{{\'u}}1 
+	{ý}{{\'y}}1
+	{č}{{\v{c}}}1
+%	{ď}{{\v{d}}}1
+	{ě}{{\v{e}}}1
+%	{ň}{{\v{n}}}1	
+	{ř}{{\v{r}}}1
+	{š}{{\v{s}}}1
+%	{t}{{\v{ť}}}1
+	{ž}{{\v{z}}}1
+	{ě}{{\v{e}}}1
+	{ů}{\r u}1,
 }
 %abstrakt, datovy slovnik
 % Zadame pozadovane vstupy pro generovani titulnich stran.
@@ -302,9 +319,14 @@ Concrete Table Inheritance se někdy označuje také jako horizontální mapová
 Při použití vzoru Class Table Inheritance je vytvořena tabulka v databázi pro každou třídu. Tato tabulka však obsahuje atributy, které jsou definované pouze v dané třídě. Výhodou je velmi jednoduché vytvoření tohoto mapování. Tabulka neobsahuje žádné prázdné sloupce a primární klíče jsou uloženy na jednom místě. Nevýhodou je složitost dotazů a jejich pomalé vyhodnocování, jelikož dochází ke spojování tabulek.  \\
 Jiným názvem pro Class Table Inheritance bývá také Joined Table Inheritance nebo vertikální mapování.
 
-\section{Srovnání existujících technologií pracujících na datové vrstvě}
+\section{Existující technologie pracující na datové vrstvě}
 \label{sec:Comparison}
-Jelikož jedním z požadavků byl jazyk Python, budu se zde věnovat srovnání ORM rámců pro jazyk Python.
+
+V této kapitole budou popsány existující rámce a knihovny pracující na datové vrstvě vytvořené pomocí jazyka Python. Byly vybrány tři rámce napsané v jazyce Python: Django ORM, web2py DBAL a SQLAlchemy. \\
+Pro srovnání těchto rámců bude každý z nich pracovat s databázovou strukturou, kterou zobrazuje ERD diagram na obrázku \ref{fig:BlogappErd}. Tato struktura představuje jednoduchou aplikaci pro vytváření blogů. Pokud to bude možné, budou se rámce snažit namodelovat tuto strukturu pomocí mapování. Konkrétně pak bude mezi tabulkami \lstinline[style=inlinepython]|entry| a \lstinline[style=inlinepython]|vlogetry| využito dědičnosti Class Table Inheritance a tabulka \lstinline[style=inlinepython]|author| bude dědit pomocí Concrete Table Inheritance z abstraktní třídy \lstinline[style=inlinepython]|Person| obsahující atributy jméno a příjmení. Všechny následující příklady a ukázkové výpisy kódu budou, pokud nebude určeno jinak, používat tuto databázovou strukturu. \\
+U každého rámce budou popsány techniky mapování, dotazování, funkce pro optimalizaci komunikace s databází a nevýhody rámce.
+
+\InsertFigure{blogapp.png}{150mm}{ERD diagram jednoduché aplikace pro vytváření blogů}{fig:BlogappErd}
 
 \subsection{Django ORM}
 
@@ -370,7 +392,7 @@ CREATE TABLE "myapp_author" (
 \end{lstlisting}
 
 Django ORM podporuje i použití více databází najednou. Pro každý model je v takovém případě potřeba určit k jaké databázi náleží. \\
-Výpis \ref{src:Mapping} zobrazuje jednoduchý model aplikace umožňující vytváření vlastních blogů. Tento model je použit pro všechny další příklady v této kapitole.
+Výpis \ref{src:Mapping} zobrazuje model aplikace umožňující vytváření vlastních blogů. 
 
 \paragraph{Instance modelu}
 
@@ -457,15 +479,11 @@ Keš je použita v instanci v případě přístupu k relacím. Platí to však 
 V případech, kdy výsledný QuerySet obsahuje mnoho záznamů, lze vypnutím této keše předejít zahlcení paměti \cite{dj-iterator}.
 
 \paragraph{Načítání relací} 
-
+\label{par:N+1}
 Při neopatrném používání ORM může dojít k tzv. \textit{N+1 problému}. N+1 problém nastává, pokud je použit cyklus při získávání dat z databáze spolu s líným nahráváním. Většinou se tento problém projevuje u relací. Funkce \lstinline[style=custompython]|inefficient| ve výpisu \ref{src:Nplus1} zobrazuje, jak tento problém vypadá. Funkce se stará o jednoduchý výpis příspěvků a blogů, ve kterém jsou publikovány. Tato funkce však provede N+1 dotazů do tabáze. Jeden dotaz pro získání všech příspěvků a N dotazů pro získání blogu každého příspěvku. Tento kód navíc nebere v potaz ani to, že některé příspěvky mohou být publikovány ve stejném blogu. \\
 ORM poskytuje řešení v podobě funkcí \lstinline[style=custompython]|select_related| a \lstinline[style=custompython]|prefetch_related|. \\ 
 \lstinline[style=custompython]|select_related| se používá při přednačtení relací, které odkazují na konkrétní objekt. Při použití této funkce se všechny výsledné objekty a jejich relace načtou jedním dotazem pomocí spojení tabulek a relační objekty se uloží do keše k dané instanci. Funkce \lstinline[style=custompython]|efficient| ve výpisu \ref{src:Nplus1} tedy použije pouze jeden dotaz do databáze. \\
 Stejný problém může nastat i při použití zpětných relací nebo v případech, kdy relace odkazuje na kolekci objektů. Pro tento případ se využívá funkce \lstinline[style=custompython]|prefetch_related.| Tato funkce byla přidána do ORM až ve verzi 1.4. Funkce \lstinline[style=custompython]|efficient_backward| ve výpisu \ref{src:Nplus1} využívá funkce \lstinline[style=custompython]|prefetch_related|. Při spuštění se provedou dva dotazy. Jeden pro získání všech blogů a druhý pro získání všech příspěvků za pomocí SQL \lstinline[style=customsql]|SELECT IN| klauzule. Výsledek se opět uloží do keše k daným instancím blogu. 
-
-\paragraph{Omezení sloupců}
-
-Implicitně se ORM pro každou tabulku dotazuje na všechny její atributy. Tento přístup může být obzvlášť náročný při obsáhlých tabulkách nebo objemných atributech, proto je možné dotazy omezit na konkrétní atributy tabulky. Tento postup se však doporučuje používat pouze, pokud není jisté, které konkrétní atributy budou použity. V opačném případě se doporučuje tabulku rozdělit, jelikož tato funkce mírně zvyšuje režijní náklady ORM \cite{dj-defer}.
 
 \begin{lstlisting}[style=custompython, label=src:Nplus1, caption={N+1 problém a jeho řešení}]
 def inefficient():
@@ -485,6 +503,10 @@ def efficient_backward():
 		for entry in blog.entry_set.all():#Hodnota je získána z keše
 			print entry.headline
 \end{lstlisting}
+
+\paragraph{Omezení sloupců}
+
+Implicitně se ORM pro každou tabulku dotazuje na všechny její atributy. Tento přístup může být obzvlášť náročný při obsáhlých tabulkách nebo objemných atributech, proto je možné dotazy omezit na konkrétní atributy tabulky. Tento postup se však doporučuje používat pouze, pokud není jisté, které konkrétní atributy budou použity. V opačném případě se doporučuje tabulku rozdělit, jelikož tato funkce mírně zvyšuje režijní náklady ORM \cite{dj-defer}.
 
 \paragraph{Hromadné operace}
 
@@ -514,6 +536,8 @@ ORM umožňuje zadat vlastní SQL dotazy, což řeší většinu problémů. Tot
 \subsubsection{Zhodnocení}
 Navzdory nevýhodám uvedeným výše Django ORM funguje skvěle pro jednoduché případy a jeho použití ušetří mnoho času. A protože se jedná o projekt, který se každým dnem vyvíjí, je možné, že budou tyto nevýhody v budoucnu odstraněny.
 
+\clearpage
+
 \subsection{web2py DBAL}
 
 web2py je rámec pro tvorbu webových aplikací napsaný v jazyce Python, který vznikl původně jako univerzitní projekt vytvořený profesorem Massimem Di Peirrem pro výukové účely \cite{wikiw2p}. Byl stvořen s úmyslem co nejvíce usnadnit vývoj webových aplikací a problémy s tím spojené. Celý rámec je tak distribuován pomocí balíku, který v základu obsahuje integrované vývojové prostředí (IDE), webový server, relační databázi SQLite a dokonce i interpret jazyka Python. Není tedy potřeba nic instalovat, balík se rozbalí a ihned lze tento rámec používat \cite{web2py}. Rámec se řídí návrhovým vzorem MVC. \\
@@ -523,7 +547,7 @@ web2py implementuje DBAL pro komunikaci s databází. Odlišnost této vrstvy od
 \subsubsection{Mapování ve web2py DBAL}
 Třída \lstinline[style=inlinepython]|web2py.gluon.dal.DAL| je vstupním bodem pro komunikaci s databází. Inicializací objektu této třídy je vytvořeno spojení s danou databází. DBAL obsahuje \textit{connection pool}, do kterého se spojení uloží. Connection pool je možno konfigurovat podle potřeby. \\
 Rámec vyžaduje pro správnou funkčnost datové vrstvy nejdříve definovat strukturu tabulek v databázi. Definice struktury slouží jako metadata při dotazování do databáze a umožňuje tabulky v databázi automaticky generovat i měnit. Definice tabulek si DBAL ukládá do speciálních souborů. Pomocí těchto souborů lze pak provádět migrace databáze. \\
-Migracemi lze měnit datové typy konkrétních sloupců, odstraňovat nebo přidávat nové sloupce k tabulkám a nebo i přesouvat celé databáze do jiných SŘBD. Migrace však nejsou úplně automatizované a mohou při nich nastat problémy, které je potřeba řešit explicitně. Kromě migrací umožňuje DBAL i export dat do XML, HTML nebo CVS formátu. \\
+Migracemi lze měnit datové typy konkrétních sloupců, odstraňovat nebo přidávat nové sloupce k tabulkám a nebo i přesouvat celé databáze do jiných SŘBD. Migrace však nejsou úplně automatizované a mohou při nich nastat problémy, které je potřeba řešit explicitně. Kromě migrací umožňuje DBAL i export dat do XML, HTML nebo CSV formátu. \\
 DBAL umožňuje používat i existující databázi, je však potřeba, aby splňovala určité podmínky. Konkrétně musí databáze obsahovat pro každou tabulku primární klíč a všechny relace musí být řešené pomocí primárního klíče. \\
 Výpis \ref{src:w2p-mapping} zobrazuje definici tabulek jednoduché aplikace pro vytváření blogů. Tabulky lze definovat pomocí instance třídy \lstinline[style=inlinepython]|web2py.gluon.dal.DAL|. Je také možné pomocí tohoto objektu tabulkám dále nastavovat další parametry, měnit jejich strukturu nebo je i smazat. Primární klíč je automaticky vygenerován pro každou tabulku. Sloupce tabulky pak obsahují metody pro validaci, které lze využit před ukládáním do databáze. \\
 DBAL však neumožňuje pomocí této definice určit databázové indexy. Celkový výpis SQL, které DBAL vygeneruje z této definice je možné nalézt v příloze ve výpisu \ref{src:w2p-mappingSQL}.
@@ -668,6 +692,7 @@ Rámce nebo knihovny pracující na datové vrstvě často podporují mnoho růz
 Výsledná knihovna tedy bude implementována s myšlenkou, že bude vždy podporovat pouze jediný SŘBD. Tímto SŘBD je PostgreSQL.
 
 \subsubsection{Specifické vlastnosti PostgreSQL}
+\label{subsubsec:PostgreSQL}
 
 SŘBD PostreSQL obsahuje oproti jiným SŘBD mnoho specifických vlastností a funkcí. Některé z těchto vlastností by vytvořená knihovna mohla podporovat nebo jich využívat pro zlepšení rychlosti dotazování.
 
@@ -684,6 +709,7 @@ SŘBD PostreSQL obsahuje oproti jiným SŘBD mnoho specifických vlastností a f
 PostgreSQL obsahuje mnoho dalších funkcí a vlastností, jejich popis je však nad rámec této diplomové práce. Pro tento SŘBD navíc existuje i mnoho zásuvných modulů, které mu dodávají další funkce. Proč používat PostgreSQL a další jeho vlastnosti pěkně popisují dva články na internetu \cite{postgre, postgre2}.
 
 \subsection{Funkce pro zlepšení výkonu při čtení z databáze}
+\label{subsec:ReadOpt}
 
 Jedním z požadavků na vlastnosti vytvořené knihovny byla rychlá komunikace s databází, konkrétně rychlé načítání dat. Aby byl tento požadavek splněn, bude knihovna obsahovat funkce urychlující čtení dat. Mezi tyto funkce bude patřit simulace materializovaných pohledů a minimalizace přenášených dat.
 
@@ -702,6 +728,7 @@ Knihovna bude obsahovat mechanismus, který bude navrhovat denormalizační změ
 Tato funkce tak zjednoduší uživateli rozhodování, na jakém místě by měl vytvořit výše popsaný simulovaný materializovaný pohled nebo jiné denormalizace.
 
 \subsubsection{Minimalizace přenášených dat}
+\label{subsubsec:Selectin}
 
 Knihovna se bude svými funkcemi snažit o co nejmenší objem přenášených dat. V případě pomalé odezvy databázového serveru je pro rychlost komunikace nesmírně kritické co nejméně přenesených dat pro získání výsledku dotazu. \\
 Při pokládání dotazu pomocí spojení tabulek může nastat situace, kdy se přenáší stejná data vícekrát. V případě dlouhé odezvy nebo mnoha sloupců, lze data získat rychleji rozdělením dotazu na samostatné dotazy pro každou tabulku. Příklad zobrazuje tabulka \ref{tab:JoinTable}. Tabulka je výsledkem dotazu z testovací databáze world\footnote{http://pgfoundry.org/projects/dbsamples/}, který využívá spojení tabulek. Dotazem byla získána pro každé město i země do, které město náleží. Tabulka vypisuje pro přehlednost pouze část výsledku, ale i na tomto výsledku je však vidět, že každý záznam tabulky country se přenáší několikrát a vznikají několikanásobné kopie dat. \\
@@ -835,7 +862,7 @@ Knihovna obsahuje mnoho dalších možností pro sestavování dotazů a jejich 
 \subsection{Architektura}
 
 Při vytváření knihovny byl kladem zřetel na čistotu a jednoduchou strukturu kódu. Kniha Roberta Martina posloužila jako zdroj pravidel a postupů při vytváření knihovny pypg \cite{cleancode}. Celková funkčnost je tak rozdělena do kompaktních jednoduchých tříd, které jsou většinou v samostatných modulech. Názvy funkcí, metod a proměnných jsou vytvořeny s rozvahou, tak aby nepotřebovaly komentáře. Komentáře v kódu zastarávají a často jim není věnována stejná pozornost při změnách, což vede ke zmateným informacím  \cite{cleancode}. Jediným zdrojem pravdivých informací (SSOT) je kód. Knihovna tedy neobsahuje mnoho komentářů, ale byla napsána se snahou, aby kód popisoval sám sebe. \\
-Architektura knihovny obsahuje mnoho tříd. Níže jsou popsány pouze třídy, které zastávají v rámci knihovny důležitou funkci.
+Knihovna je z 95\% pokryta jednotkovými testy, které zjednodušují případné změny\footnote{Pro zjištění pokrytí kódu testy byl využit Python coverage (https://pypi.python.org/pypi/coverage)}. Architektura knihovny obsahuje mnoho tříd. Níže jsou popsány pouze třídy, které zastávají v rámci knihovny důležitou funkci.
 
 \begin{description}
 \item[PyPg] Třída je vstupním bodem celé knihovny. Umožňuje nastavovat vlastnosti knihovny a poskytuje přístup k objektům třídy \lstinline[style=inlinepython]|Table|. Pomocí této třídy se spouští i vytváření materializovaných pohledů a automatická denormalizace.
@@ -850,7 +877,7 @@ Architektura knihovny obsahuje mnoho tříd. Níže jsou popsány pouze třídy,
 \item[SQLBuilder] Třída pro sestavování SQL dotazu.
 \item[Query] Třída, která přijímá hodnoty vrácené instancí třídy \lstinline[style=inlinepython]|SQLBuilder|, provádí SQL dotaz a získává výsledná data. Také shromažďuje statistky pro automatickou denormalizaci.
 \item[Manager] Třída, která se stará o správu spojení a o nastavení knihovny.
-\item[PyPgCursor] Třída dědí ze třídy \lstinline[style=inlinepython]|psycopg2.extras.DictCursor| a pokud je to nastaveno loguje dotazy pomocí standardního logování jazyka Python.
+\item[PyPgCursor] Třída dědí ze třídy \lstinline[style=inlinepython]|psycopg2.extras.DictCursor| a pokud je to nastaveno, loguje dotazy pomocí standardního logování jazyka Python a pro každý dotaz měří čas provádění.
 \item[PyPgException] Třída vytvořená pro výjimky vyvolané knihovnou.
 \item[Structure] Třída, která abstrahuje strukturu databáze a poskytuje metody pro vyhledávání v této struktuře. 
 \item[Naming] Třída obsahuje pravidla, podle kterých se řídí struktura databáze. Pokud není povolena introspekce, je využívána třídou \lstinline[style=inlinepython]|Structure|.
@@ -859,21 +886,112 @@ Architektura knihovny obsahuje mnoho tříd. Níže jsou popsány pouze třídy,
 
 \subsection{Funkce pro zrychlení čtení dat}
 
+Knihovna implementuje funkce, které urychlují a optimalizují čtení dat z databáze. Tyto funkce byly popsány v návrhu v sekci \ref{subsec:ReadOpt}.
+
+\subsubsection{Simulace materializovaných pohledů}
+
+Třída \lstinline[style=inlinepython]|pypg.mview.MaterializedView| obsahuje logiku pro simulaci materializovaných pohledů. Tato třída umožňuje materializované pohledy vytvářet i mazat. Pro vytvoření materializovaného pohledu je potřeba zavolat metodu \lstinline[style=inlinepython]|create_view| na instanci třídy \lstinline[style=inlinepython]|PyPg|. Metoda přijímá jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvořený pomocí API pypg. \\
+Nejdříve je dotaz validován a pomocí introspekce se zjišťuje, zda obsahuje primární klíče všech dotazovaných tabulek. Pokud ne, jsou primární klíče do dotazu přidány, jelikož jsou potřeba při aktualizaci záznamů. Poté je všem sloupcům v dotazu vytvořen alias složený z názvu tabulky a sloupce tak, aby se předešlo případným kolizím v názvech. \\
+Pomocí výsledného dotazu je vytvořen pohled a tento pohled je pak použit jako zdroj dat při vytváření tabulky materializovaného pohledu. Pro tuto tabulku je vytvořen primární klíč složený ze všech klíčů zjištěných dříve pomocí introspekce. \\
+Pro každou tabulku obsaženou v dotazu jsou vytvořeny triggery pro vložení, aktualizaci a smazání záznamu. Při aktualizaci záznamu jsou v tabulce materializovaného pohledu podle primárního klíče vyhledány všechny korespondující záznamy. Tyto záznamy jsou smazány a pak znovu načteny pomocí pohledu vytvořeného dříve. Triggery fungují spolehlivě i při změně primárního klíče. \\
+Celý proces zobrazuje diagram na obrázku TODO. \\
+Metoda \lstinline[style=inlinepython]|drop_mview| třídy \lstinline[style=inlinepython]|PyPg| pak odstraní z databáze celou tuto logiku. Tabulku materializovaného pohledu, pohled pomocí, kterého byla tabulka vytvořena, a všechny triggery aktualizující data pro tento materializovaný pohled. \\
+S vytvořeným materializovaným pohledem, lze pracovat stejně jako s obyčejnou tabulkou. Momentálně jsou však podporovány pouze operace pro čtení. Změny dat provedené na tabulce materializovaného pohledu se neprojeví zpět do bázových tabulek. \\
+I když je možné vytváření materializovaného spustit za běhu aplikace, mělo by být vytváření nebo mazaní spouštěno mimo běh aplikace, jelikož je to časově náročná operace. \\
+
+\subsubsection{Automatická denormalizace}
+
+Celý proces automatické denormalizace začíná při zapnutí logování statistik. Knihovna si vytvoří soubor, do kterého loguje všechny dotazy, které se provádějí nad databází. Každý řádek v tomto souboru je ve formátu JSON a obsahuje provedený dotaz, čas provádění dotazu a sloupce a tabulky použité v dotazu. Ve stejném okamžiku se provede i záloha současného stavu databáze, aby pak bylo možné simulovat stejné podmínky při testování denormalizace. \\
+Poté, co je knihovna nějaký čas v provozu a každý prováděný dotaz byl logován, je možné spustit proces automatické denormalizace. Tento proces se spouští pomocí metody \lstinline[style=inlinepython]|start_denormalization| třídy \lstinline[style=inlinepython]|PyPg| mimo běh aplikace. Před spuštěním se doporučuje pomocí knihovny vytvořit spojení na testovací databázový server, jelikož produkční server by mohl být touto operací velmi zatěžován. \\
+Třídy obstarávající funkčnost automatické denormalizace se nacházejí v modulu \lstinline[style=inlinepython]|pypg.denormalization|. Při spuštění procesu nejdříve pomocí třídy \lstinline[style=inlinepython]|Analyzer| proběhne ana- lýza. Tato třída si načte data a statistiky uložené v souboru s logovanými dotazy. Tyto data poté zanalyzuje a zjistí případné denormalizační změny, které by mohly prospět rychlosti čtení dat z databáze. Pro denormalizační změny je podmínka, že celkový čas dotazů strávený čtením nad konkrétní tabulkou musí být větší než čas strávený zápisem. Pokud tomu tak není, nemá smysl nad touto tabulkou provádět denormalizaci, jelikož to operace zápisu ještě více zpomalí. Třída poté vrací kolekci všech doporučovaných denormalizačních změn v podobně instancí třídy \lstinline[style=inlinepython]|Improvement|. Tato kolekce obsahuje i seznam dotazů, které byly získány ze statistik, a které dernomalizační změny ovlivní. \\
+Každá denormalizační změna je poté otestována nad testovací databází. Záloha databáze, získaná dříve, je nahrána do testovací databáze. Denormalizace je v databázi nejdříve vytvořena a poté jsou spuštěny dotazy získané ze statistik, které interagují s tabulkami nebo strukturami ovlivněné denormalizací. Aby byly zaručeny stejné podmínky pro všechny testy, je vždy před každým testem databáze převedena do stavu v jakém byla před testováním. \\
+Výstupem je seznam otestovaných denormalizačních změn, který obsahuje doporučení zda, konkrétní denormalizační změnu implementovat a časy, které toto doporučení odůvo- dňují. Ukázku výstupu této operace zobrazuje tabulka/obrázek TODO. \\
+Celý proces automatické denormalizace lze vidět na diagramu TODO. Momentálně je pro denormalizační změny podporován pouze materializovaný pohled.
+
+\subsubsection{Minimalizace přenášených dat}
+
+Knihovna implementuje mechanismus popsaný v sekci \ref{subsubsec:Selectin}. Tento mechanismus zmenšuje objem přenášených dat pomocí samostatných dotazů a tak i urychluje čtení z databáze. Celková funkčnost se děje na pozadí a při dotazování není potřeba nic dalšího implementovat. Příklad zobrazuje výpis \ref{src:imp-selectin}. Výstupem tohoto výpisu je seznam všech blogů a pro každý blog prvních deset příspěvků v tomto blogu a jejich autoři.
+
+\begin{lstlisting}[style=custompython, label=src:imp-selectin, caption={Implementace samostatných dotazů v pypg}]
+>>>for blog in db.blog.select()
+...    print 'Blog: ', blog['name']
+...    print 'Příspěvky v blogu: '
+...    for entry in blog.entry.limit(10).select():
+...        print entry.headline
+...        print 'Autoři: '
+...        for author_entry in entry.entry_authors.select():
+...            author = author_entry.author_id
+...            print author.first_name, author.last_name
+\end{lstlisting}
+
+Knihovna v tomto případě provede pouze 4 dotazy. Jeden dotaz pro získání dat z každé tabulky použité v tomto výpisu (\lstinline[style=inlinepython]|blog|, \lstinline[style=inlinepython]|entry|, \lstinline[style=inlinepython]|entry_authors| a \lstinline[style=inlinepython]|author|). \\
+Knihovna rozpozná, zda-li se výsledek dotazu prochází smyčkou, uloží si primární klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomocí těchto klíčů vytvoří nový dotaz. Jelikož knihovna ví, že jsou data procházena smyčkou a v případě, kdy se přistupuje k relaci ví, že by nebylo efektivní vytvářet pokaždé nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří dotaz, kterým získá všechny relace od všech záznamů najednou. Tyto relace potom distribuuje ke konkrétním záznamům. \\
+V případě druhého cyklu ve výpisu \ref{src:imp-selectin}, kdy je dotazováno prvních 10 příspěvků blogu, je tedy dotaz proveden pouze při prvním průchodu prvního cyklu a při dalších průchodech jsou pak již využívána kešovaná data. Tento mechanismus funguje nezávisle na počtu smyček. \\
+Knihovna dotazy pro relační objekty skládá za pomocí introspekce, pokud je zapnutá, a nebo pomocí pravidel struktury databáze. Seznam všech dotazů, které se provedou pro výpis \ref{src:imp-selectin}, zobrazuje výpis \ref{src:sql-selectin}.
+
+\begin{lstlisting}[style=customsql, label=src:sql-selectin, caption={Dotazy vygenerované výpisem \ref{src:imp-selectin}}]
+SELECT * FROM "blog";
+(SELECT * FROM "entry" WHERE entry.blog_id = 1 LIMIT 10) UNION  (SELECT * FROM "entry" WHERE entry.blog_id = 2 LIMIT 10) UNION ...; 
+	--Do pomínky jsou použity hodnoty blog.id
+SELECT * FROM "entry_authors" WHERE entry_id IN (1, 2, 3, 4...); 
+	--Do pomínky jsou použity hodnoty entry.id
+SELECT * FROM "author" WHERE id IN (1, 2, 3, 4...);
+	--Do pomínky jsou použity hodnoty entry_authors.author_id
+\end{lstlisting}
+
 \subsection{Funkce, které budou v budoucnu implementovány}
 
-Tyto funkce byly původně obsaženy v návrhu knihovny. 
+Tyto funkce byly původně obsaženy v návrhu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti nebudou implementovány. Vzhledem k časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
+Knihovna ovšem bude později používána jako prostředek pro tvorbu systémů firmy deving, jak bylo popsáno v sekci \ref{sec:Design}. Do budoucna se tedy plánuje s dalšími vylepšeními knihovny, mezi kterými budou i níže popsané funkce.
+
+\subsubsection{Tvoření dotazů pomocí SQL}
+
+Zadávání dotazů formou dotazovacího API knihovny je jednoduché, avšak můžou nastat případy, kdy toto API nebude vystačovat. V takovém případě by bylo dobré mít možnost, která umožní zadat dotaz ve formě SQL a přitom zachovat přístup ke všem funkcím  knihovny. \\
+Knihovna momentálně nepodporuje zadávání dotazů ve formě SQL. Je to dáno funkcemi v rámci knihovny, které pro svou funkčnost potřebují z dotazu získat metadata. Například je u některých funkcí potřeba vědět, které tabulky a sloupce jsou v dotazu používány. Pokud jsou dotazy sestavovány pomocí API knihovny, lze tyto metadata jednoduše získat, jelikož jsou tvořeny při sestavování dotazu. Při použití SQL by však bylo potřeba nejdříve provést syntaktickou analýzu. \\
+Knihovna tedy v budoucnu bude podporovat zadávání dotazů ve formě SQL a to jednoduchou formou, při které lze provádět efektivní a rychlou syntaktickou analýzu. Všechny funkce, které knihovna obsahuje budou kompatibilní s touto formou dotazu. \\
+Implementace této funkčnosti si bude brát inspiraci z knihovny dibi\footnote{http://dibiphp.com/}.
+
+\subsubsection{Rozšíření možností dotazovacího API}
+
 Connection pooling
-tabulky a sloupce prece jen nakonec vypisovat pri chybach jenom pokud debug=True
-dodelat limitovani relaci u row
-pokud tabulka obsahuje vice relaci, zpetna vazba nefunguje uplne presne
-sloupce pri joinu, ktere se jmenuji stejne podobne jako u web2py
-raw sql, parsing sql
+
+\subsubsection{Editovatelné pohledy}
+
+Knihovna momentálně podporuje pouze materializované pohledy. Tyto pohledy nelze využívat pro zápis dat, jelikož se změny neprojeví v bázových tabulkách. Vzhledem k požadavku na rychlost čtení dat popsaného v sekci \ref{sec:Design}, byla tato funkčnost přesunuta do budoucna, jelikož by se při simulaci editovatelného pohledu nezvýšila rychlost čtení. \\
+Tato funkce by však ulehčila práci s daty materializovaného pohledu a bude tedy v budoucnu implementována.
+
+\subsubsection{Více možností denormalizace}
+
+Funkce automatické denormalizace momentálně navrhuje pouze zlepšení ve formě materializovaných pohledů. Materializovaný pohled však není jedinou formou denormalizace a tak bude knihovna v budoucnu navrhovat a testovat například i přesunutí databázových sloupců na základě prováděných dotazů.
+
+\subsubsection{Minimalizace přenášených dat pomocí formátu JSON}
+
+V některých případech by při dotazování bylo vhodnější a efektivnější využít místo samostatných dotazů spojení tabulek. Jak už bylo zmíněno dříve v návrhu v sekci \ref{subsubsec:Selectin}, spojení tabulek však přenáší více dat než samostatné dotazy. \\ 
+V budoucnu bude tedy knihovna implementovat funkci, která bude využívat spojení tabulek, ale bude i minimalizovat data přenášená po síti. Toho bude dosaženo pomocí funkcí SŘBD PostgreSQL \lstinline[style=inlinepython]|row_to_json| a \lstinline[style=inlinepython]|array_agg| popsaných v sekci \ref{subsubsec:PostgreSQL}. Z databáze budou vráceny data ve formátu JSON, který umožní jejich kompresi a zabrání přenášení několikanásobných kopií dat. Data vrácena dotazem při použití spojení tabulek zobrazená v tabulce \ref{tab:JoinTable} tedy budou vrácena ve formě jaké zobrazuje výpis \ref{src:jsonjoin}. Knihovna tyto data poté na pozadí zpracuje do požadované podoby. \\
+\begin{lstlisting}[style=custompython, label=src:jsonjoin, caption={Minimalizace přenášených dat z tabulky \ref{tab:JoinTable} pomocí formátu JSON}]
+{1: "country_name", 2: "country_continent", 3: "country_region", 
+	4: "cities", 5: "city_id", 6: "city_name"}
+{1: "Bosnia and Herzegovina", 2: "Europe", 3: "Southern Europe", 
+	4: [{5: 201, 6: "Sarajevo"}, {5: 202, 6: "Banja Luka"}, 
+		{5: 203, 6: "Zenica"}]}
+{1: "Botswana", 2: "Africa", 3: "Southern Africa", 
+	4: [{5: 204, 6: "Gaborone"}, {5: 205, 6: "Francistown"}]}
+{1: "Brazil", 2: "South America", 3: "South America", 
+	4: [{5: 206, 6: "Sao Paulo & Brazil"}, 
+		{5: 207, 6: "Rio de Janeiro"}, {5: 208, 6: "Salvador"}, 
+		{5: 209, 6: "Belo Horizonte"}, {5: 210, 6: "Fortaleza"}]}
+\end{lstlisting}
+
+Kromě toho bude knihovna obsahovat i další funkci, která bude rozhodovat o provedení dotazu pomocí...
 
 \section{Porovnani rychlosti pypg s ostatními rámci}
 
 \section{Závěr}
 \label{sec:Conclusion}
 
+%V zhledem k casovemu omezeni bylo treba vybrat ktere funkce implementova a ktere prenechat do budoucna.
+%Rozhodovalo se na zaklade pozadavku v kapitelo 5.
+%Musel jsem zjistit, jake funkce existujici ramce obsahuji a proc nevyhovuji
 
 \begin{thebibliography}{99}
 
