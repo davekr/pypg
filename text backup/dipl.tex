@@ -857,7 +857,7 @@ Přes instanci třídy \lstinline[style=inlinepython]|PyPg| se lze dostat k obje
 Knihovna podporuje nejpoužívanější konstrukce pro sestavování dotazu. Řádek 19 zobrazuje dotaz na seřazené názvy všech blogů, které končí slovem \uv{blog}. Je zde také vidět, že při řetězení jednotlivých podmínek nezáleží na jejich pořadí. \\
 Přes instanci třídy představující databázovou tabulku lze přistoupit na objekty typu \lstinline[style=inlinepython]|pypg.column.Column|. Tyto objekty lze porovnávat a vytvářet tak podmínky při dotazování a obsahují i metody, které generují příslušné SQL jako například metoda \lstinline[style=inlinepython]|like|. \\
 API poskytuje možnost vytvářet dotazy i pomocí spojení tabulek. Ukázka je zobrazena na řádku 21 a 23 ve výpisu \ref{src:pypg}. Metoda \lstinline[style=inlinepython]|join| přijímá jako argument instanci třídy \lstinline[style=inlinepython]|pypg.table.Table| a nepovinný argument \lstinline[style=inlinepython]|on|. Pokud je nepovinný argument prázdný, knihovna se pokusí podmínku spojení doplnit implicitně za pomocí introspekce nebo sady pravidel. \\
-Knihovna obsahuje mnoho dalších možností pro sestavování dotazů a jejich kompletní popis lze nalézt v příloze \ref{sec:Appendixcd} v programátorské příručce.
+Knihovna obsahuje i další možnosti pro sestavování dotazů a jejich kompletní popis lze nalézt v příloze \ref{sec:Appendixcd} v programátorské příručce.
 
 \subsection{Architektura}
 
@@ -941,33 +941,34 @@ SELECT * FROM "author" WHERE id IN (1, 2, 3, 4...);
 
 \subsection{Funkce, které budou v budoucnu implementovány}
 
-Tyto funkce byly původně obsaženy v návrhu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti nebudou implementovány. Vzhledem k časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
-Knihovna ovšem bude později používána jako prostředek pro tvorbu systémů firmy deving, jak bylo popsáno v sekci \ref{sec:Design}. Do budoucna se tedy plánuje s dalšími vylepšeními knihovny, mezi kterými budou i níže popsané funkce.
+Tyto funkce byly původně obsaženy v návrhu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti a nižší prioritě na základě požadavků popsaných v sekci \ref{sec:Design}, nebudou implementovány. Kvůli časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
+Jak bylo popsáno výše, knihovna ovšem bude později používána jako prostředek pro tvorbu systémů firmy deving. Do budoucna se tedy plánuje s dalšími vylepšeními knihovny, mezi kterými budou i níže popsané funkce.
 
 \subsubsection{Tvoření dotazů pomocí SQL}
 
 Zadávání dotazů formou dotazovacího API knihovny je jednoduché, avšak můžou nastat případy, kdy toto API nebude vystačovat. V takovém případě by bylo dobré mít možnost, která umožní zadat dotaz ve formě SQL a přitom zachovat přístup ke všem funkcím  knihovny. \\
-Knihovna momentálně nepodporuje zadávání dotazů ve formě SQL. Je to dáno funkcemi v rámci knihovny, které pro svou funkčnost potřebují z dotazu získat metadata. Například je u některých funkcí potřeba vědět, které tabulky a sloupce jsou v dotazu používány. Pokud jsou dotazy sestavovány pomocí API knihovny, lze tyto metadata jednoduše získat, jelikož jsou tvořeny při sestavování dotazu. Při použití SQL by však bylo potřeba nejdříve provést syntaktickou analýzu. \\
-Knihovna tedy v budoucnu bude podporovat zadávání dotazů ve formě SQL a to jednoduchou formou, při které lze provádět efektivní a rychlou syntaktickou analýzu. Všechny funkce, které knihovna obsahuje budou kompatibilní s touto formou dotazu. \\
+Knihovna momentálně nepodporuje zadávání dotazů ve formě SQL. Je to dáno funkcemi v rámci knihovny, které pro svou funkčnost potřebují k dotazu získat i metadata. Například je u některých funkcí potřeba vědět, které tabulky a sloupce jsou v dotazu používány. Pokud jsou dotazy sestavovány pomocí API knihovny, lze tyto metadata jednoduše získat, jelikož jsou tvořeny při sestavování dotazu. Při použití SQL by však bylo potřeba nejdříve provést syntaktickou analýzu. \\
+Knihovna tedy v budoucnu bude podporovat zadávání dotazů v podobě SQL a to jednoduchou formou, pro kterou lze provádět efektivní a rychlou syntaktickou analýzu. Všechny funkce, které knihovna obsahuje budou kompatibilní s touto formou dotazu. \\
 Implementace této funkčnosti si bude brát inspiraci z knihovny dibi\footnote{http://dibiphp.com/}.
 
 \subsubsection{Rozšíření možností dotazovacího API}
 
-Connection pooling
+API knihovny PyPg pro generování dotazů momentálně umožňuje při sestavování dotazů používat pouze základní SQL výrazy. V budoucnu budou implementovány funkce, které budou umožňovat sestavovat SQL pomocí složitějších konstrukcí. Mezi tyto konstrukce budou patřit agregace, seskupování a specifické funkce SŘBD PostgreSQL.
 
 \subsubsection{Editovatelné pohledy}
 
-Knihovna momentálně podporuje pouze materializované pohledy. Tyto pohledy nelze využívat pro zápis dat, jelikož se změny neprojeví v bázových tabulkách. Vzhledem k požadavku na rychlost čtení dat popsaného v sekci \ref{sec:Design}, byla tato funkčnost přesunuta do budoucna, jelikož by se při simulaci editovatelného pohledu nezvýšila rychlost čtení. \\
-Tato funkce by však ulehčila práci s daty materializovaného pohledu a bude tedy v budoucnu implementována.
+Knihovna momentálně podporuje pouze materializované pohledy. Tyto pohledy nelze využívat pro zápis dat, jelikož neexistuje mechanismus, který by propagoval změny do bázových tabulek. Vzhledem k požadavku na rychlost čtení dat popsaného v sekci \ref{sec:Design}, byla tato funkčnost přesunuta mezi budoucí rozšíření, jelikož by simulace editovatelného pohledu nijak nezvyšovaly rychlost čtení. \\
+Tato funkce by však mohla ulehčit práci s daty materializovaného pohledu a bude tedy v budoucnu implementována.
 
 \subsubsection{Více možností denormalizace}
 
-Funkce automatické denormalizace momentálně navrhuje pouze zlepšení ve formě materializovaných pohledů. Materializovaný pohled však není jedinou formou denormalizace a tak bude knihovna v budoucnu navrhovat a testovat například i přesunutí databázových sloupců na základě prováděných dotazů.
+Funkce automatické denormalizace momentálně navrhuje pouze zlepšení ve formě materializovaných pohledů. Materializovaný pohled však není jedinou formou denormalizace, a tak bude knihovna v budoucnu navrhovat a testovat i jiné denormalizační techniky. Mezi podporované podoby denormalizace by mohlo patřit například přesunutí databázových sloupců na základě prováděných dotazů.
 
 \subsubsection{Minimalizace přenášených dat pomocí formátu JSON}
 
 V některých případech by při dotazování bylo vhodnější a efektivnější využít místo samostatných dotazů spojení tabulek. Jak už bylo zmíněno dříve v návrhu v sekci \ref{subsubsec:Selectin}, spojení tabulek však přenáší více dat než samostatné dotazy. \\ 
-V budoucnu bude tedy knihovna implementovat funkci, která bude využívat spojení tabulek, ale bude i minimalizovat data přenášená po síti. Toho bude dosaženo pomocí funkcí SŘBD PostgreSQL \lstinline[style=inlinepython]|row_to_json| a \lstinline[style=inlinepython]|array_agg| popsaných v sekci \ref{subsubsec:PostgreSQL}. Z databáze budou vráceny data ve formátu JSON, který umožní jejich kompresi a zabrání přenášení několikanásobných kopií dat. Data vrácena dotazem při použití spojení tabulek zobrazená v tabulce \ref{tab:JoinTable} tedy budou vrácena ve formě jaké zobrazuje výpis \ref{src:jsonjoin}. Knihovna tyto data poté na pozadí zpracuje do požadované podoby. \\
+V budoucnu bude tedy knihovna implementovat funkci, která bude využívat spojení tabulek, ale bude i minimalizovat data přenášená po síti. Toho bude dosaženo pomocí funkcí SŘBD PostgreSQL \lstinline[style=inlinepython]|row_to_json| a \lstinline[style=inlinepython]|array_agg| popsaných v sekci \ref{subsubsec:PostgreSQL}. \\
+Z databáze budou data vrácena ve formátu JSON, který umožní jejich kompresi a zabrání přenášení několikanásobných kopií dat. Příklad zobrazuje výpis \ref{src:jsonjoin}, kde jsou data z tabulky \ref{tab:JoinTable}, která byla dříve několikanásobně přenášena, vrácena ve formě využívající formát JSON. Aby byl minimalizován objem dat, jsou atributům přiděleny aliasy, které zobrazuje první řádek v tomto výpisu. Tyto aliasy si knihovna uloží a nebudou přenášeny. Ve výpisu jsou pouze pro přehlednost. \\
 \begin{lstlisting}[style=custompython, label=src:jsonjoin, caption={Minimalizace přenášených dat z tabulky \ref{tab:JoinTable} pomocí formátu JSON}]
 {1: "country_name", 2: "country_continent", 3: "country_region", 
 	4: "cities", 5: "city_id", 6: "city_name"}
@@ -982,7 +983,8 @@ V budoucnu bude tedy knihovna implementovat funkci, která bude využívat spoje
 		{5: 209, 6: "Belo Horizonte"}, {5: 210, 6: "Fortaleza"}]}
 \end{lstlisting}
 
-Kromě toho bude knihovna obsahovat i další funkci, která bude rozhodovat o provedení dotazu pomocí...
+Knihovna tyto data poté na pozadí zpracuje a vypíše v požadované podobě. \\
+Kromě této funkce bude knihovna na základě dotazu, implicitně rozhodovat o jeho provedení pomocí samostatných dotazů nebo spojení tabulek s výsledkem vráceným ve formátu JSON.
 
 \section{Porovnani rychlosti pypg s ostatními rámci}
 
