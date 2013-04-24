@@ -10,6 +10,7 @@ from column import Column
 import settings
 from cursor import PyPgCursor
 import time
+import os
 
 class Analyzer(object):
 
@@ -27,7 +28,8 @@ class Analyzer(object):
 
     def load_statistics(self):
         data = []
-        with open('log/statistics.log') as stats:
+        stats_file = os.path.join(Manager.get_path(), 'log/statistics.log')
+        with open(stats_file) as stats:
             for line in stats.readlines():
                 data.append(json.loads(line))
         return data
@@ -175,9 +177,11 @@ class Denormalization(object):
             print 'No improvements found.'
             return None
         for improvement in improvements:
-            self.set_up_enviroment()
-            self.run_test(improvement, all_queries)
-            self.tear_down_enviroment()
+            try:
+                self.set_up_enviroment()
+                self.run_test(improvement, all_queries)
+            finally:
+                self.tear_down_enviroment()
         self.report(improvements)
 
     def set_up_enviroment(self):
@@ -209,8 +213,11 @@ class Denormalization(object):
     def tear_down_enviroment(self):
         print 'Tearing down test enviroment'
         conn = Manager.get_connection()
-        conn.close()
-        cursor = self.orig_conn.cursor()
+        if getattr(self, 'orig_conn', None):
+            conn.close()
+            cursor = self.orig_conn.cursor()
+        else:
+            cursor = conn.cursor()
         cursor.execute("DROP DATABASE %s" % self.DBNAME)
         cursor.close()
         self.orig_conn.commit()
@@ -222,6 +229,7 @@ class Denormalization(object):
         level = conn.isolation_level
         conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
+        cursor.execute("select (1) from pg_catalog.pg_database where datname = '%s'" % self.DBNAME)
         cursor.execute("CREATE DATABASE %s" % self.DBNAME)
         cursor.close()
         conn.commit()
@@ -240,6 +248,7 @@ class DBBackup(object):
 
     def __init__(self):
         self.command = []
+        self.backup_sql = os.path.join(Manager.get_path(), 'log/backup.sql')
 
     def create_backup(self):
         self.delete_log_and_dump()
@@ -256,10 +265,11 @@ class DBBackup(object):
         self.call_command(self.command)
 
     def delete_log_and_dump(self):
-        if os.path.exists('log/statistics.log'):
-            os.remove('log/statistics.log')
-        if os.path.exists('log/backup.sql'):
-            os.remove('log/backup.sql')
+        stats_file = os.path.join(Manager.get_path(), 'log/statistics.log')
+        if os.path.exists(stats_file):
+            os.remove(stats_file)
+        if os.path.exists(self.backup_sql):
+            os.remove(self.backup_sql)
 
     def parse_connection_dsn(self, dsn):
         return dict([arg.split('=') for arg in dsn.split(' ')])
@@ -274,7 +284,7 @@ class DBBackup(object):
             command.extend(['-U', args['user']])
         if args.has_key('password'):
             os.putenv('PGPASSWORD', args['password'])
-        command.extend(['-f', 'log/backup.sql', args['dbname']])
+        command.extend(['-f', self.backup_sql, args['dbname']])
         return command
 
     def get_restore_command(self, args):
@@ -287,7 +297,7 @@ class DBBackup(object):
             command.extend(['-U', args['user']])
         if args.has_key('password'):
             os.putenv('PGPASSWORD', args['password'])
-        command.extend(['-d', args['dbname'], '-f', 'log/backup.sql'])
+        command.extend(['-d', args['dbname'], '-f', self.backup_sql])
         return command
 
     def call_command(self, command):

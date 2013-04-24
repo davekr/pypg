@@ -2,6 +2,7 @@ from collections import defaultdict
 from exception import PyPgException
 import settings
 import logging
+import os
 
 class Manager(object):
 
@@ -35,6 +36,8 @@ class Manager(object):
                            ON t1.column_name = t2.column_name AND t1.table_name = t2.table_name;
                            """
     _NAMING = None
+
+    _LIB_PATH = os.path.realpath(os.path.dirname(__file__))
     
     @staticmethod
     def set_connection(conn):
@@ -85,6 +88,10 @@ class Manager(object):
             raise PyPgException('Cache is old or has never been popuated. Please renew cache.')
         else:
             return Manager._INTROSPECTION_CACHE
+
+    @staticmethod
+    def get_path():
+        return Manager._LIB_PATH
                     
     @staticmethod
     def renew_cache():

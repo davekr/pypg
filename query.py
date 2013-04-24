@@ -40,7 +40,9 @@ class Query(object):
         logger = logging.getLogger("PyPg.statistics")
         logger.setLevel(logging.DEBUG)
         if not logger.handlers:
-            logger.addHandler(logging.FileHandler("log/statistics.log"))
+            import os
+            stats_file = os.path.join(Manager.get_path(), 'log/statistics.log')
+            logger.addHandler(logging.FileHandler(stats_file))
         logdict = {}
         logdict['query'] = self._cursor.query
         logdict['time'] = t
