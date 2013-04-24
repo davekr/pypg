@@ -29,7 +29,7 @@ class DB(object):
             if func:
                 func(settings[value])
 
-    def analyze_statistics(self):
+    def start_denormalization(self):
         Denormalization().start()
 
     def create_mview(self, name, table):
