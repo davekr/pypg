@@ -8,7 +8,7 @@ from mview import MaterializedView
 from table import TableSelect
 from column import Column
 import settings
-from cursor import DALCursor
+from cursor import PyPgCursor
 import time
 
 class Analyzer(object):
@@ -193,7 +193,7 @@ class Denormalization(object):
         improvement.run_improvement()
         conn = Manager.get_connection()
         for query in all_queries:
-            cursor = conn.cursor(cursor_factory=DALCursor)
+            cursor = conn.cursor(cursor_factory=PyPgCursor)
             if query['sql'] == improvement.query:
                 cursor.execute(improvement.improvement_sql())
                 t = (time.time() - cursor.timestamp) * 1000

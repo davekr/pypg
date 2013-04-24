@@ -1,5 +1,5 @@
 from collections import defaultdict
-from exception import DBException
+from exception import PyPgException
 import settings
 import logging
 
@@ -45,7 +45,7 @@ class Manager(object):
         if Manager._CONNECTION:
             return Manager._CONNECTION
         else:
-            raise DBException('No connection specified.')
+            raise PyPgException('No connection specified.')
 
     @staticmethod
     def get_logger():
@@ -73,7 +73,7 @@ class Manager(object):
         from structure import Naming
         if naming: 
             if not isinstance(naming, Naming):
-                raise DBException('Naming must be instance of class utils.Naming')
+                raise PyPgException('Naming must be instance of class utils.Naming')
             else:
                 Manager._NAMING = naming
         else:
@@ -82,7 +82,7 @@ class Manager(object):
     @staticmethod
     def get_scheme():
         if not Manager._CACHE_POPULATED:
-            raise DBException('Cache is old or has never been popuated. Please renew cache.')
+            raise PyPgException('Cache is old or has never been popuated. Please renew cache.')
         else:
             return Manager._INTROSPECTION_CACHE
                     

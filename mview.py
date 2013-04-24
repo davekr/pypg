@@ -4,6 +4,7 @@ from query import Query
 from table import TableSelect
 from manager import Manager
 import settings
+from exception import PyPgException
 
 class MaterializedView(object):
 
@@ -57,7 +58,7 @@ class MaterializedView(object):
 
     def create_mview(self, name, table):
         if not isinstance(table, TableSelect):
-            raise DBExpcetion("Raw sql not yet supported. Use DAL syntax to create mview")
+            raise PyPgExpcetion("Raw sql not yet supported. Use PyPg syntax to create mview")
         pks = []
         if not table._sql._select_args:
             if settings.STRICT == False:

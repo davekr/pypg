@@ -1,6 +1,6 @@
 from manager import Manager
 import settings
-from exception import DBException
+from exception import PyPgException
 
 class Structure(object):
 
@@ -10,9 +10,13 @@ class Structure(object):
             if column in Manager.get_scheme()[table]['columns']:
                 return True
             else:
-                error = 'Column "%s" is not a valid column in table "%s".' \
-                        % (column, table)
-                raise DBException(error)
+                if settings.DEBUG:
+                    columns = ' Choices are: %s' % ', '.join(Structure.get_all_columns(table))
+                else:
+                    columns = ''
+                error = 'Column "%s" is not a valid column in table "%s".%s' \
+                        % (column, table, columns)
+                raise PyPgException(error)
         else:
             return True
         
@@ -29,7 +33,11 @@ class Structure(object):
             if table in Manager.get_scheme():
                 return True
             else:
-                raise DBException('No table "%s" in database.' % table)
+                if settings.DEBUG:
+                    tables = ' Choices are: %s' % ', '.join(Structure.get_all_tables())
+                else:
+                    tables = ''
+                raise PyPgException('No table "%s" in database.%s' % (table, tables))
         else:
             return True
         
@@ -52,7 +60,7 @@ class Structure(object):
         try:
             return Structure.get_primary_keys(table)[0]
         except IndexError:
-            raise DBException('Table %s has no primary key.' % table)
+            raise PyPgException('Table %s has no primary key.' % table)
 
     @staticmethod
     def is_foreign_key(table, attr):
@@ -69,7 +77,7 @@ class Structure(object):
             if reltable in Manager.get_scheme()[table]['fks'] or table in Manager.get_scheme()[reltable]['fks']:
                 return True
             else:
-                raise DBException('Tables %s and %s are not related.' % (table, reltable))
+                raise PyPgException('Tables %s and %s are not related.' % (table, reltable))
         else:
             return True
     
@@ -85,7 +93,7 @@ class Structure(object):
         try:
             return Structure.get_foreign_keys_for_table(table, foreign_table)[0]
         except IndexError:
-            raise DBException('Table %s has no foreign key for table %s' % (table, foreign_table))
+            raise PyPgException('Table %s has no foreign key for table %s' % (table, foreign_table))
            
     @staticmethod
     def get_fk_referenced_table(table, foreign_key):
@@ -94,7 +102,7 @@ class Structure(object):
                 if foreign_key in fks['relcolumns']:
                     return table
             else:
-                raise DBException('Table %s has no foreign key %s.' % (table, foreign_key))
+                raise PyPgException('Table %s has no foreign key %s.' % (table, foreign_key))
         else:
             return Manager.get_naming().get_fk_column(table, foreign_key)
                 

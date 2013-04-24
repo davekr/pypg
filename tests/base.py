@@ -1,5 +1,5 @@
 import psycopg2
-from db import DB
+from pypg import PyPg
 import subprocess
         
 class TestHelper(object):
@@ -12,7 +12,7 @@ class TestHelper(object):
         cls.create_db()
         cls.fill_db()
         cls.conn = psycopg2.connect("dbname=%s user=%s" % (cls.DBNAME, cls.DBUSER))
-        cls.db = DB(cls.conn)
+        cls.db = PyPg(cls.conn)
 
     @classmethod
     def fill_db(cls):

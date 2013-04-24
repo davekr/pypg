@@ -64,16 +64,22 @@ class ResultSet(ReadOnlyResultSet):
             if sql._select_args:
                 sql.add_select_arg(Column(relation, relation_fk))
             if sql._limit:
-                pass
-                #union = ''
-                #union_parameters = []
-                #import copy
-                #for id in self._cache.get_all_keys(table_name, pk):
-                    #limiting_sql = copy.deepcopy(sql)
-                    #limiting_sql.add_where_literal(Column(relation, relation_fk) == id)
+                union_sql = []
+                union_parameters = []
+                union_dict = {}
+                import copy
+                for id in self._cache.get_all_keys(table_name, pk):
+                    limiting_sql = copy.deepcopy(sql)
+                    limiting_sql.add_where_literal(Column(relation, relation_fk) == id)
+                    union_dict = limiting_sql.build_select() 
+                    union_sql.append('(%s)' % union_dict['sql'])
+                    union_parameters.extend(union_dict['parameters'])
+                union_dict['sql'], union_dict['parameters'] = ' UNION '.join(union_sql), union_parameters
+                data = Query().execute_and_fetch(**union_dict)
+                self._cache.save_relation(table_name, relation, data)
             else:
                 sql.add_where_literal(Column(relation, relation_fk).in_(self._cache.get_all_keys(table_name, pk)))
-            data = Query().execute_and_fetch(**sql.build_select())
-            self._cache.save_relation(table_name, relation, data)
+                data = Query().execute_and_fetch(**sql.build_select())
+                self._cache.save_relation(table_name, relation, data)
         return ResultSet(self._cache.get_relation_set(relation, relation_fk, pk_value), relation, self._cache)
 

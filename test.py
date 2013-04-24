@@ -1,10 +1,11 @@
 import unittest
-from exception import DBException
+from exception import PyPgException
 from table import TableWhere, Table, TableSelect, TableSelected
 from column import Column
 from row import Row, ReadOnlyRow
 from resultset import ResultSet
 from tests import TestHelper
+from restricted import RestrictedTableSelected
 
 class DBTest(unittest.TestCase):
 
@@ -27,7 +28,7 @@ class DBStrictTest(unittest.TestCase):
         self.assertEqual(isinstance(self.db.city, Table), True)
     
     def test_table_access_failure(self):
-        self.assertRaises(DBException, getattr, self.db, 'notexistingtable')
+        self.assertRaises(PyPgException, getattr, self.db, 'notexistingtable')
 
 class TableInsertTest(unittest.TestCase):
 
@@ -41,16 +42,16 @@ class TableInsertTest(unittest.TestCase):
         self.assertRaises(TypeError, operator.getitem, self.db.city, 0)
 
     def test_insert_no_arguments(self):
-        self.assertRaises(DBException, self.db.city.insert)
+        self.assertRaises(PyPgException, self.db.city.insert)
 
     def test_insert_and_get_no_arguments(self):
-        self.assertRaises(DBException, self.db.city.insert_and_get)
+        self.assertRaises(PyPgException, self.db.city.insert_and_get)
     
     def test_insert_bad_karguments(self):
-        self.assertRaises(DBException, self.db.city.insert, notexistingcolumn='')
+        self.assertRaises(PyPgException, self.db.city.insert, notexistingcolumn='')
 
     def test_insert_and_get_bad_karguments(self):
-        self.assertRaises(DBException, self.db.city.insert_and_get, notexistingcolumn='')
+        self.assertRaises(PyPgException, self.db.city.insert_and_get, notexistingcolumn='')
          
     def test_insert_good_karguments(self):
         self.assertEqual(self.db.city.insert(name='Test', countrycode="CZE", district="Testdistrict", population=300), None)
@@ -59,10 +60,10 @@ class TableInsertTest(unittest.TestCase):
         self.assertEqual(isinstance(self.db.city.insert_and_get(name='Test', countrycode="CZE", district="Testdistrict", population=300), ResultSet), True)
          
     def test_insert_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.insert, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.insert, 'balderdash')
         
     def test_insert_and_get_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.insert_and_get, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.insert_and_get, 'balderdash')
 
     def test_insert_good_arguments(self):
         #self.assertEqual(isinstance(self.db.test.insert(self.db.test.row()), list), True)
@@ -79,13 +80,13 @@ class TableWhereTest(unittest.TestCase):
         self.assertRaises(TypeError, operator.getitem, self.db.city.where(self.db.city.id==1), 0)
 
     def test_where_no_arguments(self):
-        self.assertRaises(DBException, self.db.city.where)
+        self.assertRaises(PyPgException, self.db.city.where)
     
     def test_where_bad_karguments(self):
-        self.assertRaises(DBException, self.db.city.where, balderdash='')
+        self.assertRaises(PyPgException, self.db.city.where, balderdash='')
         
     def test_where_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.where, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.where, 'balderdash')
         
     def test_where_good_karguments(self):
         self.assertEqual(isinstance(self.db.city.where(self.db.city.id == 1), TableWhere), True)
@@ -121,16 +122,16 @@ class TableUpdateTest(unittest.TestCase):
         self.assertRaises(TypeError, operator.getitem, self.db.city.where(self.db.city.id==1), 0)
 
     def test_update_no_arguments(self):
-        self.assertRaises(DBException, self.db.city.update)
+        self.assertRaises(PyPgException, self.db.city.update)
 
     def test_update_and_get_no_arguments(self):
-        self.assertRaises(DBException, self.db.city.update_and_get)
+        self.assertRaises(PyPgException, self.db.city.update_and_get)
     
     def test_update_bad_karguments(self):
-        self.assertRaises(DBException, self.db.city.update, notexistingcolumn='')
+        self.assertRaises(PyPgException, self.db.city.update, notexistingcolumn='')
 
     def test_update_and_get_bad_karguments(self):
-        self.assertRaises(DBException, self.db.city.update_and_get, notexistingcolumn='')
+        self.assertRaises(PyPgException, self.db.city.update_and_get, notexistingcolumn='')
          
     def test_update_good_karguments(self):
         self.assertEqual(self.db.city.where(self.db.city.id==1).update(name='Test'), None)
@@ -161,7 +162,7 @@ class TableSelectTest(unittest.TestCase):
         self.assertRaises(TypeError, self.db.city.limit)
         
     def test_limit_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.limit, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.limit, 'balderdash')
         
     def test_limit_good_arguments(self):
         self.assertEqual(isinstance(self.db.city.limit(10), TableSelect), True)
@@ -170,7 +171,7 @@ class TableSelectTest(unittest.TestCase):
         self.assertRaises(TypeError, self.db.city.order)
         
     def test_order_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.order, 'balderdash')    
+        self.assertRaises(PyPgException, self.db.city.order, 'balderdash')    
         
     def test_order_good_arguments(self):
         self.assertEqual(isinstance(self.db.city.order(self.db.city.name), TableSelect), True)
@@ -182,7 +183,7 @@ class TableSelectTest(unittest.TestCase):
         self.assertRaises(TypeError, self.db.city.order_desc)
         
     def test_order_desc_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.order_desc, 'balderdash')    
+        self.assertRaises(PyPgException, self.db.city.order_desc, 'balderdash')    
         
     def test_order_desc_good_arguments(self):
         self.assertEqual(isinstance(self.db.city.order_desc(self.db.city.name), TableSelect), True)
@@ -194,7 +195,7 @@ class TableSelectTest(unittest.TestCase):
         self.assertEqual(isinstance(self.db.city.select(), TableSelected), True)
          
     def test_select_bad_arguments(self):
-        self.assertRaises(DBException, self.db.city.select, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.select, 'balderdash')
         
     def test_select_good_arguments(self):
         self.assertEqual(isinstance(self.db.city.select(self.db.city.name), TableSelected), True)
@@ -216,13 +217,13 @@ class TableJoinTest(unittest.TestCase):
         cls.db.set_strict(True)
 
     def test_join_bad_argument(self):
-        self.assertRaises(DBException, self.db.city.join, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.join, 'balderdash')
 
     def test_join_bad_on_argument(self):
-        self.assertRaises(DBException, self.db.city.join, self.db.country, 'balderdash')
+        self.assertRaises(PyPgException, self.db.city.join, self.db.country, 'balderdash')
 
     def test_join_bad_on_argument2(self):
-        self.assertRaises(DBException, self.db.city.join, self.db.country, self.db.city.id == 1)
+        self.assertRaises(PyPgException, self.db.city.join, self.db.country, self.db.city.id == 1)
 
     def test_join_implicit_on(self):
         self.assertEqual(isinstance(self.db.city.join(self.db.country).limit(1).select()[0], ReadOnlyRow), True)
@@ -248,7 +249,7 @@ class TableTest(unittest.TestCase):
         self.assertEqual(isinstance(self.db.city.name, Column), True)
 
     def test_column_access_failure(self):
-        self.assertRaises(DBException, getattr, self.db.city, 'notexistingcolumn')
+        self.assertRaises(PyPgException, getattr, self.db.city, 'notexistingcolumn')
 
     def test_where_insert(self):
         self.assertRaises(AttributeError, getattr, self.db.city.where(self.db.city.id == 1), 'insert')
@@ -286,14 +287,14 @@ class RowTest(unittest.TestCase):
         self.assertRaises(KeyError, operator.getitem, self.row, 'notexstingcolumn')
         
     def test_update_no_arguments(self):
-        self.assertRaises(DBException, self.row.update)
+        self.assertRaises(PyPgException, self.row.update)
         
     def test_update_bad_arguments(self):
-        self.assertRaises(DBException, self.row.update, notexistingcolumn='')
+        self.assertRaises(PyPgException, self.row.update, notexistingcolumn='')
         
     def test_item_set_failuer(self):
         import operator
-        self.assertRaises(DBException, operator.setitem , self.row, 'notexistingcolumn', 'value')
+        self.assertRaises(PyPgException, operator.setitem , self.row, 'notexistingcolumn', 'value')
 
     def test_update_good_arguments(self):
         self.assertEqual(type(self.row.update(name='New name')), Row)
@@ -326,17 +327,17 @@ class RowDeletedTest(unittest.TestCase):
         
     def test_item_access_failure(self):
         import operator
-        self.assertRaises(DBException, operator.getitem, self.row, 'notexstingcolumn')
+        self.assertRaises(PyPgException, operator.getitem, self.row, 'notexstingcolumn')
         
     def test_item_set_failure(self):
         import operator
-        self.assertRaises(DBException, operator.setitem , self.row, 'notexistingcolumn', 'value')
+        self.assertRaises(PyPgException, operator.setitem , self.row, 'notexistingcolumn', 'value')
         
     def test_update_failure(self):
-        self.assertRaises(DBException, self.row.update, name='Test')
+        self.assertRaises(PyPgException, self.row.update, name='Test')
         
     def test_delete_failure(self):
-        self.assertRaises(DBException, self.row.delete)
+        self.assertRaises(PyPgException, self.row.delete)
 
 class ReadOnlyRowTest(unittest.TestCase):
 
@@ -379,13 +380,13 @@ class RowRelationTest(unittest.TestCase):
         self.assertEqual(isinstance(self.row.countrycode, Row), True)
 
     def test_access_languages(self):
-        self.assertEqual(isinstance(self.row.countrycode.countrylanguage, ResultSet), True)
+        self.assertEqual(isinstance(self.row.countrycode.countrylanguage.select(), RestrictedTableSelected), True)
 
     def test_access_failure(self):
-        self.assertRaises(DBException, getattr, self.row, 'notexistingrelation')
+        self.assertRaises(PyPgException, getattr, self.row, 'notexistingrelation')
 
     def test_access_failure2(self):
-        self.assertRaises(DBException, getattr, self.row.countrycode, 'notexistingrelation')
+        self.assertRaises(PyPgException, getattr, self.row.countrycode, 'notexistingrelation')
 
 class SelectInTest(unittest.TestCase):
 
@@ -441,7 +442,7 @@ class NamingTest(unittest.TestCase):
         self.assertEqual(isinstance(self.row.countrycode, Row), True)
 
     def test_access_languages(self):
-        self.assertEqual(isinstance(self.row.countrycode.countrylanguage, ResultSet), True)
+        self.assertEqual(isinstance(self.row.countrycode.countrylanguage.select(), RestrictedTableSelected), True)
 
 class LoggingTest(unittest.TestCase):
 

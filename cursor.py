@@ -3,12 +3,12 @@ import time
 
 from manager import Manager
 
-class DALCursor(DictCursor):
+class PyPgCursor(DictCursor):
     """A cursor that keeps a list of column name -> index mappings.
         And logs every executed query."""
 
     def __init__(self, *args, **kwargs):
-        super(DALCursor, self).__init__(*args, **kwargs)
+        super(PyPgCursor, self).__init__(*args, **kwargs)
         self._logger = Manager.get_logger()
 
     def log(self, msg):
@@ -17,14 +17,14 @@ class DALCursor(DictCursor):
     def execute(self, query, vars=None):
         self.timestamp = time.time()
         try:
-            return super(DALCursor, self).execute(query, vars)
+            return super(PyPgCursor, self).execute(query, vars)
         finally:
             self.log(self.query)
 
     def callproc(self, procname, vars=None):
         self.timestamp = time.time()
         try:
-            return super(DALCursor, self).callproc(procname, vars)
+            return super(PyPgCursor, self).callproc(procname, vars)
         finally:
             self.log(self.query)
 

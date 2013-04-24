@@ -4,7 +4,7 @@ from column import Column
 from query import Query
 from structure import Structure
 from utils import TableValidator
-from exception import DBException
+from exception import PyPgException
     
 __all__ = ['Table']
 
@@ -56,7 +56,7 @@ class TableSelect(TableValidator):
             Structure.tables_related(self._table_name, table._table_name)
             try:
                 fk = Structure.get_foreign_key_for_table(self._table_name, table._table_name)
-            except DBException:
+            except PyPgException:
                 fk = Structure.get_foreign_key_for_table(table._table_name, self._table_name)
                 on = Column(table._table_name, fk) == \
                         Column(self._table_name, Structure.get_primary_key(self._table_name))

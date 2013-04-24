@@ -1,13 +1,13 @@
 
 from table import Table, TableSelect
-from exception import DBException
+from exception import PyPgException
 from manager import Manager
 from structure import Structure
 from mview import MaterializedView
 import settings as dbsettings
 from analyzer import Denormalization, DBBackup
 
-class DB(object):
+class PyPg(object):
     
     def __init__(self, conn, logger=None, naming=None, **kwargs):
         Manager.set_connection(conn)

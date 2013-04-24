@@ -1,5 +1,5 @@
 from builder import SQLBuilder
-from exception import DBException
+from exception import PyPgException
 from query import Query
 from utils import TableValidator
 from structure import Structure
@@ -33,7 +33,7 @@ class ReadOnlyRow(TableValidator):
 
     def _check_deleted(self):
         if self._deleted:
-            raise DBException('This row was deleted.')  
+            raise PyPgException('This row was deleted.')  
 
 class Row(ReadOnlyRow):
 
@@ -53,7 +53,7 @@ class Row(ReadOnlyRow):
         if self.data.get(pk) is not None:
             return pk
         else:
-            raise DBException('Incorectly formated naming for primary key. Please provide manager.Naming instance or set strict mode on.')
+            raise PyPgException('Incorectly formated naming for primary key. Please provide manager.Naming instance or set strict mode on.')
         
     def __setitem__(self, item, value):
         self._check_deleted()
@@ -80,12 +80,17 @@ class Row(ReadOnlyRow):
             if self._result_set:
                 return self._result_set._get_rel_data(self._table_name, attr, pk, self.data[pk])
             else:
-                relation_fk = Structure.get_foreign_key_for_table(attr, self._table_name)
-                sql = SQLBuilder(attr)
-                sql.add_where_condition(relation_fk, self.data[pk])
-                data = Query().execute_and_fetch(**sql.build_select())
-                from resultset import ResultSet
-                return ResultSet(data, attr)
+                self._restricted_table_attr = attr
+                from restricted import RestrictedTableSelect
+                return RestrictedTableSelect(attr, SQLBuilder(attr), self)
+
+    def _get_rel_data_restricted(self, sql):
+        attr, pk = self._restricted_table_attr, self._get_pk()
+        relation_fk = Structure.get_foreign_key_for_table(attr, self._table_name)
+        sql.add_where_condition(relation_fk, self.data[pk])
+        data = Query().execute_and_fetch(**sql.build_select())
+        from resultset import ResultSet
+        return ResultSet(data, attr)
         
     def update(self, **kwargs):
         self._check_deleted()
@@ -97,7 +102,7 @@ class Row(ReadOnlyRow):
             #self._set_sql_builder()
             return self
         else:
-            raise DBException('No data to update for this row.')
+            raise PyPgException('No data to update for this row.')
         
     def delete(self):
         self._check_deleted()

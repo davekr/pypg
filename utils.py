@@ -1,6 +1,6 @@
 
 from structure import Structure
-from exception import DBException
+from exception import PyPgException
 
 class TableValidator(object):
 
@@ -18,7 +18,7 @@ class TableValidator(object):
         except ValueError:
             error = 'Wrong limit "%s". Limit has to be an integer or convertable to integer.' \
                     % limit
-            raise DBException(error)
+            raise PyPgException(error)
             
     def _validate_row(self, kwargs):
         self._validate_kwargs(kwargs, 'row')
@@ -34,21 +34,21 @@ class TableValidator(object):
     
     def _validate_kwargs(self, kwargs, method):
         if not kwargs:
-            raise DBException(self._NO_ARGUMENTS_ERROR % method)
+            raise PyPgException(self._NO_ARGUMENTS_ERROR % method)
         map(self._check_column_in_table, kwargs.keys())
         
     def _validate_args_kwargs(self, args, kwargs, method, class_):
         if not args and not kwargs:
-            raise DBException(self._NO_ARGUMENTS_ERROR % method)
+            raise PyPgException(self._NO_ARGUMENTS_ERROR % method)
         map(lambda arg: self._check_is_instance(arg, class_), args)
         map(self._check_column_in_table, kwargs.keys())
 
     def _validate_on(self, table, on):
         if not isinstance(on._value, on._column.__class__):
-            raise DBException("Wrong join condition.")
+            raise PyPgException("Wrong join condition.")
         
     def _check_is_instance(self, instance, class_):
         if not instance.__class__.__name__ == class_:
-            raise DBException('Argument "%s" is not "%s" instance.' % (instance, class_))
+            raise PyPgException('Argument "%s" is not "%s" instance.' % (instance, class_))
         return True
 

@@ -1,5 +1,5 @@
 from table import TableSelect, TableSelected
-from exception import DBException
+from exception import PyPgException
 
 class RestrictedTableSelect(TableSelect):
 
@@ -8,7 +8,7 @@ class RestrictedTableSelect(TableSelect):
         self._result_set = result_set
 
     def join(self, *args, **kwargs):
-        raise DBException("Join not supported in SELECT...IN functionality")
+        raise PyPgException("Join not supported in SELECT...IN functionality")
 
     def _table_select_instance(self):
         return self
