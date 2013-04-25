@@ -5,7 +5,7 @@ from manager import Manager
 from structure import Structure
 from mview import MaterializedView
 import settings as dbsettings
-from analyzer import Denormalization, DBBackup
+from denormalization import Denormalization, DBBackup
 
 class PyPg(object):
     

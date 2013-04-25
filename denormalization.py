@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 from manager import Manager
 import os
@@ -11,6 +12,7 @@ import settings
 from cursor import PyPgCursor
 import time
 import os
+import platform
 
 class Analyzer(object):
 
@@ -70,15 +72,36 @@ class Improvement(object):
         return 'SELECT * FROM test_mview;'
 
     def __str__(self):
-        return 'Improvement: \n\tquery: %s\n\ttotal time reading: %s\n\ttotal time modifying: %s\n\timproved read: %s\n\timproved modify: %s' % (self.query, self.time_read, self.time_modify, self.improved_time_read, self.improved_time_modify)
+        return 'Improving query: %s' % self.query
+
+    def report(self):
+        unit = 's' if platform.system() == 'Windows' else 'ms'
+        result = self.get_result_report()
+        return 'Improvement: \n\
+        query: %(q)s\n\
+        original time spent reading: %(orig_read)s %(unit)s\n\
+        original time spent writing: %(orig_write)s %(unit)s\n\
+        improved time spent reading: %(impro_read)s %(unit)s \n\
+        improved time spent writing: %(impro_write)s %(unit)s\n\t%(result)s' \
+                          % {'q': self.query, 'orig_read': self.time_read, \
+                             'orig_write': self.time_modify, 'impro_read': self.improved_time_read, \
+                             'impro_write': self.improved_time_modify, 'unit': unit, 'result': result}
+
+    def get_result_report(self):
+        total_orig_time = self.time_modify + self.time_read
+        total_improved_time = self.improved_time_modify + self.improved_time_read
+        recomended, percentage = False, 0
+        if total_improved_time < total_orig_time:
+            percentage = round((total_orig_time - total_improved_time) / total_orig_time * 100)
+            if percentage > 9:
+                recomended = True
+        result = 'Improvement is%(not)s recomended. Improvement is %(percent)s%% better then the original.' \
+                % {'not': '' if recomended else ' not', 'percent': percentage}
+        return result
+
 
     def run_improvement(self):
         self._improvement_mview()
-        #result = self._check_column_denormalization()
-        #if result:
-            #self._improvement_add_column(*result)
-        #else:
-            #self._improvement_mview()
 
     def _check_column_denormalization():
         if len(self.tables) == 2:
@@ -160,6 +183,9 @@ class ImprovementCollection(object):
     def __len__(self):
         return len(self.collection)
 
+    def report(self):
+        return '\n'.join([improvement.report() for improvement in self.collection])
+
     def __str__(self):
         return '\n'.join(map(str, self.collection))
 
@@ -190,10 +216,10 @@ class Denormalization(object):
         self.restore_db()
 
     def report(self, improvements):
-        print str(improvements)
+        print improvements.report()
 
     def run_test(self, improvement, all_queries):
-        print 'Testing improvement %s' % str(improvement)
+        print 'Testing improvement\n%s' % str(improvement)
         improvement.run_improvement()
         conn = Manager.get_connection()
         for query in all_queries:
