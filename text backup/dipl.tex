@@ -4,8 +4,8 @@
 \usepackage[czech]{babel}
 \usepackage[utf8]{inputenc}
 
-\usepackage{hyperref}
-\usepackage{hypcap}
+%\usepackage{hyperref}
+%\usepackage{hypcap}
 
 \usepackage{color}
 \usepackage{setspace}
@@ -120,7 +120,7 @@ literate=%
 %	{ň}{{\v{n}}}1	
 	{ř}{{\v{r}}}1
 	{š}{{\v{s}}}1
-%	{t}{{\v{ť}}}1
+%	{ť}{{\v{t}}}1
 	{ž}{{\v{z}}}1
 	{ě}{{\v{e}}}1
 	{ů}{\r u}1,
@@ -685,7 +685,8 @@ Mezi jeho výhody patří dotazovací API, které má blízko k SQL, funkce jako
 Dodělám popis a srovnání během tohoto týdne.
 %sql oriented
 % jedno vlakno vice trasakci, django jenom 1 a 1
-%
+%hibernate, which was pretty influential on sqlalchemy.
+%datamapper, unit of work
 
 \section{Návrh knihovny pypg}
 \label{sec:Design}
@@ -866,12 +867,12 @@ Při tvorbě syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelno
 >>> db.blog.where(db.blog.id == 2).update(name = "Better name for the blog")
 >>> db.blog.where(db.blog.id == 1).delete()
 >>> query = db.blog.select().where(db.blog.name == "Better name for the blog") #Neprovádí se dotaz
->>> query.limit(10) #Neprovádí se dotaz
+>>> query = query.limit(10) #Neprovádí se dotaz
 >>> print query[0]
 #SELECT * FROM "blog"  WHERE blog.name = 'Better name for the blog' LIMIT 10
 [2, 'Better name for the blog', None]
 >>> db.blog.order(db.blog.name).where(db.blog.name.like("%blog")).select(db.blog.name)[0]
-#SELECT blog.name FROM "blog" WHERE blog.name LIKE '%blog' ORDER BY blog.name
+#SELECT blog.id, blog.name FROM "blog" WHERE blog.name LIKE '%blog' ORDER BY blog.name
 >>> db.blog.join(db.entry).select()[0]
 #SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.blog_id
 >>> db.blog.join(db.entry, on=db.entry.id == db.blog.id).select()[0]
@@ -1022,7 +1023,45 @@ Kromě této funkce bude knihovna na základě dotazu, implicitně rozhodovat o 
 
 \section{Porovnani rychlosti pypg s ostatními rámci}
 \label{sec:Bench}
-Dodělám během tohoto týdne.
+Rámce popsané v kapitole \ref{sec:Comparison} byly spolu s knihovnou pypg podrobeny testům. Testy měly za úkol srovnat knihovnu s těmito rámci a ukázat výkon a efektivnost knihovny a výše popsaných funkcí, které knihovna implementuje.
+
+\subsection{Podmínky testování}
+Pro testování výkonu rámců byly vybrány podmínky, které by alespoň zčásti odpovídaly reálnému nasazení a požadavkům. 
+Byla použita testovací databáze dellstore2\footnote{http://pgfoundry.org/frs/?group\_id=1000150\&release\_id=376}, která představuje relační schéma jednoduchého internetového obchodu a obsahuje i náhodně vygenerovaná data. Tato databáze byla mírně upravena tak, aby dovolovala větší variabilitu testů. Do databáze byly přidány nové tabulky, které byly naplněny náhodně generovanými daty. Obrázek zobrazuje relační schéma této databáze a tabulka \ref{tab:TestRecords}, pak množství dat v jednotlivých databázových tabulkách. Vazební tabulky \lstinline[style=inlinepython]|product_category| a \lstinline[style=inlinepython]|pro-| \lstinline[style=inlinepython]|duct_variant| pak obsahují data tak, aby každý záznam v tabulce \lstinline[style=inlinepython]|product| obsahoval relaci na dva záznamy v tabulce \lstinline[style=inlinepython]|category| a čtyři záznamy v tabulkce \lstinline[style=inlinepython]|variant|.
+
+\begin{table}
+  \centering
+  \begin{tabular}{|c|c|c|c|c|c|c|c|}
+    \hline
+    address & brand & category & customer & order & orderline & product & variant \\
+    \hline
+	30.000 & 100 & 16 & 20.000 & 12.000 & 60.350 & 10.000 &  512 \\
+	\hline
+  \end{tabular}
+  \caption{Počet záznamů v tabulkách testovací databáze}
+  \label{tab:TestRecords}
+\end{table}
+
+\subsubsection{Použité technologie}
+Testy byly spuštěny na zařízení s následujícím hardwarem:
+\begin{itemize}
+\item Procesor Intel Core i3-M330 s frekvencí 2.13GHz. Procesor obsahuje dvě jádra a čtyři vlákna.
+\item Pevný disk SATA HITACHI s obsahem 320 GB a s 5400 otáčky za minutu.
+\item Operační paměť 3 GB DDR3 s frekvencí 1066 MHz.
+\end{itemize}
+Software obsažený na tomto zařízení a jednotlivé verze použitých technologií a rámců byly tyto:
+\begin{itemize}
+\item Operační systém Ubuntu 12.04
+\item Lokální server SŘBD PostgreSQL 9.2.3
+\item Python 2.7.3
+\item Django 1.5
+\item web2py 2.4.6
+\item SQLAlchemy 0.8
+\end{itemize}
+
+\subsection{Popis testů}
+
+\subsection{Výsledky testů}
 
 \section{Závěr}
 \label{sec:Conclusion}
