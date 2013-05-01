@@ -492,6 +492,7 @@ ORM poskytuje i možnost zadat vlastní SQL, z jehož výsledku se pak vytvoří
 API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Cílem této sekce bylo pouze nastínit základní principy a ukázat základy syntaxe. Další informace lze nalézt v oficiální dokumentaci \cite{djangodoc}.
 
 \subsubsection{Optimalizace v Django ORM}
+\label{subsubsec:DjangoOpt}
 
 Django ORM umožňuje svými funkcemi optimalizovat některé náročnější operace. Přihlédnutím k těmto optimalizacím lze ve většině případů zlepšit výkon ORM. 
 
@@ -667,6 +668,7 @@ Problém N+1 DBAL nijak neulehčuje, a je ho potřeba řešit explicitním spoje
 Mezi optimalizace, které DBAL poskytuje patří kešování výsledku dotazů. \\
 
 \subsubsection{Nevýhody web2py DBAL}
+\label{subsubsec:web2py-cons}
 
 web2py DBAL poskytuje velmi dobré API pro dotazování do databáze. Tento fakt však zastiňuje mnoho nevýhod. \\
 Vytváření nebo změny tabulek jsou bohužel prováděny za běhu aplikace. DBAL také neulehčuje použití existující databáze, jelikož neposkytuje nástroj, který by automaticky vygeneroval definice tabulek a je tak potřeba tyto definice vytvořit ručně. \\
@@ -915,6 +917,7 @@ Všechny tyto třídy zobrazuje diagram na obrázku \ref{fig:Clsdiag}.
 \InsertFigure{architektura.png}{150mm}{Diagram tříd knihovny pypg}{fig:Clsdiag}
 
 \subsection{Funkce pro zrychlení čtení dat}
+\label{subsec:PyPgOpt}
 
 Knihovna implementuje funkce, které urychlují a optimalizují čtení dat z databáze. Tyto funkce byly popsány v návrhu v sekci \ref{subsec:ReadOpt}.
 
@@ -1021,7 +1024,7 @@ Z databáze budou data vrácena ve formátu JSON, který umožní jejich kompres
 Knihovna tyto data poté na pozadí zpracuje a vypíše v požadované podobě. \\
 Kromě této funkce bude knihovna na základě dotazu, implicitně rozhodovat o jeho provedení pomocí samostatných dotazů nebo spojení tabulek s výsledkem vráceným ve formátu JSON.
 
-\section{Porovnani rychlosti pypg s ostatními rámci}
+\section{Porovnání knihovny pypg s ostatními rámci}
 \label{sec:Bench}
 Rámce popsané v kapitole \ref{sec:Comparison} byly spolu s knihovnou pypg podrobeny testům. Testy měly za úkol srovnat knihovnu s těmito rámci a ukázat výkon a efektivnost knihovny a výše popsaných funkcí, které knihovna implementuje.
 
@@ -1060,8 +1063,234 @@ Software obsažený na tomto zařízení a jednotlivé verze použitých technol
 \end{itemize}
 
 \subsection{Popis testů}
+V každém testu byly měřeny dva časové úseky. Prvním byla doba, kterou rámci nebo knihovně trvalo získat data z databáze. Do tohoto času spadá vyslání požadavku do databáze, zpracování požadavku databází a odeslání výsledných dat zpět rámci či knihovně. Druhým časovým úsekem bylo zpracování výsledných dat testovanou technologií do podoby, kdy je možné data vypsat na obrazovku nebo předat dále k dalšímu zpracování. První čas byl získán pomocí interních funkcí každého rámce nebo knihovny a pro získání druhého času byla použita knihovna jazyka Python timeit\footnote{http://docs.python.org/2/library/timeit.html}. Do testů nebyly zahrnuty přípravné a ukončovací operace. \\
+Před každým testem byla databáze vyprázdněna a znovu naplněna testovacími daty. Každý test byl spuštěn dvacetkrát a na výsledné časy byl aplikován medián. \\
+Bylo vybráno šest testovacích případů, které představují typickou práci s daty v systé-
+mech, kde bude knihovna použita.
+
+\subsubsection{Test 1 - detail produktu}
+První test představuje detailní výpis jednoho záznamu z tabulky \lstinline[style=inlinepython]|product|. Spolu s každým produktem měly rámce a knihovna za úkol dále vypsat značku a varianty produktu a kategorie, do kterých produkt spadá. \\
+Celkem tedy v tomto testu testované technologie získávají data z šesti tabulek v databázi - \lstinline[style=inlinepython]|product|, \lstinline[style=inlinepython]|brand|, \lstinline[style=inlinepython]|product_variant|, \lstinline[style=inlinepython]|variant|, \lstinline[style=inlinepython]|product_category|, \lstinline[style=inlinepython]|category|.
+
+\subsubsection{Test 2 - detail zákazníka}
+V tomto testu bylo za úkol vypsat detailní údaje jednoho zákazníka a všech jeho adres. Testované technologie získávaly data ze dvou tabulek v databázi - \lstinline[style=inlinepython]|customer| a \lstinline[style=inlinepython]|address|.
+
+\subsubsection{Test 3 - detail objednávky}
+Testované technologie v tomto testu měly za úkol vypsat detailní informace jedné objednávky. Pro každou objednávku byl vypsán zákazník, který objednávku vytvořil a adresa, která byla zadána do objednávky. Dále pak byly vypsány jednotlivé položky v objednávce, detaily produktů, jejich značky a kategorie, do kterých spadají a konkrétní varianty produktů.
+Celkem tedy byly získávány data z těchto tabulek v databázi: \lstinline[style=inlinepython]|order|, \lstinline[style=inlinepython]|customer|, \lstinline[style=inlinepython]|address|, \lstinline[style=inlinepython]|orderline|, \lstinline[style=inlinepython]|produt|, \lstinline[style=inlinepython]|brand|, \lstinline[style=inlinepython]|product_category|, \lstinline[style=inlinepython]|category| a \lstinline[style=inlinepython]|vari-| \lstinline[style=inlinepython]|ant|.
+
+\subsubsection{Test 4 - produkty v kategorii}
+Tento test sestával z detailního výpisu jedné kategorie a dvaceti produktů v této kategorii. Pro každý produkt byla pak dále vypsána jeho značka a jeho varianty. \\
+Testované technologie tedy získávaly data z tabulky \lstinline[style=inlinepython]|category|, \lstinline[style=inlinepython]|product_category|, \lstinline[style=inlinepython]|product|, \lstinline[style=inlinepython]|brand|, \lstinline[style=inlinepython]|produt_variant| a \lstinline[style=inlinepython]|variant|.
+
+\subsubsection{Test 5 - objednávky zákazníka}
+V tomto testu bylo za úkol vypsat detail zákazníka a všechny jeho objednávky. Maximálně však dvacet těchto objednávek. Dále pak pro každou objednávku všechny její položky.
+Celkem byla data získávána ze tří databázových tabulek - \lstinline[style=inlinepython]|customer|, \lstinline[style=inlinepython]|order| a \lstinline[style=inlinepython]|orderline|.
+
+\subsubsection{Test 6 - vytvoření nového zákazníka a objednávky}
+Všechny testy výše se zaměřují na rychlost čtení z databáze. Tento test však testoval rychlost operací při aktualizaci dat. V tomto testu měly testované technologie za úkol vytvořit nového zákazníka a jeho adresu. Pro tohoto zákazníka pak dále vytvořit objednávku se třemi položkami. \\
+Byl tedy testován zápis do tabulek \lstinline[style=inlinepython]|customer|, \lstinline[style=inlinepython]|address|, \lstinline[style=inlinepython]|order| a \lstinline[style=inlinepython]|orderline|.
+
+\subsection{Vytváření testů}
+Testy byly vytvářeny tak, aby co nejvíce využívaly vlastností rámců a knihovny, a byly tak maximálně optimalizované pro danou technologii. Zároveň však nebyl vytvořen žádný vlastní kód, který by operace dále optimalizoval. Testy byly vytvořeny čistě pomocí API testovaných technologií. 
+
+\begin{description}
+\item[Django ORM] Při testování rámce byly využity optimalizace pro okamžité načtení vazebních objektů popsaných v sekci \ref{subsubsec:DjangoOpt}. Dále pak byla v testech využita funkce hromadného ukládání objektů.
+\item[web2py DBAL] Testy pro tento rámec využívaly funkce hromadného ukládání objektů. Jiné optimalizační techniky, které by bylo možné využít v testech, rámec neposkytuje.
+\item[SQLAlchemy ORM] Testy tohoto rámce využily funkcí pro optimalizované načítaní vazebních objektů popsaných v sekci ??. Rámec některé další optimalizace poskytuje implicitně. Například hromadné ukládání nebo kešování objektů pomocí Identity Map v rámci transakce. Testy byly napsány s vědomím o těchto optimalizacích.
+\item[pypg] Testy pro knihovnu pypg využívaly optimalizací popsaných v sekci \ref{subsec:PyPgOpt}. Testy byly napsány s využitím samostatných dotazů i dotazů vytvořených spojením tabulek. \\
+Na základě uložených statistik z těchto testů pak byla spuštěna automatická denormalizace. Celý výstup této funkce zobrazuje výpis \ref{src:pypg-denomoutup} v příloze \ref{sec:Appendixdenom}. \\
+Z tohoto výstupu jsem vybral dva knihovnou doporučované materializované pohledy a vytvořil je pomocí knihovny v testovací databázi. Testy pak byly vytvořeny tak, aby využívaly těchto optimalizačních změn.
+\end{description}
 
 \subsection{Výsledky testů}
+
+\subsubsection{Test 1 - detail produktu}
+Výsledky prvního testu zobrazuje graf na obrázku \ref{fig:TestPD} a tabulka \ref{tab:TestPD}. Z výsledků je vidět, že knihovna pypg je několikanásobně lepší než ostatní rámce. Rozdíl se ještě více projeví, když knihovna používá navrhovaný materializovaný pohled. Naopak rámce Django ORM a web2py DBAL pokládaly neefektivní dotazy, což se projevilo na jejich celkovém čase. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{product_detail.pdf}
+    \caption{Graf výsledků testu 1 - detail produktu}
+    \label{fig:TestPD}
+\end{figure}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|r|r|r|r|r|}
+    \hline
+    & Čas získání dat & Čas zpracování dat & \textbf{Celkový čas} \\
+    \hline
+    web2py DBAL & 20 ms & 16 ms & \textbf{36 ms} \\
+    \hline
+    Django ORM & 21 ms & 5 ms & \textbf{26 ms} \\
+    \hline
+    SQLAlchemy & 6 ms & 17 ms & \textbf{23 ms} \\
+    \hline
+    pypg & 4 ms & 7 ms & \textbf{11 ms} \\
+    \hline
+    pypg - po denormalizaci & 2 ms & 4 ms & \textbf{6 ms} \\
+    \hline
+  \end{tabular}
+  \caption{Tabulka výsledků testu 1 - detail produktu}
+  \label{tab:TestPD}
+\end{table}
+
+\subsubsection{Test 2 - detail zákazníka}
+Ve druhém testu nejsou patrné velké rozdíly mezi testovanými rámci a knihovnou. Je to dáno celkem jednoduchou strukturou testu. Knihovna pypg spolu s rámcem Django ORM dopadla nejlépe. Z dat lze vidět, že Django ORM dokázalo získaná data zpracovat velmi rychle, což mu umožnilo splnit test nejrychleji. Materializované pohledy vytvořené knihovnou pypg neměly na tento test vliv. Výsledky testu zobrazuje graf na obrázku \ref{fig:TestCD} a tabulka \ref{tab:TestCD}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=130mm]{customer_detail.pdf}
+    \caption{Graf výsledků testu 2 - detail zákazníka}
+    \label{fig:TestCD}
+\end{figure}
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|r|r|r|r|r|}
+    \hline
+    & Čas získání dat & Čas zpracování dat & \textbf{Celkový čas} \\
+    \hline
+    SQLAlchemy & 16 ms & 8 ms & \textbf{24 ms} \\
+    \hline
+    web2py DBAL & 11 ms & 9 ms & \textbf{20 ms} \\
+    \hline
+    Django ORM & 14 ms & 2 ms & \textbf{16 ms} \\
+    \hline
+    pypg & 9 ms & 7 ms & \textbf{16 ms} \\
+    \hline
+    pypg - po denormalizaci & - & - & \textbf{-} \\
+    \hline
+  \end{tabular}
+  \caption{Tabulka výsledků testu 2 - detail zákazníka}
+  \label{tab:TestCD}
+\end{table}
+
+\subsubsection{Test 3 - detail objednávky}
+Výsledky třetího testu lze vidět na obrázku \ref{fig:TestOD} a v tabulce \ref{tab:TestOD}. Knihovna pypg opět dopadla nejlépe. Navrhované denormalizační změny ovšem výkon moc nezlepšily, jelikož urychlily pouze část dotazů v testu. Materializované pohledy byly testovány funkcí automatické denormalizace knihovny pypg v celém kontextu dotazů. Celkově tyto pohledy urychlily zpracování dat, ovšem v tomto testu zlepšení patrné nebylo. \\
+Rámec web2py DBAL v tomto testu dopadl nejhůře. Jeho výsledky jsou dané zejména tím, že pomocí jeho API nebylo možné získat data spojením více než dvou tabulek nejspíše kvůli nějaké vnitřní chybě rámce. Jak bylo popsáno v sekci \ref{subsubsec:web2py-cons}, stabilita rámce není dokonalá. V testu tedy nastal u web2py DBAL N+1 problém, což se velmi negativně projevilo na výkonu.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|r|r|r|r|r|}
+    \hline
+    & Čas získání dat & Čas zpracování dat & \textbf{Celkový čas} \\
+    \hline
+    web2py DBAL & 78 ms & 44 ms & \textbf{122 ms} \\
+    \hline
+    SQLAlchemy & 14 ms & 30 ms & \textbf{44 ms} \\
+    \hline
+    Django ORM & 17 ms & 16 ms & \textbf{33 ms} \\
+    \hline
+    pypg & 7 ms & 16 ms & \textbf{23 ms} \\
+    \hline
+    pypg - po denormalizaci & 6 ms & 14 ms & \textbf{20 ms} \\
+    \hline
+  \end{tabular}
+  \caption{Tabulka výsledků testu 3 - detail objednávky}
+  \label{tab:TestOD}
+\end{table}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{order_detail.png}
+    \caption{Graf výsledků testu 3 - detail objednávky}
+    \label{fig:TestOD}
+\end{figure}
+
+\subsubsection{Test 4 - produkty v kategorii}
+Ve čtvrtém testu nastal u rámce web2py DBAL stejný problém jako v testu třetím. Opět nebylo možné data pomocí API rámce získat spojením více než dvou tabulek a opět nastal N+1 problém. Tentokrát se ale následky projevily daleko hůře. \\
+Knihovna pypg v tomto testu nedopadla nejlépe. I když položila velmi efektivní dotazy a byla schopná data získat několikanásobně rychleji než ostatní rámce, zpracování dat bylo velmi pomalé. Vytvořením materializovaného pohledu se zpracování dat mírně urychlilo a celkově se tak výsledky zlepšily. \\
+Tabulka \ref{tab:TestCP} a graf na obrázku \ref{fig:TestCP} zobrazují výsledky tohoto testu.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{category_products.png}
+    \caption{Graf výsledků testu 4 - produkty v kategorii}
+    \label{fig:TestCP}
+\end{figure}
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|r|r|r|r|r|}
+    \hline
+    & Čas získání dat & Čas zpracování dat & \textbf{Celkový čas} \\
+    \hline
+    web2py DBAL & 287 ms & 79 ms & \textbf{366 ms} \\
+    \hline
+    Django ORM & 26 ms & 22 ms & \textbf{48 ms} \\
+    \hline
+    pypg & 6 ms & 42 ms & \textbf{48 ms} \\
+    \hline
+    SQLAlchemy & 14 ms & 25 ms & \textbf{39 ms} \\
+    \hline
+    pypg - po denormalizaci & 4 ms & 24 ms & \textbf{28 ms} \\
+    \hline
+  \end{tabular}
+  \caption{Tabulka výsledků testu 4 - produkty v kategorii}
+  \label{tab:TestCP}
+\end{table}
+\clearpage
+
+\subsubsection{Test 5 - objednávky zákazníka}
+Výsledky pátého testu zobrazuje graf na obrázku \ref{fig:TestCO} a tabulka \ref{tab:TestCO}. V tomto testu dopadl nejlépe rámec Django ORM spolu s knihovnou pypg. Rámec v tomto testu totiž použil podobné dotazy jako knihovna pypg a byl tak stejně efektivní. Ostatní rámce dopadly o dost hůře. \\
+Materializované pohledy vytvořené knihovnou pypg na tento test neměly vliv.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=130mm]{customer_orders.pdf}
+    \caption{Graf výsledků testu 5 - objednávky zákazníka}
+    \label{fig:TestCO}
+\end{figure}
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|r|r|r|r|r|}
+    \hline
+    & Čas získání dat & Čas zpracování dat & \textbf{Celkový čas} \\
+    \hline
+    web2py DBAL & 20 ms & 17 ms & \textbf{37 ms} \\
+    \hline
+    SQLAlchemy & 7 ms & 15 ms & \textbf{22 ms} \\
+    \hline
+    Django ORM & 3 ms & 9 ms & \textbf{12 ms} \\
+    \hline
+    pypg & 2 ms & 8 ms & \textbf{10 ms} \\
+    \hline
+    pypg - po denormalizaci & - & - & \textbf{-} \\
+    \hline
+  \end{tabular}
+  \caption{Tabulka výsledků testu 5 - objednávky zákazníka}
+  \label{tab:TestCO}
+\end{table}
+
+\subsubsection{Test 6 - vytvoření nového zákazníka a objednávky}
+V šestém testu dopadla knihovna pypg nejhůře, jelikož neposkytuje žádné optimalizace pro zápis dat. Všechny ostatní rámce poskytují možnost hromadného ukládání. Rámec web2py dopadl nejlépe jelikož nejefektivněji pracuje s ukládáním dat. Při uložení získává zpět z databáze pouze primární klíč ukládaného záznamu, což se v tomto případě hodí. Výsledky tohoto testu zobrazuje graf na obrázku \ref{fig:TestNCO} a tabulka \ref{tab:TestNCO}.\\
+Materializované pohledy vytvořené knihovnou pypg na tento dotaz neměly vliv. \\
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=130mm]{new_customer_orders.pdf}
+    \caption{Graf výsledků testu 6 - vytvoření nového zákazníka a objednávky}
+    \label{fig:TestNCO}
+\end{figure}
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|c|r|r|r|r|r|}
+    \hline
+    & Čas získání dat & Čas zpracování dat & \textbf{Celkový čas} \\
+    \hline
+    pypg & 7 ms & 54 ms & \textbf{61 ms} \\
+    \hline
+    Django ORM & 4 ms & 40 ms & \textbf{44 ms} \\
+    \hline
+    SQLAlchemy & 8 ms & 15 ms & \textbf{33 ms} \\
+    \hline
+    web2py DBAL & 9 ms & 11 ms & \textbf{20 ms} \\
+    \hline
+    pypg - po denormalizaci & - & - & \textbf{-} \\
+    \hline
+  \end{tabular}
+  \caption{Tabulka výsledků testu 6 - vytvoření nového zákazníka a objednávky}
+  \label{tab:TestNCO}
+\end{table}
 
 \section{Závěr}
 \label{sec:Conclusion}
@@ -1190,6 +1419,54 @@ CREATE TABLE entry_author(
 \end{lstlisting}
 \clearpage
 
+\section{Výstup automatické denormalizace knihovny pypg}
+\label{sec:Appendixdenom}
+\begin{lstlisting}[label=src:pypg-denomoutup, caption=Výstup automatické denormalizace po testech popsaných v kapitole \ref{sec:Bench}]
+Improvement: 
+        materialized view based on query: 
+		SELECT * FROM "product" JOIN "product_variant" ON product_variant.product_id = product.id JOIN "variant" ON product_variant.variant_id = variant.id 
+        original time spent reading: 292.447328568 ms
+        original time spent writing: 0 ms
+        improved time spent reading: 6.41107559204 ms 
+        improved time spent writing: 0 ms
+	Improvement is recomended. Improvement is 98.0% better than the original.
+	
+Improvement: 
+        materialized view based on query: 
+		SELECT * FROM "product" JOIN "product_category" ON product_category.product_id = product.id JOIN "category" ON product_category.category_id = category.id 
+        original time spent reading: 145.055055618 ms
+        original time spent writing: 0 ms
+        improved time spent reading: 13.1204128265 ms 
+        improved time spent writing: 0 ms
+	Improvement is recomended. Improvement is 91.0% better than the original.
+	
+Improvement: 
+        materialized view based on query: 
+		SELECT * FROM "customer" JOIN "address" ON address.customer_id = customer.id 
+        original time spent reading: 229.359149933 ms
+        original time spent writing: 48.0208396912 ms
+        improved time spent reading: 13.9319896698 ms 
+        improved time spent writing: 287.025690079 ms
+	Improvement is not recomended. Improvement is 0% better than the original.
+	
+Improvement: 
+        materialized view based on query: 
+		SELECT * FROM "product_category" JOIN "category" ON category.id = product_category.category_id JOIN "product_variant" ON product_variant.product_id = product_category.category_id JOIN "variant" ON variant.id = product_variant.variant_id 
+        original time spent reading: 472.248077393 ms
+        original time spent writing: 0 ms
+        improved time spent reading: 2012.54701614 ms 
+        improved time spent writing: 0 ms
+	Improvement is not recomended. Improvement is 0% better than the original.
+	
+Improvement: 
+        materialized view based on query: 
+		SELECT * FROM "product_variant" JOIN "variant" ON variant.id = product_variant.variant_id 
+        original time spent reading: 454.188585281 ms
+        original time spent writing: 0 ms
+        improved time spent reading: 531.061649323 ms 
+        improved time spent writing: 0 ms
+	Improvement is not recomended. Improvement is 0% better than the original.
+\end{lstlisting}
 \section{Obsah přiloženého CD/DVD}
 \label{sec:Appendixcd}
 
