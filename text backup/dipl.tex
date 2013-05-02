@@ -717,53 +717,62 @@ Mezi podporované SŘBD rámce patří Oracle, MSSQL Server, MySQL, PostgreSQL, 
 
 \subsubsection{Mapování v SQLAlchemy}
 
-Jak bylo popsáno výše, SQLAlchemy ORM se při mapování řídí návrhovým vzorem Data Mapper. Mapování se tedy skládá ze dvou struktur, a to třídy z modulu Schema, která představuje strukturu databázové tabulky a mapovací třídy, která představuje doménový objekt. Definice tříd představující struktury v databázi slouží jako metadata a používají se při vytváření dotazů do databáze. Mapovací třída je typu POPO (Plain Old Python Object), nerozšiřuje tedy žádnou bázovou třídu a neimplementuje žádné rozhraní. V mapovací třídě lze vytvořit i validátory dat, které je možné volat před uložením do databáze. \\
+Jak bylo popsáno výše, SQLAlchemy ORM se při mapování řídí návrhovým vzorem Data Mapper. Mapování se tedy skládá ze dvou struktur, a to z třídy z modulu Schema, která představuje strukturu databázové tabulky a z mapovací třídy, která představuje doménový objekt. Definice tříd představující struktury v databázi slouží jako metadata a používají se při vytváření dotazů do databáze. Mapovací třída je typu POPO (Plain Old Python Object), nerozšiřuje tedy žádnou bázovou třídu a neimplementuje žádné rozhraní. V mapovací třídě lze vytvořit i validátory dat, které je možné volat před uložením do databáze. \\
 Pomocí tříd, které představují strukturu databázových tabulek umožňuje SQLAlchemy vygenerovat SQL kód k jejich vytvoření a při použití existující databáze lze vygenerovat pomocí introspekce z databázových tabulek definici těchto tříd. \\
 SQLAlchemy lze bez problému používat s existující databází. Jedinou podmínkou je, aby každá tabulka obsahovala primární klíč. Rámec dovoluje používat složené klíče i složené vazební atributy. SQLAlchemy ovšem nepodporuje migrace databázových dat. Této funkce lze dosáhnout až přes zásuvné moduly třetích stran. \\
 Vzhledem k použití návrhového vzoru Data Mapper obsahuje SQLAlchemy mnoho možností, jak namapovat struktury v databázi na doménové objekty. Je možné namapovat více tabulek nebo část tabulky na jeden doménový objekt, lze vytvořit hybridní a složené atributy, kompozitní sloupce nebo namapovat doménový objekt nebo jeho atribut přímo na SQL dotaz. \\
-SQLAlchemy ORM obsahuje i možnost namapovat struktury v databázi podobně jako při použití návrhového vzoru Active Record. Pomocí tzv. deklarativního přístupu lze nadefinovat za pomocí jedné třídy mapovací třídu i třídu představující strukturu v databázi. 
+SQLAlchemy ORM obsahuje i možnost definovat schéma a struktury v databázi podobně jako při použití návrhového vzoru Active Record. Pomocí tzv. deklarativního pří- stupu lze nadefinovat za pomocí jediné třídy mapovací třídu i třídu představující strukturu v databázi. 
 
 \paragraph{Mapování relací}
 
 Rámec umožňuje definovat všechny typy relací popsaných v sekci \ref{subsec:Relmapping}. Při definování relací je třeba rozlišovat mezi relacemi na úrovni databáze a relacemi mezi objekty v doménové logice. Obě tyto relace je potřeba specifikovat. Při definici relací mezi doménovými objekty je možné určit zpětné relace, jakým způsobem se budou vazební objekty načítat, zdali se budou načítat všechny a zdali je bude možné dále filtrovat. \\
-Pro vytvoření relace N:M je potřeba vždy pomocí modulu Schema definovat vazební tabulku. SQLAlchemy pak automaticky zajistí načítání objektů přes vazební tabulku při přístupu k N:M relaci a poskytuje i možnost jednoduchého vytvoření této relace. Rámec podporuje i rekurzivní relace. \\
-Před úpravou nebo mazáním relačních objektů rámec vždy tyto objekty z databáze načte. Při mazání relačních objektů navíc implicitně nepředpokládá, že je v databázi nastaveno kaskádové mazání a je potřeba to explicitně zadat nebo vazební objekty smazat zvlášť.
+Pro vytvoření relace N:M je potřeba vždy pomocí modulu Schema definovat vazební tabulku. SQLAlchemy pak automaticky zajistí načítání objektů přes vazební tabulku při přístupu k N:M relaci a poskytuje i možnost jednoduchého vytvoření relačních objektů. Rámec podporuje i rekurzivní relace. \\
+Před úpravou nebo mazáním relačních objektů rámec vždy tyto objekty z databáze načte. Při mazání relačních objektů navíc implicitně nepředpokládá, že je v databázi nastaveno kaskádové mazání a je potřeba to explicitně zadat nebo vazební objekty smazat samostatně.
 
 \paragraph{Mapování dědičnosti}
 
 SQLAlchemy podporuje všechny tři typy dědičností popsaných v sekci \ref{subsec:Inhmapping}. Rámec se řídí návrhovými vzory dědičnosti velmi striktně a implementuje dědičnost přesně podle definicí. \\
-Bázová třída řídící se vzorem Class Table Inheritance obsahuje atribut, který určuje identitu objektů v hierarchii. Každá třída v hierarchii pak obsahuje definici, která určuje její typ a konkrétní třídy pak obsahují navíc cizí klíč na bázovou tabulku. Primární klíče jsou uloženy pouze v bázové tabulce. Rámec umožňuje sestavovat dotazy na tyto tabulky využívající polymorfismus. \\
-Podobným způsobem lze definovat i dědičnost podle vzoru Single Table Inheritance. Bázová třída má opět atribut, který určuje identitu objektů a každá třída v hierarchii pak definici, která tento typ určuje. Konkrétní tabulky pak již neobsahují cizí klíč na bázovou třídu, jelikož celá hierarchie bude reprezentována v databázi jedinou tabulkou. \\
+Bázová třída řídící se vzorem Class Table Inheritance obsahuje atribut, který určuje identitu objektů v hierarchii. Každá třída v hierarchii pak obsahuje definici, která určuje její typ a konkrétní třídy pak obsahují navíc cizí klíč na bázovou tabulku. Primární klíče jsou uloženy pouze v bázové tabulce. Rámec umožňuje získat objekty z těchto tabulek pomocí dotazů, které využívají polymorfismus. \\
+Podobným způsobem lze definovat i dědičnost podle vzoru Single Table Inheritance. Bázová třída má opět atribut, který určuje identitu objektů a každá třída v hierarchii pak definici, která tuto identitu určuje. Konkrétní tabulky pak již neobsahují cizí klíč na bázovou třídu, jelikož celá hierarchie bude reprezentována v databázi jedinou tabulkou. \\
 Při definic tříd, které využívají Concrete Table Inheritance je potřeba, aby abstraktní bázová třída dědila z třídy \lstinline[style=inlinepython]|AbstractConcreteBase|. U konkrétních tříd je pak potřeba nastavit atribut, který určuje vytvoření tabulky v databázi, a definovat identitu v rámci hierarchie. U tříd, u kterých není definovaná identita, nelze použít načítání objektů z databáze využívající polymorfismus.
 
 \subsubsection{Dotazování}
 
-SQLAlchemy pro práci s objekty obsahuje systém řídící se návrhovým vzorem \textit{Unit of Work} \cite{fowler}. Unit of Work představuje mechanismus, který synchronizuje všechny změny mezi objekty a jejich vazební záznamy. Tento systém v SQLAlchemy zaštiťuje objekt třídy \lstinline[style=inlinepython]|Session| neboli \uv{sezení}. \\
-Objekt třídy \lstinline[style=inlinepython]|Session| se stará o vytváření transakce skrze modul Engine, o stavy všech objektů registrovaných v sezení a provádí SQL dotazy ve chvílích, kdy je to potřeba. Sezení otálí s prováděním dotazů do doby než je to nevyhnutelně nutné. Objekty registrované v sezení se pohybují mezi stavy transient, pending, persistent nebo detached.
+SQLAlchemy používá pro práci s objekty systém řídící se návrhovým vzorem \textit{Unit of Work} \cite{fowler}. Unit of Work představuje mechanismus, který synchronizuje všechny změny mezi objekty a jejich vazební záznamy. Tento systém v SQLAlchemy zaštiťuje objekt třídy \lstinline[style=inlinepython]|Session| neboli \uv{sezení}. \\
+Objekt třídy \lstinline[style=inlinepython]|Session| se stará o vytváření transakce skrze modul Engine, o stavy všech objektů registrovaných v sezení, a provádí SQL dotazy ve chvílích, kdy je to potřeba. Sezení otálí s prováděním dotazů do doby než je to nevyhnutelně nutné. Objekty registrované v sezení se pohybují mezi stavy transient, pending, persistent nebo detached.
 
 \begin{description}
-\item[Stav transient] Objekt ve stavu transient je instance mapovací třídy, která nebyla zatím registrována v sezení a data, která obsahuje nebyly uloženy do databáze. 
-\item[Stav pending] Instance, která byla registrována do sezení, ale data, zatím nebyla uložena do databáze.
-\item[Stav persistent] Objekty, které jsou získány z databáze nebo instance, jejichž data byly uloženy do databáze jsou ve stavu persistent.
-\item[Stav detached] Instance, která obsahuje data z databáze, ale nebyla registrována do sezení se nachází ve stavu detached. Instanci v tomto stavu lze používat, ale nelze načítat její vazební objekty z databáze.
+\item[Stav transient] Objekt ve stavu transient je instance mapovací třídy, která nebyla zatím registrována v sezení a data, která obsahuje nebyla uloženy do databáze. 
+\item[Stav pending] Instance, která byla registrována do sezení, ale data, zatím nebyla uložena do databáze je ve stavu pending.
+\item[Stav persistent] Objekty, které jsou získány z databáze nebo instance, jejichž data byla uložena do databáze jsou ve stavu persistent.
+\item[Stav detached] Instance, která obsahuje data z databáze, ale nebyla registrována do sezení, se nachází ve stavu detached. Instanci v tomto stavu lze používat, ale nelze načítat její vazební objekty z databáze.
 \end{description}
 
 Pokud je objekt zaregistrovaný v sezení aktualizován, sezení tuto změnu automaticky zaznamená a v příhodné chvíli provede změny v databázi. Všechny změny, které má sezení zaregistrováno jsou provedeny v případě, že je přes sezení vyžadováno načtení nového objektu z databáze, a nebo pokud je transakce ukončena příkazem \lstinline[style=inlinepython]|commit| nebo \lstinline[style=inlinepython]|rollback|. Sezení po ukončení transakce automaticky započne novou transakci, jakmile jsou přes sezení vyžadovány další manipulace s objekty. SQLAlchemy umožňuje vytvářet pomocí sezení i vnořené transakce. \\
 
-Při vytváření dotazů do databáze vrací sezení instanci třídy \lstinline[style=inlinepython]|Query|. Tento objekt poskytuje metody pro generování SQL dotazů. 
+Při vytváření dotazů do databáze vrací sezení instanci třídy \lstinline[style=inlinepython]|Query|. Tento objekt poskytuje metody pro získávání objektů z databáze. Metody umožňují objekty filtrovat, limitovat a řadit. Výsledky je možné získat ve formě instancí mapovacích tříd nebo v objektech typu pole. API umožňuje při získávání objektů z databáze zadat části dotazu ve formě vlastně vytvořeného SQL. \\
+SQLAlchemy ORM využívá při práci s objekty strukturu Identity Map. Při získávání objektů z databáze tato struktura zjistí, zda je objekt se stejnými daty v sezení již registrován, a pokud ano vrací pouze referenci na tento objekt. Funguje také zčásti jako jednoduchá keš, která obsahuje objekty rozdělené podle jejich unikátního identifikátoru. Objekty jsou v Identity Map registrovány pouze po dobu transakce. Jakmile transakce skončí, data jsou označena jako zastaralá a všechny data objektů v paměti je potřeba znovu načíst z databáze. \\
 
 \subsubsection{Optimalizace v SQLAlchemy}
 
-%relacni objekty treba nacist pred mazanim nebo pred upravou... opet se operace schovavaji za kod, pri velkych objemech dat je to mozne zmenit - passive_deletes
+SQLAlchemy provádí mnoho optimalizací na pozadí. Jeho velkou výhodou je použití sezení, které umožňuje implicitně provádět hromadné operace a spolu s Identity Map slouží jako jednoduchá keš pro data. \\
+Mezi optimalizace, které je potřeba určit explicitně patří načítání relačních objektů.
+
+\paragraph{Načítání relací}
+Podobně jako Django ORM poskytuje SQLAlchemy optimalizace v podobě horlivého načítání relací při vytváření dotazů do databáze. Tyto optimalizace zabraňují, aby nastal N+1 problém a umožňují efektivní provedení SQL dotazů a vylepšují celkový výkon rámce. \\
+SQLAlchemy umožňuje horlivého načítání dosáhnout pomocí vnořeného dotazu metodou \lstinline[style=inlinepython]|subqueryload|, implicitním spojení tabulek metodou \lstinline[style=inlinepython]|joinedload| a nebo explicitním spojením tabulek. \\
+SQLAlchemy doporučuje vnořený dotaz používat při načítání kolekce vazebních objektů a spojení tabulek při relaci N:1 \cite{sqla-doc}. Při spojení tabulek se totiž většinou přenáší více dat (jak bude popsáno v sekci \ref{subsubsec:Selectin}) a použití spojení tabulek v pro získání kolekce vazebních objektů nemusí být vždy nejefektivnějším řešením.
+
+\paragraph{Načítání relací při aktualizaci dat}
+Relační objekty je potřeba načíst z databáze před jejich smazáním nebo úpravou. SQLAlchemy provádí toto načítaní na pozadí. V případě velkých objemů dat se tento fakt může negativně projevit na výkonu. Nastavením atributu \lstinline[style=inlinepython]|passive_deletes| a \lstinline[style=inlinepython]|cascade| v mapovací třídě, lze toto chování změnit.
 
 \subsubsection{Nevýhody SQLAlchemy}
+SQLAlchemy je velice sofistikovaným řešením. Jeho abstrakce je dostačující a v případech, kdy nevystačuje lze použít vestavěnou DBAL. Umožňuje získat z databáze maximální výkon, pokud je to potřeba, a nebo ji dostatečně abstrahovat. \\
+Mezi nevýhody SQLAlchemy však patří jeho složitost, obsáhlost a nutnost vše explicitně nastavovat. Obsahuje mnoho funkcí, které nemusí být vždy využívány, mnoho možností a nastavení. Pro dokonalé porozumění celého rámce je před jeho použitím potřeba nastudovat obsáhlý manuál\footnote{Dokumentace SQLAlchemy 0.8 dosahuje téměř tisíce stránek}. Rámec tedy vyžaduje velkou časovou investici, což nemusí být vždy výhodné.
 
 \subsubsection{Zhodnocení}
 
-%sql oriented
-% jedno vlakno vice trasakci, django jenom 1 a 1
-%hibernate, which was pretty influential on sqlalchemy.
-%datamapper, unit of work
+SQLAlchemy je nejvíce vyspělým rámcem z popisových technologií v této kapitole. Umo- žňuje vytvořit datovou vrstvu na míru konkrétním podmínkám, lze ho velmi dobře integrovat do existujících systémů a obsahuje podporu pro mnoho SŘBD. Jeho složitost, množství znalostí potřebných pro jeho efektivní používání a použití návrhového vzoru Data Mapper jej však činí vhodným většinou pouze pro komplexnější projekty.
 
 \section{Návrh knihovny pypg}
 \label{sec:Design}
