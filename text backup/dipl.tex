@@ -163,6 +163,7 @@ literate=%
 \AddAcronym{IS}{Informační systém}
 \AddAcronym{CMS}{Content Management System}
 \AddAcronym{JSON}{JavaScript Object Notation}
+\AddAcronym{POCO} {Plain Old Python Object}
 
 % Zacatek dokumentu
 \begin{document}
@@ -349,7 +350,13 @@ V této kapitole budou popsány existující rámce a knihovny pracující na da
 Pro srovnání těchto rámců bude každý z nich pracovat s databázovou strukturou, kterou zobrazuje ERD diagram na obrázku \ref{fig:BlogappErd}. Tato struktura představuje jednoduchou aplikaci pro vytváření blogů. Pokud to bude možné, budou se rámce snažit namodelovat tuto strukturu pomocí mapování. Konkrétně pak bude mezi tabulkami \lstinline[style=inlinepython]|entry| a \lstinline[style=inlinepython]|vlogetry| využito dědičnosti Class Table Inheritance a tabulka \lstinline[style=inlinepython]|author| bude dědit pomocí Concrete Table Inheritance z abstraktní třídy \lstinline[style=inlinepython]|Person| obsahující atributy jméno a příjmení. Všechny následující příklady a ukázkové výpisy kódu budou, pokud nebude určeno jinak, používat tuto databázovou strukturu. \\
 U každého rámce budou popsány techniky mapování, dotazování, funkce pro optimalizaci komunikace s databází a nevýhody rámce.
 
-\InsertFigure{blogapp.png}{150mm}{ERD diagram jednoduché aplikace pro vytváření blogů}{fig:BlogappErd}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{blogapp.pdf}
+    \caption{ERD diagram jednoduché aplikace pro vytváření blogů}
+    \label{fig:BlogappErd}
+\end{figure}
+\clearpage
 
 \subsection{Django ORM}
 
@@ -577,7 +584,7 @@ DBAL umožňuje používat i existující databázi, je však potřeba, aby spl�
 Výpis \ref{src:w2p-mapping} zobrazuje definici tabulek jednoduché aplikace pro vytváření blogů. Tabulky lze definovat pomocí instance třídy \lstinline[style=inlinepython]|web2py.gluon.dal.DAL|. Je také možné pomocí tohoto objektu tabulkám dále nastavovat další parametry, měnit jejich strukturu nebo je i smazat. Primární klíč je automaticky vygenerován pro každou tabulku. Sloupce tabulky pak obsahují metody pro validaci, které lze využit před ukládáním do databáze. \\
 DBAL však neumožňuje pomocí této definice určit databázové indexy. Celkový výpis SQL, které DBAL vygeneruje z této definice je možné nalézt v příloze ve výpisu \ref{src:w2p-mappingSQL}.
 
-\begin{lstlisting}[style=custompython, label=src:w2p-mapping, caption=Modely jednoduché aplikace pro vytváření blogů ve web2py DBAL]
+\begin{lstlisting}[style=custompython, label=src:w2p-mapping, caption=Schéma jednoduché aplikace pro vytváření blogů ve web2py DBAL]
 db = DAL("postgres://username:password@localhost/database")
 
 person = db.Table(db, 'person',
@@ -683,8 +690,76 @@ Rámec web2py vznikl jako školní projekt pro výukové účely. Bohužel tento
 Mezi jeho výhody patří dotazovací API, které má blízko k SQL, funkce jako migrace a verzování databázových záznamů. Jeho využití je pro ukázkové nebo velmi jednoduché projekty. Pro seriózní projekty se web2py DBAL však kvůli výše uvedeným nevýhodám nevyplatí používat. 
 
 \clearpage
+
 \subsection{SQLAlchemy}
-Dodělám popis a srovnání během tohoto týdne.
+
+SQLAlchemy je rámec pracující na datové vrstvě velmi orientovaný na SQL. Rámec byl vytvořen s myšlenkou, že \uv{relační databáze se chová méně jako kolekce objektů, jakmile začne více záležet na efektivitě a výkonu, a naopak kolekce objektů se chovají méně jako tabulky a záznamy, jakmile záleží více na abstrakci databáze}\cite{wiki-sqla}. Rámec tak umožňuje vždy přistoupit přímo k databázi, pokud je to nutné a zároveň poskytuje velmi dobrou abstrakci, která umožňuje kompletní odstínění aplikační logiky od specifik databáze. SQLAlchemy bylo inspirováno rámcem Hibernate vytvořeným v programovacím jazyce Java a stejně jako tento rámec se řídí návrhovým vzorem Data Mapper. \\ 
+Rámec původně vznikl pouze jako generátor dotazů a postupně, jak se vyvíjel, byly přidávány další vrstvy, vlastnosti a funkce. Obrázek \ref{fig:sqla-layers} zobrazuje architekturu rámce tak, jak vypadá ve verzi 0.8. \\ Mezi dvě hlavní vrsty rámce patří jádro a ORM. Jádro SQLAlchemy se skládá z DBAL a je možné ho využít samostatně bez ORM. DBAL obsahuje moduly Dialect, Connection Pooling, Engine, SQL Expression Language a Schema.
+
+\begin{description}
+\item[Dialect] Modul Dialect obsahuje specifické vlastnosti pro každý podporovaný SŘBD a databázový ovladač. SQLAlchemy se snaží kromě mnoha SŘBD podporovat i více existujících ovladačů pro každý SŘBD. Tento modul tedy zpracovává požadavky a aplikuje je pro konkrétní SŘBD a použitý ovladač.
+\item[Connection Pooling] Connection Pooling je standardní technikou používanou pro správu spojení, která efektivně hospodaří s připojením do databáze a poskytuje možnost používat spojení na více místech současně. Tento modul umožňuje nastavit vlastnosti a chování této funkce jako je například obnova přerušených spojení nebo množství spravovaných spojení.
+\item[Engine] Modul Engine se stará o správu konkrétního spojení. Získává spojení z modulu Connection Pooling, zakládá a uzavírá transakce, předává požadavky modulu Dialect a loguje příkazy spuštěné nad databází. Tento modul je hlavním rozhraním k databázi.
+\item[SQL Expression Language] Modul SQL Expression Language obsahuje API pro generování SQL dotazů. API je velmi variabilní a poskytuje mnoho možností, jak dotazy tvořit. Umožňuje například vytváření vnořených dotazů, používání databázových funkcí a procedur, skládání dotazů zčásti za pomoci API a zčásti ručně vytvořeným SQL nebo i jenom pomocí vlastního SQL. \\
+Při použití tohoto API je jasně vidět jaké SQL dotazy se provádí a přitom je umožněno dotazy vytvářet jednoduše a přehledně.
+\item[Schema/Types] V tomto modulu jsou obsaženy funkce pro definování struktury a mapování relačního schématu v databázi. Pomocí tohoto modulu je možné nadefinovat databázové tabulky, jejich atributy, vlastnosti a integritní omezení. Rámec umožňuje definovat datové typy pomocí datových typů jazyka Python i pomocí datových typů relační databáze. Tyto typy jsou pak mezi sebou mapovány co nejpřesněji. SQLAlchemy podporuje mnoho databázových datových typů a umožňuje nadefinovat i vlastní.
+\end{description}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=100mm]{sqla-layers.png}
+    \caption{Architektura rámce SQLAlchemy \cite[str. 3]{sqla-doc}}
+    \label{fig:sqla-layers}
+\end{figure}
+
+Při použití ORM rámce SQLAlchemy je možné v místech, kde ORM nevystačuje využít DBAL a SQL Expression Language. DBAL rámce SQLAlchemy je velice podobná DBAL rámci web2py a nebude zde tedy podrobně popsána. \\
+Mezi podporované SŘBD rámce patří Oracle, MSSQL Server, MySQL, PostgreSQL, SQLite, Sybase a mnoho dalších. Přes přídavné balíčky lze získat podporu i pro další SŘBD.
+
+\subsubsection{Mapování v SQLAlchemy}
+
+Jak bylo popsáno výše, SQLAlchemy ORM se při mapování řídí návrhovým vzorem Data Mapper. Mapování se tedy skládá ze dvou struktur, a to třídy z modulu Schema, která představuje strukturu databázové tabulky a mapovací třídy, která představuje doménový objekt. Definice tříd představující struktury v databázi slouží jako metadata a používají se při vytváření dotazů do databáze. Mapovací třída je typu POPO (Plain Old Python Object), nerozšiřuje tedy žádnou bázovou třídu a neimplementuje žádné rozhraní. V mapovací třídě lze vytvořit i validátory dat, které je možné volat před uložením do databáze. \\
+Pomocí tříd, které představují strukturu databázových tabulek umožňuje SQLAlchemy vygenerovat SQL kód k jejich vytvoření a při použití existující databáze lze vygenerovat pomocí introspekce z databázových tabulek definici těchto tříd. \\
+SQLAlchemy lze bez problému používat s existující databází. Jedinou podmínkou je, aby každá tabulka obsahovala primární klíč. Rámec dovoluje používat složené klíče i složené vazební atributy. SQLAlchemy ovšem nepodporuje migrace databázových dat. Této funkce lze dosáhnout až přes zásuvné moduly třetích stran. \\
+Vzhledem k použití návrhového vzoru Data Mapper obsahuje SQLAlchemy mnoho možností, jak namapovat struktury v databázi na doménové objekty. Je možné namapovat více tabulek nebo část tabulky na jeden doménový objekt, lze vytvořit hybridní a složené atributy, kompozitní sloupce nebo namapovat doménový objekt nebo jeho atribut přímo na SQL dotaz. \\
+SQLAlchemy ORM obsahuje i možnost namapovat struktury v databázi podobně jako při použití návrhového vzoru Active Record. Pomocí tzv. deklarativního přístupu lze nadefinovat za pomocí jedné třídy mapovací třídu i třídu představující strukturu v databázi. 
+
+\paragraph{Mapování relací}
+
+Rámec umožňuje definovat všechny typy relací popsaných v sekci \ref{subsec:Relmapping}. Při definování relací je třeba rozlišovat mezi relacemi na úrovni databáze a relacemi mezi objekty v doménové logice. Obě tyto relace je potřeba specifikovat. Při definici relací mezi doménovými objekty je možné určit zpětné relace, jakým způsobem se budou vazební objekty načítat, zdali se budou načítat všechny a zdali je bude možné dále filtrovat. \\
+Pro vytvoření relace N:M je potřeba vždy pomocí modulu Schema definovat vazební tabulku. SQLAlchemy pak automaticky zajistí načítání objektů přes vazební tabulku při přístupu k N:M relaci a poskytuje i možnost jednoduchého vytvoření této relace. Rámec podporuje i rekurzivní relace. \\
+Před úpravou nebo mazáním relačních objektů rámec vždy tyto objekty z databáze načte. Při mazání relačních objektů navíc implicitně nepředpokládá, že je v databázi nastaveno kaskádové mazání a je potřeba to explicitně zadat nebo vazební objekty smazat zvlášť.
+
+\paragraph{Mapování dědičnosti}
+
+SQLAlchemy podporuje všechny tři typy dědičností popsaných v sekci \ref{subsec:Inhmapping}. Rámec se řídí návrhovými vzory dědičnosti velmi striktně a implementuje dědičnost přesně podle definicí. \\
+Bázová třída řídící se vzorem Class Table Inheritance obsahuje atribut, který určuje identitu objektů v hierarchii. Každá třída v hierarchii pak obsahuje definici, která určuje její typ a konkrétní třídy pak obsahují navíc cizí klíč na bázovou tabulku. Primární klíče jsou uloženy pouze v bázové tabulce. Rámec umožňuje sestavovat dotazy na tyto tabulky využívající polymorfismus. \\
+Podobným způsobem lze definovat i dědičnost podle vzoru Single Table Inheritance. Bázová třída má opět atribut, který určuje identitu objektů a každá třída v hierarchii pak definici, která tento typ určuje. Konkrétní tabulky pak již neobsahují cizí klíč na bázovou třídu, jelikož celá hierarchie bude reprezentována v databázi jedinou tabulkou. \\
+Při definic tříd, které využívají Concrete Table Inheritance je potřeba, aby abstraktní bázová třída dědila z třídy \lstinline[style=inlinepython]|AbstractConcreteBase|. U konkrétních tříd je pak potřeba nastavit atribut, který určuje vytvoření tabulky v databázi, a definovat identitu v rámci hierarchie. U tříd, u kterých není definovaná identita, nelze použít načítání objektů z databáze využívající polymorfismus.
+
+\subsubsection{Dotazování}
+
+SQLAlchemy pro práci s objekty obsahuje systém řídící se návrhovým vzorem \textit{Unit of Work} \cite{fowler}. Unit of Work představuje mechanismus, který synchronizuje všechny změny mezi objekty a jejich vazební záznamy. Tento systém v SQLAlchemy zaštiťuje objekt třídy \lstinline[style=inlinepython]|Session| neboli \uv{sezení}. \\
+Objekt třídy \lstinline[style=inlinepython]|Session| se stará o vytváření transakce skrze modul Engine, o stavy všech objektů registrovaných v sezení a provádí SQL dotazy ve chvílích, kdy je to potřeba. Sezení otálí s prováděním dotazů do doby než je to nevyhnutelně nutné. Objekty registrované v sezení se pohybují mezi stavy transient, pending, persistent nebo detached.
+
+\begin{description}
+\item[Stav transient] Objekt ve stavu transient je instance mapovací třídy, která nebyla zatím registrována v sezení a data, která obsahuje nebyly uloženy do databáze. 
+\item[Stav pending] Instance, která byla registrována do sezení, ale data, zatím nebyla uložena do databáze.
+\item[Stav persistent] Objekty, které jsou získány z databáze nebo instance, jejichž data byly uloženy do databáze jsou ve stavu persistent.
+\item[Stav detached] Instance, která obsahuje data z databáze, ale nebyla registrována do sezení se nachází ve stavu detached. Instanci v tomto stavu lze používat, ale nelze načítat její vazební objekty z databáze.
+\end{description}
+
+Pokud je objekt zaregistrovaný v sezení aktualizován, sezení tuto změnu automaticky zaznamená a v příhodné chvíli provede změny v databázi. Všechny změny, které má sezení zaregistrováno jsou provedeny v případě, že je přes sezení vyžadováno načtení nového objektu z databáze, a nebo pokud je transakce ukončena příkazem \lstinline[style=inlinepython]|commit| nebo \lstinline[style=inlinepython]|rollback|. Sezení po ukončení transakce automaticky započne novou transakci, jakmile jsou přes sezení vyžadovány další manipulace s objekty. SQLAlchemy umožňuje vytvářet pomocí sezení i vnořené transakce. \\
+
+Při vytváření dotazů do databáze vrací sezení instanci třídy \lstinline[style=inlinepython]|Query|. Tento objekt poskytuje metody pro generování SQL dotazů. 
+
+\subsubsection{Optimalizace v SQLAlchemy}
+
+%relacni objekty treba nacist pred mazanim nebo pred upravou... opet se operace schovavaji za kod, pri velkych objemech dat je to mozne zmenit - passive_deletes
+
+\subsubsection{Nevýhody SQLAlchemy}
+
+\subsubsection{Zhodnocení}
+
 %sql oriented
 % jedno vlakno vice trasakci, django jenom 1 a 1
 %hibernate, which was pretty influential on sqlalchemy.
@@ -1030,7 +1105,14 @@ Rámce popsané v kapitole \ref{sec:Comparison} byly spolu s knihovnou pypg podr
 
 \subsection{Podmínky testování}
 Pro testování výkonu rámců byly vybrány podmínky, které by alespoň zčásti odpovídaly reálnému nasazení a požadavkům. 
-Byla použita testovací databáze dellstore2\footnote{http://pgfoundry.org/frs/?group\_id=1000150\&release\_id=376}, která představuje relační schéma jednoduchého internetového obchodu a obsahuje i náhodně vygenerovaná data. Tato databáze byla mírně upravena tak, aby dovolovala větší variabilitu testů. Do databáze byly přidány nové tabulky, které byly naplněny náhodně generovanými daty. Obrázek zobrazuje relační schéma této databáze a tabulka \ref{tab:TestRecords}, pak množství dat v jednotlivých databázových tabulkách. Vazební tabulky \lstinline[style=inlinepython]|product_category| a \lstinline[style=inlinepython]|pro-| \lstinline[style=inlinepython]|duct_variant| pak obsahují data tak, aby každý záznam v tabulce \lstinline[style=inlinepython]|product| obsahoval relaci na dva záznamy v tabulce \lstinline[style=inlinepython]|category| a čtyři záznamy v tabulkce \lstinline[style=inlinepython]|variant|.
+Byla použita testovací databáze dellstore2\footnote{http://pgfoundry.org/frs/?group\_id=1000150\&release\_id=376}, která představuje relační schéma jednoduchého internetového obchodu a obsahuje i náhodně vygenerovaná data. Tato databáze byla mírně upravena tak, aby dovolovala větší variabilitu testů. Do databáze byly přidány nové tabulky, které byly naplněny náhodně generovanými daty. Obrázek \ref{fig:Testdb} zobrazuje relační schéma této databáze a tabulka \ref{tab:TestRecords}, pak množství dat v jednotlivých databázových tabulkách. Vazební tabulky \lstinline[style=inlinepython]|product_cate-| \lstinline[style=inlinepython]|gory| a \lstinline[style=inlinepython]|product_variant| pak obsahují data tak, aby každý záznam v tabulce \lstinline[style=inlinepython]|product| obsahoval relaci na dva záznamy v tabulce \lstinline[style=inlinepython]|category| a čtyři záznamy v tabulkce \lstinline[style=inlinepython]|vari-| \lstinline[style=inlinepython]|ant|.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=150mm]{benchmark.pdf}
+    \caption{ERD diagram testovací databáze}
+    \label{fig:Testdb}
+\end{figure}
 
 \begin{table}
   \centering
@@ -1294,10 +1376,12 @@ Materializované pohledy vytvořené knihovnou pypg na tento dotaz neměly vliv.
 
 \section{Závěr}
 \label{sec:Conclusion}
+Tato diplomová práce měla za úkol srovnat existující technologie pracující na datové vrstvě a vytvořit vlastní knihovnu, která by nad těmito technologiemi vynikala v rychlosti čtení dat z databáze. 
 
 %V zhledem k casovemu omezeni bylo treba vybrat ktere funkce implementova a ktere prenechat do budoucna.
 %Rozhodovalo se na zaklade pozadavku v kapitelo 5.
 %Musel jsem zjistit, jake funkce existujici ramce obsahuji a proc nevyhovuji
+%srovnat s predeslymi diplomkami
 
 \begin{thebibliography}{99}
 
@@ -1327,11 +1411,81 @@ Materializované pohledy vytvořené knihovnou pypg na tento dotaz neměly vliv.
 \bibitem{notorm} VRÁNA, Jakub. Srovnání dotazů do závislých tabulek. In: PHP triky [online]. 2009, 27.2. [cit. 2013-04-24]. Dostupné z: http://php.vrana.cz/srovnani-dotazu-do-zavislych-tabulek.php
 \bibitem{notorm-why} Proč NotORM. VRÁNA, Jakub. NotORM - PHP library for simple working with data in the database [online]. 2010 [cit. 2013-04-24]. Dostupné z: http://www.notorm.com/\#why
 \bibitem{cleancode} MARTIN, Robert C. Clean code : a handbook of agile software craftsmanship. NJ : Prentice Hall: Upper Saddle River, 2009. ISBN 0132350882.
+\bibitem{wiki-sqla} http://en.wikipedia.org/wiki/SQLAlchemy
+\bibitem{sqla-doc} SQLAlchemy documentation Mike Bayer
 \end{thebibliography}
 
 
 \appendix
-\section{SQL vygenerované rámci pro jednoduchou aplikaci vytváření blogů}
+\section{Výpisy mapování rámců z kapitoly \ref{sec:Comparison}}
+\begin{lstlisting}[style=custompython, label=src:sqla-mapping, caption={Schéma jednoduché aplikace pro vytváření blogů v SQLAlchemy}]
+from sqlalchemy.ext.declarative import declarative_base, AbstractConcreteBase
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, Table, UniqueConstraint, Index
+from sqlalchemy.orm import relationship, backref
+import datetime
+
+Base = declarative_base()
+
+entry_authors =  Table('entry_authors', Base.metadata,
+    Column(u'entry_id', Integer, ForeignKey('entry.id')),
+    Column(u'author_id', Integer, ForeignKey('author.id')),
+)
+class Person(AbstractConcreteBase, Base):
+    id = Column(Integer, primary_key=True)
+    firstname = Column(String(50))
+    lastname = Column(String(50))
+
+class Author(Person):
+    __tablename__ = 'author'
+
+    email = Column(String(75))
+    biography = Column(Text)
+    photo = String(String(100))
+
+    __table_args__ = (UniqueConstraint('email'), )
+
+class Blog(Base):
+    __tablename__ = 'blog'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    description = Column(Text)
+
+    __table_args__ = (Index('blog_name_idx', "name"), )
+
+class Entry(Base):
+    __tablename__ = 'entry'
+
+    id = Column(Integer, primary_key=True)
+    headline = Column(String(255))
+    body_text = Column(Text)
+    pud_date = Column(Date, default=datetime.datetime.now())
+    mod_date = Column(Date, onupdate=datetime.datetime.now())
+    comments = Column(Integer)
+    raing = Column(Integer)
+    blog_id = Column(Integer, ForeignKey('blog.id'))
+    type = Column(String(50))
+
+    blog = relationship("Blog", backref=backref('entries', lazy='dynamic'))
+    authors = relationship("Author", secondary=entry_authors, backref=backref('entries', lazy='dynamic'))
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'entry',
+        'polymorphic_on': type
+    }
+
+class VlogEntry(Base):
+    __tablename__ = 'vlogentry'
+
+    entry_id = Column(Integer, ForeignKey('entry.id'), primary_key=True)
+    video = Column(String(100))
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'vlogentry'
+    }
+\end{lstlisting}
+
+\section{Výpisy SQL vygenerované rámci z kapitoly \ref{sec:Comparison}}
 \begin{lstlisting}[label=src:SQLMapping, caption=Reprezentace modelů z výpisu \ref{src:Mapping} v PostgreSQL vygenerovaná rámcem Django ORM, style=customsql]
 CREATE TABLE "myapp_blog" (
     "id" serial NOT NULL PRIMARY KEY,
@@ -1377,7 +1531,7 @@ CREATE INDEX "myapp_blog_name_like" ON "myapp_blog" ("name" varchar_pattern_ops)
 CREATE INDEX "myapp_entry_blog_id" ON "myapp_entry" ("blog_id");
 \end{lstlisting}
 \clearpage
-\begin{lstlisting}[label=src:w2p-mappingSQL, caption=Reprezentace modelů z výpisu \ref{src:w2p-mapping} v PostgreSQL vygenerovaná rámcem web2py DBAL, style=customsql]
+\begin{lstlisting}[label=src:w2p-mappingSQL, caption=Reprezentace schéma z výpisu \ref{src:w2p-mapping} v PostgreSQL vygenerovaná rámcem web2py DBAL, style=customsql]
 CREATE TABLE author(
     id SERIAL PRIMARY KEY,
     email VARCHAR(512) UNIQUE,
@@ -1418,6 +1572,56 @@ CREATE TABLE entry_author(
 );
 \end{lstlisting}
 \clearpage
+
+\begin{lstlisting}[label=src:sqla-mappingSQL, caption=Reprezentace schéma z výpisu \ref{src:sqla-mapping} v PostgreSQL vygenerovaná rámcem SQLAlchemy, style=customsql]
+CREATE TABLE blog (
+	id SERIAL NOT NULL, 
+	name VARCHAR(100), 
+	description TEXT, 
+	PRIMARY KEY (id)
+)
+COMMIT
+CREATE INDEX blog_name_idx ON blog (name)
+COMMIT
+CREATE TABLE author (
+	id SERIAL NOT NULL, 
+	firstname VARCHAR(50), 
+	lastname VARCHAR(50), 
+	email VARCHAR(75), 
+	biography TEXT, 
+	PRIMARY KEY (id), 
+	UNIQUE (email)
+)
+COMMIT 
+CREATE TABLE entry (
+	id SERIAL NOT NULL, 
+	headline VARCHAR(255), 
+	body_text TEXT, 
+	pud_date DATE, 
+	mod_date DATE, 
+	comments INTEGER, 
+	raing INTEGER, 
+	blog_id INTEGER, 
+	type VARCHAR(50), 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(blog_id) REFERENCES blog (id)
+)
+COMMIT
+CREATE TABLE entry_authors (
+	entry_id INTEGER, 
+	author_id INTEGER, 
+	FOREIGN KEY(entry_id) REFERENCES entry (id), 
+	FOREIGN KEY(author_id) REFERENCES author (id)
+)
+COMMIT
+CREATE TABLE vlogentry (
+	entry_id INTEGER NOT NULL, 
+	video VARCHAR(100), 
+	PRIMARY KEY (entry_id), 
+	FOREIGN KEY(entry_id) REFERENCES entry (id)
+)
+COMMIT
+\end{lstlisting}
 
 \section{Výstup automatické denormalizace knihovny pypg}
 \label{sec:Appendixdenom}
