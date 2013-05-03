@@ -193,12 +193,13 @@ literate=%
 % Zacneme uvodem
 \section{Úvod}
 \label{sec:Intro}
-Systémy řízení báze dat (SŘBD) jsou dnes nejpoužívanějšími systémy pro ukládání dat v aplikačním softwaru. Nejrozšířenějším typem databázových systému jsou databáze relační. Na problém, který představuje komunikace aplikačního softwaru s relačním databázovým systémem, se zaměřuje tato diplomová práce. \\
+Systémy řízení báze dat (SŘBD) jsou dnes velmi rozšířenými systémy používanými pro ukládání dat v aplikačním softwaru. Velice používaným typem databázových systému jsou databáze relační. Na problém, který představuje komunikace aplikačního softwaru s relačním databázovým systémem, se zaměřuje tato diplomová práce. \\
+Při použití relační databáze pro ukládání dat a objektově orientovaných jazyků pro zpracovávání těchto dat nastává mnoho problémů, které plynou ze vzájemné nekompatibility těchto dvou technologií. Z tohoto důvodu je potřeba v aplikačním softwaru vytvořit datovou vrstvu, která slouží jako tlumočník mezi relační databází a aplikační logikou. \\
 Praktická část práce sestává z implementace knihovny pro datovou vrstvu orientující se na SŘBD PostgreSQL. Tato knihovna se zaměřuje na optimalizaci komunikace s tímto SŘBD. \\
 V kapitole \ref{sec:Layers} je popsáno rozdělení architektury aplikačního softwaru do vrstev. Je zde popsána datová vrstva a jsou zde vysvětleny základní pojmy spojené s přístupem k relačním databázím pomocí objektově orientovaných jazyků. \\
 Kapitola \ref{sec:ORM} popisuje nejpoužívanější řešení pro datovou vrstvu, objektově-relační mapování. Jsou zde popsány různé přístupy mapování a návrhové vzory, kterými se řídí rámce implementující objektově-relační mapování. \\
 Kapitola \ref{sec:Comparison} obsahuje srovnání a popis existujících řešení pracujících na datové vrstvě vytvořených v jazyce Python. Jsou zde dopodrobna rozebrány rámce Django ORM, web2py DBAL a SQLAlchemy. U každého rámce jsou napsány jeho nevýhody. \\
-V kapitole \ref{sec:Design} jsou popsány důvody vytvoření nové knihovny, požadavky na její implementaci a návrh funkcí, které má vytvořená knihovna obsahovat. Je zde shrnuto také, proč nebyly použity existující rámce. \\
+V kapitole \ref{sec:Design} jsou popsány důvody vytvoření nové knihovny, požadavky na její implementaci a funkce, které bude vytvořená knihovna obsahovat. Je zde shrnuto také, proč nebyly použity existující rámce. \\
 Implementaci knihovny popisuje kapitola \ref{sec:Impl}. Tato kapitola rozebírá vytvořenou knihovnu podobným způsobem jako existující rámce v kapitole \ref{sec:Comparison} a to tak, aby bylo možné tato řešení porovnat. Dále je zde rozebrána architektura knihovny a popis řešení pro optimalizaci komunikace se SŘBD PostgreSQL. \\
 Kapitola \ref{sec:Bench} pak srovnává rámce z kapitoly \ref{sec:Comparison} a vytvořenou knihovnu pomocí rychlostních testů. \\
 Pro dokonalé porozumění textu je potřeba alespoň minimální znalost relačních databází a programovacího jazyka Python.
@@ -673,75 +674,66 @@ class Author(Person):
 
 \subsubsection{Dotazování}
 
-\begin{lstlisting}[style=custompython, numbers=left, label=src:Basic, caption={Ukázka práce s instancí, relacemi a dědičností v Django ORM}]
->>> blog = Blog()
->>> blog.name = "David's new blog"
->>> blog.full_clean()
-ValidationError: {'description': [u'This field cannot be blank.']}
+\begin{lstlisting}[style=custompython, label=src:dj-query, caption={Ukázka práce s daty v Django ORM}]
+>>> blog = Blog(name="New blog")
 >>> blog.save()
+#INSERT INTO "myapp_blog" ("name", "description") VALUES (\'New blog\', \'\') RETURNING "myapp_blog"."id"
 >>> blog.id
 1
->>> blog.name = "Better name for the blog"
+>>> blog.name = "New name"
 >>> blog.save()
->>> author = Author.objects.create(first_name="David", last_name="Krutký", email="david.krutky.st@vsb.cz")
->>> entry = VlogEntry(blog=blog, headline="New entry", comments=0, rating=0, video="http://example.com")
->>> entry.save()
->>> entry.blog
-<Blog: Blog object>
->>> blog.entry_set.filter(comments=0)
-[<Entry: Entry object>]
->>> entry.authors.add(author)
->>> entry.authors.all()
-[<Author: Author object>]
->>> entry.entry_prt
-<Entry: Entry object>
->>> entry.entry_prt.vlogentry
-<VlogEntry: VlogEntry object>
+#UPDATE "myapp_blog" SET "name" = \'New name\', "description" = \'\' WHERE "myapp_blog"."id" = 1 
+>>> blog.entry_set.all()
+#SELECT "myapp_entry"."id", ... FROM "myapp_entry" WHERE "myapp_entry"."blog_id" = 1
+>>> queryset = Entry.objects.filter(rating__gt=0)
+>>> entry = queryset.order_by("headline")[:1][0]
+#SELECT "myapp_entry"."id", ... FROM "myapp_entry" WHERE "myapp_entry"."rating" > 0   ORDER BY "myapp_entry"."headline" ASC LIMIT 1
+>>> Blog.objects.raw('SELECT * FROM "myapp_blog" ORDER BY "myapp_blog"."name"')
+#SELECT * FROM "myapp_blog" ORDER BY "myapp_blog"."name"
+[<Blog: Blog object>]
 \end{lstlisting}
 
-\begin{lstlisting}[style=custompython, numbers=left, label=src:Query, caption={Ukázka získávání dat z databáze v Django ORM}]
->>> queryset = Blog.objects.all() #Neprovádí se dotaz.
->>> filtered = queryset.filter(name="Better name for the blog")
->>> print filtered
-#SELECT "myapp_blog"."id", "myapp_blog"."name", "myapp_blog"."description" FROM "myapp_blog" WHERE "myapp_blog"."name" = \'Better name for the blog\'
-[<Blog: Blog object>] 
->>> queryset.exclude(name="Better name for the blog")
-#SELECT "myapp_blog"."id", ... WHERE NOT ("myapp_blog"."name" = \'Better name\' )
->>> print Blog.objects.get(id=1)
-#SELECT "myapp_blog"."id", ... WHERE "myapp_blog"."id" = 1
-<Blog: Blog object>
->>> queryset[0]
-#SELECT "myapp_blog"."id", ... FROM "myapp_blog" LIMIT 1
->>> queryset[2:5]
-#SELECT "myapp_blog"."id", ... FROM "myapp_blog" LIMIT 3 OFFSET 2
->>> print Blog.objects.raw('SELECT * FROM "myapp_blog" ORDER BY "myapp_blog"."name"')
-[<Blog: Blog object>, <Blog: Blog object>, ...] 
+\begin{lstlisting}[style=custompython, label=src:w2p-query, caption={Ukázka získávání dat z databáze ve web2py DBAL}]
+>>> db.blog.insert(name="New blog")
+#INSERT INTO blog(name) VALUES ('New blog');
+1L
+>>> db(db.blog.id == 1).update(name="New name")
+#UPDATE blog SET name='New name' WHERE (blog.id = 1);
+>>> blog = db(db.blog.id == 1).select()[0]
+#SELECT  blog.id, ... FROM blog WHERE (blog.id = 1);
+>>> blog.entry.select()
+#SELECT  entry.id, ... FROM entry WHERE (entry.blog_id = 1);
+>>> where = db.entry.rating > 0
+>>> entry = db(where).select(orderby=db.entry.headline, limitby=(0,1))[0]
+#SELECT  entry.id, ... FROM entry WHERE (entry.rating > 0) ORDER BY entry.headline LIMIT 1   OFFSET 0; 
+>>> db.executesql('SELECT * FROM blog ORDER BY blog.name')
+#SELECT * FROM blog ORDER BY blog.name
+[(1, 'New name', None)]
+>>> db.commit()
 \end{lstlisting}
+\clearpage
 
-\begin{lstlisting}[style=custompython, numbers=left, label=src:w2p-query, caption={Ukázka získávání dat z databáze ve web2py DBAL}]
->>> db.blog.insert(name="Better name for the blog")
->>> where = db.blog.name == "Better name for the blog"
->>> result = db(where).select()
-#SELECT  blog.id, blog.name, blog.description FROM blog WHERE (blog.name = 'Better name for the blog'); 
->>> print result
-blog.id,blog.name,blog.description
-10,"Better name for the blog",<NULL>
->>> result.find(lambda row: row.description[0] == 'B')
-#Nebyl proveden SELECT. Data jsou filtrována v paměti.
->>> db.rollback()
->>> print db(where).select()
-blog.id,blog.name,blog.description
-
->>> db().select(db.entry.ALL, db.author.ALL, join=[
-...			db.entry_author.on(db.entry.id==db.entry_author.entry),
-...			db.author.on(db.author.id==db.entry_author.author)])
-#SELECT entry.id, ... FROM entry JOIN entry_author ON (entry.id = entry_author.entry) JOIN author ON (author.id = entry_author.author) WHERE (entry.id IS NOT NULL);
->>> db().select((db.entry.mod_date-db.entry.pub_date).sum(), groupby=db.entry.blog_id)
-#SELECT SUM((entry.mod_date - entry.pub_date)) FROM entry GROUP BY entry.blog_id;
->>> print db.executesql('SELECT * FROM blog ORDER BY blog.name;')
-[(1,"Blog", "Popis blogu"), ...]
+\begin{lstlisting}[style=custompython, label=src:sqla-query, caption={Ukázka získávání dat z databáze v SQLAlchemy}]
+>>> Session = sessionmaker(bind=engine)
+>>> session = Session()
+>>> blog = Blog(name="New blog")
+>>> session.commit()
+#INSERT INTO blog (name, description) VALUES ('New name', NULL) RETURNING blog.id
+>>> blog.id
+#SELECT blog.id AS blog_id, ... FROM blog WHERE blog.id = 1
+1
+>>> blog.name = "New name"
+>>> blog.entry.select()
+#UPDATE blog SET name='New name' WHERE blog.id = 1
+#SELECT entry.id AS entry_id, ... FROM entry WHERE 1 = entry.blog_id
+>>> query = session.query(Entry).filter(Entry.rating > 0)
+>>> entry = query.order_by(Entry.headline)[:1][0]
+#SELECT entry.id AS entry_id, ... FROM entry WHERE entry.raing > 0 ORDER BY entry.headline LIMIT 1
+>>> session.query(Blog).from_statement('SELECT * FROM blog ORDER BY blog.name')
+#SELECT * FROM blog ORDER BY blog.name
+[<myapp.Blog at 0x9a950ac>]
+>>> session.commit()
 \end{lstlisting}
-
 
 \section{Specifikace požadavků pro tvorbu nové technologie}
 \label{sec:Design}
@@ -1472,7 +1464,7 @@ db.define_table('entry',
     Field('comments', 'integer'),
     Field('rating', 'integer'))
     
-db.define_table('vlog_entry', db.entry, Field('video', 'string'))
+db.define_table('vlogentry', db.entry, Field('video', 'string'))
 
 db.define_table('entry_author',
     Field('entry', db.entry),
@@ -1527,7 +1519,7 @@ class Entry(Base):
     pud_date = Column(Date, default=datetime.datetime.now())
     mod_date = Column(Date, onupdate=datetime.datetime.now())
     comments = Column(Integer)
-    raing = Column(Integer)
+    rating = Column(Integer)
     blog_id = Column(Integer, ForeignKey('blog.id'))
     type = Column(String(50))
 
@@ -1620,7 +1612,7 @@ CREATE TABLE entry(
     comments INTEGER,
     rating INTEGER
 );
-CREATE TABLE vblog(
+CREATE TABLE vlogentry(
     id SERIAL PRIMARY KEY,
     blog_id INTEGER REFERENCES blog (id) ON DELETE CASCADE,
     headline VARCHAR(512),
@@ -1666,7 +1658,7 @@ CREATE TABLE entry (
 	pud_date DATE, 
 	mod_date DATE, 
 	comments INTEGER, 
-	raing INTEGER, 
+	rating INTEGER, 
 	blog_id INTEGER, 
 	type VARCHAR(50), 
 	PRIMARY KEY (id), 
