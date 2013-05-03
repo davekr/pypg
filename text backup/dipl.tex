@@ -127,9 +127,9 @@ literate=%
 }
 %abstrakt, datovy slovnik
 % Zadame pozadovane vstupy pro generovani titulnich stran.
-\Author{David Krutký}
+\Author{Bc. David Krutký}
 
-\Title{Optimalizace datové vrsty aplikací pro PostgreSQL}
+\Title{Optimalizace datové vrstvy aplikací pro PostgreSQL}
 
 \EnglishTitle{Optimization of a Data Layer of an Application Using PostgreSQL}
 
@@ -162,6 +162,7 @@ literate=%
 \AddAcronym{CSV}{Comma Separated Values}
 \AddAcronym{IS}{Informační systém}
 \AddAcronym{CMS}{Content Management System}
+\AddAcronym{SSOT}{Single Source Of Truth}
 \AddAcronym{JSON}{JavaScript Object Notation}
 \AddAcronym{POCO} {Plain Old Python Object}
 
@@ -584,6 +585,7 @@ Při vytváření dotazů do databáze vrací sezení instanci třídy \lstinlin
 SQLAlchemy ORM využívá při práci s objekty strukturu Identity Map. Při získávání objektů z databáze tato struktura zjistí, zda je objekt se stejnými daty v sezení již registrován, a pokud ano vrací pouze referenci na tento objekt. Funguje také zčásti jako jednoduchá keš, která obsahuje objekty rozdělené podle jejich unikátního identifikátoru. Objekty jsou v Identity Map registrovány pouze po dobu transakce. Jakmile transakce skončí, data jsou označena jako zastaralá a všechny data objektů v paměti je potřeba znovu načíst z databáze. \\
 
 \subsubsection{Optimalizace v SQLAlchemy}
+\label{subsubsec:sqla-opt}
 
 SQLAlchemy provádí mnoho optimalizací na pozadí. Jeho velkou výhodou je použití sezení, které umožňuje implicitně provádět hromadné operace a spolu s Identity Map slouží jako jednoduchá keš pro data. \\
 Mezi optimalizace, které je potřeba určit explicitně patří načítání relačních objektů.
@@ -886,10 +888,10 @@ for city in cities:
 
 V některých případech však získávání dat pomocí samostatných dotazů není ideální. Samostatné dotazy mohou v určitých situacích z databáze přenášet zbytečné mezivýsledky, které by spojením tabulek byly vyfiltrovány. Vytvořená knihovna tedy kromě samostatných dotazů bude poskytovat možnost vytvořit dotazy do databáze i spojením tabulek.
 
-\section{Návrh nové technologie}
+\section{Návrh nové technologie pracující na datové vrstvě}
 \label{sec:Impl}
 
-Vytvářenou knihovnu jsem nazval pypg. Knihovna splňuje všechny požadavky uvedené v sekci \ref{sec:Design}. Je napsaná v jazyce Python a specializuje se na komunikaci se SŘBD PostgreSQL. Dále obsahuje jednoduché dotazovací API do databáze, které je velmi podobné SQL. Knihovna je malá, její architektura přehledná a požadavky na spuštění jsou minimální. Obsahuje pouze funkce, které budou využívány při tvorbě systému firmou deving a svými funkcemi urychluje operace pro čtení dat z databáze. \\
+Vytvářenou knihovnu jsem nazval pypg. Knihovna bude splňovat všechny požadavky uvedené v sekci \ref{sec:Design}. Bude napsaná v jazyce Python a bude se specializovat na komunikaci se SŘBD PostgreSQL. Dále bude obsahovat jednoduché dotazovací API do databáze, které bude velmi podobné SQL. Knihovna bude malá, její architektura přehledná a požadavky na spuštění budou minimální. Bude obsahovat pouze funkce, které budou využívány při tvorbě systému firmou deving a svými funkcemi bude urychlovat operace pro čtení dat z databáze. \\
 
 \subsection{Klíčové vlastnosti}
 
@@ -897,8 +899,8 @@ Vytvářenou knihovnu jsem nazval pypg. Knihovna splňuje všechny požadavky uv
 
 \subsection{Architektura}
 
-Při vytváření knihovny byl kladem zřetel na čistotu a jednoduchou strukturu kódu. Kniha Roberta Martina posloužila jako zdroj pravidel a postupů při vytváření knihovny pypg \cite{cleancode}. Celková funkčnost je tak rozdělena do kompaktních jednoduchých tříd, které jsou většinou v samostatných modulech. Názvy funkcí, metod a proměnných jsou vytvořeny s rozvahou tak, aby nepotřebovaly komentáře. Komentáře v kódu zastarávají a často jim není věnována stejná pozornost při změnách, což vede ke zmateným informacím  \cite{cleancode}. Jediným zdrojem pravdivých informací (SSOT) je kód. Knihovna tedy neobsahuje mnoho komentářů, ale byla napsána se snahou, aby kód popisoval sám sebe. \\
-Knihovna je z 95\% pokryta jednotkovými testy, které zjednodušují případné změny\footnote{Pro zjištění pokrytí kódu testy byl využit Python coverage (https://pypi.python.org/pypi/coverage)}. Architektura knihovny obsahuje mnoho tříd. Níže jsou popsány pouze třídy, které zastávají v rámci knihovny důležitou funkci.
+Při vytváření knihovny bude kladem zřetel na čistotu a jednoduchou strukturu kódu. Kniha Roberta Martina poslouží jako zdroj pravidel a postupů při vytváření knihovny pypg \cite{cleancode}. Celková funkčnost bude tak rozdělena do kompaktních jednoduchých tříd, které budou většinou v samostatných modulech. Názvy funkcí, metod a proměnných budou vytvořeny s rozvahou tak, aby nepotřebovaly komentáře. Komentáře v kódu zastarávají a často jim není věnována stejná pozornost při změnách, což vede ke zmateným informacím  \cite{cleancode}. Jediným zdrojem pravdivých informací (SSOT) je kód. Knihovna tedy nebude obsahovat mnoho komentářů, ale bude napsána se snahou, aby kód popisoval sám sebe. Knihovna bude z 95\% pokryta jednotkovými testy, které budou zjednodušovat případné změny\footnote{Pro zjištění pokrytí kódu testy bude využit Python coverage (https://pypi.python.org/pypi/coverage)}. \\
+Níže jsou popsány třídy, které budou hlavní kostrou knihovny.
 
 \begin{description}
 \item[PyPg] Třída je vstupním bodem celé knihovny. Umožňuje nastavovat vlastnosti knihovny a poskytuje přístup k objektům třídy \lstinline[style=inlinepython]|Table|. Pomocí této třídy se spouští i vytváření materializovaných pohledů a automatická denormalizace.
@@ -927,38 +929,39 @@ Všechny tyto třídy zobrazuje diagram na obrázku \ref{fig:Clsdiag}.
 \subsection{Funkce pro zrychlení čtení dat}
 \label{subsec:PyPgOpt}
 
-Knihovna implementuje funkce, které urychlují a optimalizují čtení dat z databáze. Tyto funkce byly popsány v návrhu v sekci \ref{subsec:ReadOpt}.
+Knihovna bude implementovat funkce, které urychlují a optimalizují čtení dat z databáze. Tyto funkce byly popsány v požadavcích v sekci \ref{subsec:ReadOpt}.
 
 \subsubsection{Simulace materializovaných pohledů}
 
-Třída \lstinline[style=inlinepython]|pypg.mview.MaterializedView| obsahuje logiku pro simulaci materializovaných pohledů. Tato třída umožňuje materializované pohledy vytvářet i mazat. Pro vytvoření materializovaného pohledu je potřeba zavolat metodu \lstinline[style=inlinepython]|create_view| na instanci třídy \lstinline[style=inlinepython]|PyPg|. Metoda přijímá jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvořený pomocí API knihovny. \\
-Nejdříve je dotaz validován a pomocí introspekce se zjišťuje, zda obsahuje primární klíče všech dotazovaných tabulek. Pokud ne, jsou primární klíče do dotazu přidány, jelikož jsou potřeba při aktualizaci záznamů. Poté je všem sloupcům v dotazu vytvořen alias složený z názvu tabulky a sloupce tak, aby se předešlo případným kolizím v názvech. \\
-Pomocí výsledného dotazu je vytvořen pohled a tento pohled je pak použit jako zdroj dat při vytváření tabulky materializovaného pohledu. Pro tuto tabulku je vytvořen primární klíč složený ze všech klíčů zjištěných dříve pomocí introspekce. \\
-Pro každou tabulku obsaženou v dotazu jsou vytvořeny triggery pro vložení, aktualizaci a smazání záznamu. Při aktualizaci záznamu jsou v tabulce materializovaného pohledu podle primárního klíče vyhledány všechny korespondující záznamy. Tyto záznamy jsou smazány a pak znovu načteny pomocí pohledu vytvořeného dříve. Triggery fungují spolehlivě i při změně primárního klíče. \\
+Třída \lstinline[style=inlinepython]|MaterializedView| bude obsahovat logiku pro simulaci materializovaných pohledů. Tato třída bude umožňovat materializované pohledy vytvářet i mazat. Pro vytvoření materializovaného pohledu bude potřeba zavolat metodu \lstinline[style=inlinepython]|create_view| na instanci třídy \lstinline[style=inlinepython]|PyPg|. Metoda bdue přijímat jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvořený pomocí API knihovny. \\
+Nejdříve bude dotaz validován a pomocí introspekce bude zjištěno, zda obsahuje primární klíče všech dotazovaných tabulek. Pokud ne, budou primární klíče do dotazu přidány, jelikož jsou potřeba při aktualizaci záznamů. Poté bude všem sloupcům v dotazu vytvořen alias složený z názvu tabulky a sloupce tak, aby se předešlo případným kolizím v názvech. \\
+Pomocí výsledného dotazu bude vytvořen pohled a tento pohled bude pak použit jako zdroj dat při vytváření tabulky materializovaného pohledu. Pro tuto tabulku bude vytvořen primární klíč složený ze všech klíčů zjištěných dříve pomocí introspekce. \\
+Pro každou tabulku obsaženou v dotazu budou vytvořeny triggery pro vložení, aktualizaci a smazání záznamu. Při aktualizaci záznamu budou v tabulce materializovaného pohledu podle primárního klíče vyhledány všechny korespondující záznamy. Tyto záznamy budou smazány a pak znovu načteny pomocí pohledu vytvořeného dříve. Aktualizace záznamů budou fungovat spolehlivě i při změně primárního klíče. \\
 Celý proces zobrazuje diagram na obrázku \ref{fig:Matview}. \\
 Metoda \lstinline[style=inlinepython]|drop_mview| třídy \lstinline[style=inlinepython]|PyPg| pak odstraní z databáze celou tuto logiku. Tabulku materializovaného pohledu, pohled pomocí, kterého byla tabulka vytvořena, a všechny triggery aktualizující data pro tento materializovaný pohled. \\
-S vytvořeným materializovaným pohledem, lze pracovat stejně jako s obyčejnou tabulkou. Momentálně jsou však podporovány pouze operace pro čtení. Změny dat provedené na tabulce materializovaného pohledu se neprojeví zpět do bázových tabulek. \\
-I když je možné vytváření materializovaného pohledu spustit za běhu aplikace, mělo by být vytváření nebo mazaní spouštěno mimo běh aplikace, jelikož je to časově náročná operace. \\
+S vytvořeným materializovaným pohledem, bude možné pracovat stejně jako s obyčejnou tabulkou. Podporovány budou pouze operace pro čtení dat, jelikož materializovaný pohled nebude obsahovat mechanismus, který by aktualizace dat aplikoval i na bázové tabulky (více v sekci \ref{subsubsec:EditView}). \\
+I když bude možné vytváření materializovaného pohledu spustit za běhu aplikace, mělo by být vytváření nebo mazaní spouštěno mimo běh aplikace, jelikož je to časově náročná operace. \\
 
 \InsertFigure{matview.png}{100mm}{Diagram aktivit zobrazující vytváření materializovaného pohledu}{fig:Matview}
 
 \subsubsection{Automatická denormalizace}
 
-Celý proces automatické denormalizace začíná při zapnutí logování statistik. Knihovna si vytvoří soubor, do kterého loguje všechny dotazy, které se provádějí nad databází. Každý řádek v tomto souboru je ve formátu JSON a obsahuje provedený dotaz, čas provádění dotazu a názvy sloupců a tabulek použitých v dotazu. Ve stejném okamžiku se provede i záloha současného stavu databáze, aby pak bylo možné simulovat stejné podmínky při testování denormalizace. \\
-Poté, co je knihovna nějaký čas v provozu a každý prováděný dotaz byl logován, je možné spustit proces automatické denormalizace. Tento proces se spouští pomocí metody \lstinline[style=inlinepython]|start_denormalization| třídy \lstinline[style=inlinepython]|PyPg| mimo běh aplikace. Před spuštěním se doporučuje pomocí knihovny vytvořit spojení na testovací databázový server, jelikož produkční server by mohl být touto operací velmi zatěžován. \\
-Třídy obstarávající funkčnost automatické denormalizace se nacházejí v modulu \lstinline[style=inlinepython]|pypg.denormalization|. Při spuštění procesu nejdříve pomocí třídy \lstinline[style=inlinepython]|Analyzer| proběhne ana- lýza. Tato třída si načte data a statistiky uložené v souboru s logovanými dotazy. Tyto data poté zanalyzuje a zjistí případné denormalizační změny, které by mohly prospět rychlosti čtení dat z databáze. Pro denormalizační změny je podmínka, že celkový čas dotazů strávený čtením nad konkrétní tabulkou musí být větší než čas strávený zápisem. Pokud tomu tak není, nemá smysl nad touto tabulkou provádět denormalizaci, jelikož to operace zápisu ještě více zpomalí. Třída poté vrací kolekci všech doporučovaných denormalizačních změn v podobně instancí třídy \lstinline[style=inlinepython]|Improvement|. Tato kolekce obsahuje i seznam dotazů, které byly získány ze statistik, a které dernomalizační změny ovlivní. \\
-Každá denormalizační změna je poté otestována nad testovací databází. Záloha databáze, získaná dříve, je nahrána do testovací databáze. Denormalizace je v databázi nejdříve vytvořena a poté jsou spuštěny dotazy získané ze statistik, které interagují s tabulkami nebo strukturami ovlivněné denormalizací. Aby byly zaručeny stejné podmínky pro všechny testy, je vždy před každým testem databáze převedena do stavu v jakém byla před testováním. \\
-Výstupem je seznam otestovaných denormalizačních změn, který obsahuje doporučení, zda konkrétní denormalizační změnu implementovat, a časy, které toto doporučení odůvo- dňují. \\
+Celý proces automatické denormalizace začne při zapnutí logování statistik. Knihovna si vytvoří soubor, do kterého loguje všechny dotazy, které se provádějí nad databází. Každý řádek v tomto souboru bude ve formátu JSON a bude obsahovat provedený dotaz, čas provádění dotazu a názvy sloupců a tabulek použitých v dotazu. Ve stejném okamžiku se provede i záloha současného stavu databáze, aby pak bylo možné simulovat stejné podmínky při testování denormalizace. \\
+Poté, co je knihovna nějaký čas v provozu a každý prováděný dotaz byl logován, je možné spustit proces automatické denormalizace. Tento proces bude možné spusit pomocí metody \lstinline[style=inlinepython]|start_denormalization| třídy \lstinline[style=inlinepython]|PyPg| mimo běh aplikace. Před spuštěním se doporučuje pomocí knihovny vytvořit spojení na testovací databázový server, jelikož produkční server by mohl být touto operací velmi zatěžován. \\
+Třídy obstarávající funkčnost automatické denormalizace budou implementovány v modulu \lstinline[style=inlinepython]|pypg.denormalization|. Při spuštění procesu nejdříve pomocí třídy \lstinline[style=inlinepython]|Analyzer| proběhne ana- lýza. Tato třída si načte data a statistiky uložené v souboru s logovanými dotazy. Tyto data poté zanalyzuje a zjistí případné denormalizační změny, které by mohly prospět rychlosti čtení dat z databáze. Pro denormalizační změny bude podmínka, že celkový čas dotazů strávený čtením nad konkrétní tabulkou musí být větší než čas strávený zápisem. Pokud tomu tak není, nemá smysl nad touto tabulkou provádět denormalizaci, jelikož to operace zápisu ještě více zpomalí. Třída poté vrátí kolekci všech doporučovaných denormalizačních změn v podobně instancí třídy \lstinline[style=inlinepython]|Improvement|. Tato kolekce bude obsahovat i seznam dotazů, které byly získány ze statistik, a které dernomalizační změny ovlivní. \\
+Každá denormalizační změna bude poté otestována nad testovací databází. Záloha databáze, získaná dříve, bude nahrána do testovací databáze. Denormalizace bude v databázi nejdříve vytvořena a poté budou spuštěny dotazy získané ze statistik, které interagují s tabulkami nebo strukturami ovlivněné denormalizací. Aby byly zaručeny stejné podmínky pro všechny testy, bude vždy před každým testem databáze převedena do stavu v jakém byla před testováním. \\
+Výstupem bude seznam otestovaných denormalizačních změn, který obsahuje doporučení, zda konkrétní denormalizační změnu implementovat, a časy, které toto doporučení odůvo- dňují. \\
 %Ukázku výstupu této operace zobrazuje tabulka/obrázek TODO. 
-Celý proces automatické denormalizace lze vidět na obrázku \ref{fig:Autoden}. Momentálně je pro denormalizační změny podporován pouze materializovaný pohled.
+Celý proces automatické denormalizace lze vidět na obrázku \ref{fig:Autoden}. Mezi denormalizačními změny bude podporován pouze materializovaný pohled.
 
 \InsertFigure{autodenormalizace.png}{150mm}{Diagram aktivit zobrazující procesy automatické denormalizace}{fig:Autoden}
 
 \subsubsection{Minimalizace přenášených dat}
 
-Knihovna implementuje mechanismus popsaný v sekci \ref{subsubsec:Selectin}. Tento mechanismus zmenšuje objem přenášených dat pomocí samostatných dotazů a tak i urychluje čtení z databáze. Celková funkčnost se děje na pozadí a při dotazování není potřeba nic dalšího implementovat. Příklad zobrazuje výpis \ref{src:imp-selectin}. Výstupem tohoto výpisu je seznam všech blogů a pro každý blog prvních deset příspěvků v tomto blogu a jejich autoři.
+Knihovna bude implementovat mechanismus popsaný v sekci \ref{subsubsec:Selectin}. Tento mechanismus zmenšuje objem přenášených dat pomocí samostatných dotazů a tak i urychluje čtení z databáze. Celková funkčnost bude prováděna na pozadí a při dotazování nebude potřeba nic dalšího implementovat. \\
+Jak bude fukce vypadat zobrazuje výpis \ref{src:imp-selectin}. Tento výpis používá strukturu definovanou v sekci \ref{subsec:CodeCompare}. Výstupem tohoto výpisu je seznam všech blogů a pro každý blog prvních deset příspěvků v tomto blogu a jejich autoři.
 
-\begin{lstlisting}[style=custompython, label=src:imp-selectin, caption={Implementace samostatných dotazů v pypg}]
+\begin{lstlisting}[style=custompython, label=src:imp-selectin, caption={Návrh implementace samostatných dotazů v pypg}]
 >>>for blog in db.blog.select()
 ...    print 'Blog: ', blog['name']
 ...    print 'Příspěvky v blogu: '
@@ -971,9 +974,9 @@ Knihovna implementuje mechanismus popsaný v sekci \ref{subsubsec:Selectin}. Ten
 \end{lstlisting}
 
 Knihovna v tomto případě provede pouze 4 dotazy. Jeden dotaz pro získání dat z každé tabulky použité v tomto výpisu (\lstinline[style=inlinepython]|blog|, \lstinline[style=inlinepython]|entry|, \lstinline[style=inlinepython]|entry_authors| a \lstinline[style=inlinepython]|author|). \\
-Knihovna rozpozná, zdali se výsledek dotazu prochází smyčkou, uloží si primární klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomoci těchto klíčů vytvoří nový dotaz. Jelikož knihovna rozpozná, že jsou data procházena smyčkou, a že je přistupováno k relaci, a proto by nebylo efektivní vytvářet pokaždé nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří takový dotaz, kterým jsou získány všechny relace od všech záznamů najednou. Tyto relace potom distribuuje ke konkrétním záznamům. \\
-V případě druhého cyklu ve výpisu \ref{src:imp-selectin}, kdy je dotazováno prvních 10 příspěvků blogu, je tedy dotaz proveden pouze při prvním průchodu prvního cyklu a při dalších průchodech jsou pak již využívána kešovaná data. Tento mechanismus funguje nezávisle na počtu smyček. \\
-Knihovna dotazy pro relační objekty skládá za pomocí introspekce, pokud je zapnutá, a nebo pomocí pravidel struktury databáze. Seznam všech dotazů, které se provedou pro výpis \ref{src:imp-selectin}, zobrazuje výpis \ref{src:sql-selectin}.
+Knihovna bude rozpoznávat, že se výsledek dotazu prochází smyčkou, uloží si primární klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomoci těchto klíčů vytvoří nový dotaz. Jelikož by nebylo efektivní vytvářet při každém přístupu k relaci nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří knihovna takový dotaz, kterým budou získány všechny relace od všech záznamů najednou. Tyto relace potom bude distribuovat ke konkrétním záznamům. \\
+V případě druhého cyklu ve výpisu \ref{src:imp-selectin}, kdy je dotazováno prvních 10 příspěvků blogu, bude tedy dotaz proveden pouze při prvním průchodu prvního cyklu a při dalších průchodech budou pak již využívána kešovaná data. Tento mechanismus bude fungovat nezávisle na počtu smyček. \\
+Knihovna bude dotazy pro relační objekty skládat za pomocí introspekce a nebo pomocí pravidel struktury databáze. Seznam všech dotazů, které se provedou pro výpis \ref{src:imp-selectin}, zobrazuje výpis \ref{src:sql-selectin}.
 
 \begin{lstlisting}[style=customsql, label=src:sql-selectin, caption={Dotazy vygenerované z výpisu \ref{src:imp-selectin} knihovnou pypg}]
 SELECT * FROM "blog";
@@ -987,7 +990,7 @@ SELECT * FROM "author" WHERE id IN (1, 2, 3, 4...);
 
 \subsection{Funkce, které budou v budoucnu implementovány}
 
-Tyto funkce byly původně obsaženy v návrhu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti a nižší prioritě na základě požadavků popsaných v sekci \ref{sec:Design}, nebudou implementovány. Kvůli časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
+Tyto funkce byly původně obsaženy v požadavcích pro tvorbu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti a nižší prioritě na základě požadavků popsaných v sekci \ref{sec:Design}, nebudou implementovány. Kvůli časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
 Jak bylo popsáno výše, knihovna ovšem bude později používána jako prostředek pro tvorbu systémů firmy deving. Do budoucna se tedy plánuje s dalšími vylepšeními knihovny, mezi kterými budou i níže popsané funkce.
 
 \subsubsection{Tvoření dotazů pomocí SQL}
@@ -1002,6 +1005,7 @@ Implementace této funkčnosti si bude brát inspiraci z knihovny dibi\footnote{
 API knihovny pypg pro generování dotazů momentálně umožňuje při sestavování dotazů používat pouze základní SQL výrazy. V budoucnu budou implementovány funkce, které budou umožňovat sestavovat SQL pomocí složitějších konstrukcí. Mezi tyto konstrukce budou patřit agregace, seskupování a specifické funkce SŘBD PostgreSQL.
 
 \subsubsection{Editovatelné pohledy}
+\label{subsubsec:EditView}
 
 Knihovna momentálně podporuje pouze materializované pohledy. Tyto pohledy nelze využívat pro zápis dat, jelikož neexistuje mechanismus, který by propagoval změny do bázových tabulek. Vzhledem k požadavku na rychlost čtení dat popsaného v sekci \ref{sec:Design}, byla tato funkčnost přesunuta mezi budoucí rozšíření, jelikož by simulace editovatelného pohledu nijak nezvyšovaly rychlost čtení. \\
 Tato funkce by však mohla ulehčit práci s daty materializovaného pohledu a bude tedy v budoucnu implementována.
@@ -1163,9 +1167,9 @@ Testy byly vytvářeny tak, aby co nejvíce využívaly vlastností rámců a kn
 \begin{description}
 \item[Django ORM] Při testování rámce byly využity optimalizace pro okamžité načtení vazebních objektů popsaných v sekci \ref{subsubsec:DjangoOpt}. Dále pak byla v testech využita funkce hromadného ukládání objektů.
 \item[web2py DBAL] Testy pro tento rámec využívaly funkce hromadného ukládání objektů. Jiné optimalizační techniky, které by bylo možné využít v testech, rámec neposkytuje.
-\item[SQLAlchemy ORM] Testy tohoto rámce využily funkcí pro optimalizované načítaní vazebních objektů popsaných v sekci ??. Rámec některé další optimalizace poskytuje implicitně. Například hromadné ukládání nebo kešování objektů pomocí Identity Map v rámci transakce. Testy byly napsány s vědomím o těchto optimalizacích.
+\item[SQLAlchemy ORM] Testy tohoto rámce využily funkcí pro optimalizované načítaní vazebních objektů popsaných v sekci \ref{subsubsec:sqla-opt}. Rámec některé další optimalizace poskytuje implicitně. Například hromadné ukládání nebo kešování objektů pomocí Identity Map v rámci transakce. Testy byly napsány s vědomím o těchto optimalizacích.
 \item[pypg] Testy pro knihovnu pypg využívaly optimalizací popsaných v sekci \ref{subsec:PyPgOpt}. Testy byly napsány s využitím samostatných dotazů i dotazů vytvořených spojením tabulek. \\
-Na základě uložených statistik z těchto testů pak byla spuštěna automatická denormalizace. Celý výstup této funkce zobrazuje výpis \ref{src:pypg-denomoutup} v příloze \ref{sec:Appendixdenom}. \\
+Na základě uložených statistik z těchto testů pak byla spuštěna automatická denormalizace. Celý výstup automatické denormalizace zobrazuje výpis \ref{src:pypg-denomoutup} v příloze \ref{sec:Appendixdenom}. \\
 Z tohoto výstupu jsem vybral dva knihovnou doporučované materializované pohledy a vytvořil je pomocí knihovny v testovací databázi. Testy pak byly vytvořeny tak, aby využívaly těchto optimalizačních změn.
 \end{description}
 
@@ -1360,12 +1364,12 @@ Materializované pohledy vytvořené knihovnou pypg na tento dotaz neměly vliv.
 
 \section{Závěr}
 \label{sec:Conclusion}
-Tato diplomová práce měla za úkol srovnat existující technologie pracující na datové vrstvě a vytvořit vlastní knihovnu, která by nad těmito technologiemi vynikala v rychlosti čtení dat z databáze. 
-
-%V zhledem k casovemu omezeni bylo treba vybrat ktere funkce implementova a ktere prenechat do budoucna.
-%Rozhodovalo se na zaklade pozadavku v kapitelo 5.
-%Musel jsem zjistit, jake funkce existujici ramce obsahuji a proc nevyhovuji
-%srovnat s predeslymi diplomkami
+Tato diplomová práce měla za úkol srovnat existující technologie pracující na datové vrstvě a vytvořit vlastní knihovnu, která by nad těmito technologiemi vynikala v rychlosti čtení dat z databáze. Všechny požadavky pro vytvoření knihovny byly splněny a knihovnu lze používat pro komunikaci s databází. \\
+Diplomová práce ukázala, že vytváření nové technologie na datové vrstvě je sofistikovaná a časově náročná záležitost. Existující technologie, které byly popsány v této práci byly vyvíjeny několik let zkušenými programátory a jejich vývoj není zdaleka u konce. Proto vidím jako úspěch, že se mnou vytvořená knihovna dokázala těmto technologiím vyrovnat a dokonce je dokázala předčit v rychlosti čtení dat z databáze. Studiem jednotlivých technologií, jejich funkcí a vlastností jsem dokázal zjistit jejich slabiny a silné stránky, což mi umožnilo vytvořit knihovnu, která by tyto technologie v rychlosti čtení dat předčila. \\
+Testy v poslední kapitole však ukázaly, že při čtení dat z databáze nezáleží z velké části pouze na optimalizaci SQL dotazů a databázové struktury, ale i velmi na zpracování těchto dat datovou vrstvou. I když byla knihovna vytvářena tak, aby neobsahovala náročné operace, které by zpracovávání dat brzdily, myslím, že byl tento fakt mírně podceněn, což se projevilo v jednom z výše uvedených testů, a další vývoj knihovny by se tedy měl zaměřovat více i na optimalizaci struktur knihovny samotné. \\
+I když knihovna nad existujícími technologiemi vyniká v rychlosti čtení dat z databáze, v některých oblastech oproti těmto technologiím zaostává. Při vývoji jsem kvůli časovému omezení diplomové práce musel vybírat, které vlastnosti bude výsledná kniho- vna obsahovat. Rozhodoval jsem se na základě požadavků a zčásti i na faktu, aby mnou vytvořená technologie alespoň v jednom bodě předčila technologie existující, což se mi povedlo. \\
+Vývoj knihovny bude dále pokračovat, jelikož bude využívána při tvorbě systému firmy deving. Knihovna bude rozšířena o funkce popsané v této práci i o další funkce, kterými jsem byl inspirován při studiu existujících technologií. \\
+Tato diplomová práce je podobná svou strukturou předchozím diplomovým pracím, jejichž výstupem byly rámce BasicORM \cite{BasicORM} a EasyORM \cite{EasyORM}. Od těchto prací se má diplomová práce liší jiným přístupem k realizaci technologie na datové vrstvě. Oba rámce využívají objektově-relačního mapování. EasyORM je vytvořen pro platformu Java a BasicORM pro platformu .NET. Knihovna pypg byla vytvořena bez objektově-relačního mapování pomocí programovacího jazyka Python a zaměřuje se více na výkon a rychlost čtení dat z databáze.
 
 \begin{thebibliography}{99}
 
@@ -1397,6 +1401,8 @@ Tato diplomová práce měla za úkol srovnat existující technologie pracujíc
 \bibitem{cleancode} MARTIN, Robert C. Clean code : a handbook of agile software craftsmanship. NJ : Prentice Hall: Upper Saddle River, 2009. ISBN 0132350882.
 \bibitem{wiki-sqla} http://en.wikipedia.org/wiki/SQLAlchemy
 \bibitem{sqla-doc} SQLAlchemy documentation Mike Bayer
+\bibitem{BasicORM} Implementace objektove-relačního mapování v datové vrstvě informačního systému pro platformu .NET
+\bibitem{EasyORM} Implementace objektově-relačního mapování v datové vrstvě informačního systému pro platformu Java Lubomír Turčík, 2010, Signatura: 201001844
 \end{thebibliography}
 
 
