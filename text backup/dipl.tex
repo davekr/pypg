@@ -249,7 +249,12 @@ Konektory pak využívají již zmíněné DBAL a složitější rámce a knihov
 Nad touto vrstvou je dnes velmi často postavena ještě další funkčnost mající za cíl problém Impedance mismatch ještě více ulehčit a abstrahovat. Touto funkčností je objektově relační mapování, v angličtině \textit{Object-Relational Mapping} (ORM). ORM lze považovat za nejvyšší míru abstrakce ze všech typů DAL.  \\
 Rozdělení existujících rámců a knihoven do těchto tří vrstev znázorňuje obrázek \ref{fig:Layers}.
 
-\InsertFigure{layers.png}{150mm}{Rozdělení existujících rámců a knihoven pracujících na datové vrstvě}{fig:Layers}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{layers.png}
+    \caption{Rozdělení existujících rámců a knihoven pracujících na datové vrstvě}
+    \label{fig:Layers}
+\end{figure}
 
 \section{Objektově relační mapování}
 \label{sec:ORM}
@@ -394,7 +399,7 @@ API obsahuje metody pomocí, kterých lze objekty filtrovat, agregovat, řadit, 
 Mezi nejdůležitější metody objektu \lstinline[style=inlinepython]|QuerySet| patří \lstinline[style=inlinepython]|all|, \lstinline[style=inlinepython]|filter|, \lstinline[style=inlinepython]|exclude| a \lstinline[style=inlinepython]|get|. Metoda \lstinline[style=inlinepython]|all| vrací všechny objekty daného modelu, \lstinline[style=inlinepython]|filter| jenom objekty, které splňují podmínku, \lstinline[style=inlinepython]|exclude| objekty, které podmínku nesplňují a \lstinline[style=inlinepython]|get| vrací jediný objekt pro danou podmínku.
 \lstinline[style=inlinepython]|QuerySet| je možné dále omezovat pomocí standardní konstrukce používané pro objekty typu pole v jazyce Python. ORM poskytuje i možnost zadat vlastní SQL, z jehož výsledku se pak vytvoří instance konkrétního modelu. \\
 Po každé operaci Django ORM provádí implicitně \lstinline[style=inlinepython]|commit|. Pokud je ORM použito nezávisle na rámci nejsou transakce podporovány. \\
-API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Další informace lze nalézt v oficiální dokumentaci \cite{djangodoc}.
+API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Další informace lze nalézt v oficiální dokumentaci \cite{djangodoc}. Ukázku API rámce Django ORM pro práci z daty zobrazuje výpis \ref{src:dj-query} v sekci \ref{subsubsec:Query}.
 
 \subsubsection{Optimalizace v Django ORM}
 \label{subsubsec:DjangoOpt}
@@ -501,7 +506,7 @@ Pro dotazování do databáze se používá stejný objekt jako pro práci s tab
 Při tvoření dotazů pomoci API se nemusí specifikovat tabulky, protože DBAL dokáže automaticky zjistit potřebné atributy z ostatních parametrů předaných do dotazu. To platí i u složitějších dotazů jako je například spojení tabulek. \\
 Výsledná data získaná z databáze lze dále filtrovat a to bez potřeby nového dotazu do databáze. DBAL k těmto účelům poskytuje speciální API, které pracuje s výslednými daty v paměti. \\
 DBAL umožňuje pokládat dotazy i za pomoci vlastně vytvořeného SQL. Takto sestavený dotaz však nevrací data ve formě instancí třídy \lstinline[style=inlinepython]|Row|, ale v základní formě, kterou vrací konkrétní databázový ovladač. \\
-Transakce jsou v DBAL automaticky započaty, jakmile jsou vyžadovány nějaké operace nad databází. Po vykonání potřebných operací je potřeba vždy explicitně provést \lstinline[style=inlinepython]|commit| nebo \lstinline[style=inlinepython]|rollback|.
+Transakce jsou v DBAL automaticky započaty, jakmile jsou vyžadovány nějaké operace nad databází. Po vykonání potřebných operací je potřeba vždy explicitně provést \lstinline[style=inlinepython]|commit| nebo \lstinline[style=inlinepython]|rollback|. Ukázku API rámce web2py DBAL pro práci z daty zobrazuje výpis \ref{src:w2p-query} v sekci \ref{subsubsec:Query}.
 
 \subsubsection{Optimalizace ve web2py DBAL}
 DBAL neposkytuje mnoho optimalizací pro dotazování do databáze, jelikož syntaxe API je velmi podobná SQL a je tak možné pomocí tohoto API vytvořit skoro jakýkoliv SQL dotaz.  \\
@@ -584,6 +589,7 @@ Pokud je objekt zaregistrovaný v sezení aktualizován, sezení tuto změnu aut
 
 Při vytváření dotazů do databáze vrací sezení instanci třídy \lstinline[style=inlinepython]|Query|. Tento objekt poskytuje metody pro získávání objektů z databáze. Metody umožňují objekty filtrovat, limitovat a řadit. Výsledky je možné získat ve formě instancí mapovacích tříd nebo v objektech typu pole. API umožňuje při získávání objektů z databáze zadat části dotazu ve formě vlastně vytvořeného SQL. \\
 SQLAlchemy ORM využívá při práci s objekty strukturu Identity Map. Při získávání objektů z databáze tato struktura zjistí, zda je objekt se stejnými daty v sezení již registrován, a pokud ano vrací pouze referenci na tento objekt. Funguje také zčásti jako jednoduchá keš, která obsahuje objekty rozdělené podle jejich unikátního identifikátoru. Objekty jsou v Identity Map registrovány pouze po dobu transakce. Jakmile transakce skončí, data jsou označena jako zastaralá a všechny data objektů v paměti je potřeba znovu načíst z databáze. \\
+Ukázku API rámce SQLAlchemy pro práci z daty zobrazuje výpis \ref{src:sqla-query} v sekci \ref{subsubsec:Query}.
 
 \subsubsection{Optimalizace v SQLAlchemy}
 \label{subsubsec:sqla-opt}
@@ -619,11 +625,12 @@ Pro praktické srovnání rámců popsaných v této kapitole bude každý z nic
     \label{fig:BlogappErd}
 \end{figure}
 
+Výpisy v sekci \ref{subsubsec:Mapping} zobrazují mapování entit \lstinline[style=inlinepython]|Person| a \lstinline[style=inlinepython]|Author| pro rámce Django ORM, web2py DBAL a SQLAlchemy. Kompletní mapování struktur z diagramu na obrá- zku \ref{fig:BlogappErd} byly pro svoji délku vloženy do přílohy \ref{sec:ApendixMapping}. Reprezentace těchto struktur v databázi vygenerovaná rámci z těchto mapování je pak zobrazena v příloze \ref{sec:AppnedixSQL}. \\
+Výpisy v sekci \ref{subsubsec:Query} zobrazují ukázku práci s daty v rámcích Django ORM, web2py DBAL a SQLAlchemy. Výpisy jsou ve formátu příkazové řádky, kdy řádek začínající znakem \lstinline[style=inlinepython]|>>>| reprezentuje operace, které je možné zadat na příkazové řádce jazyka Python, následované výstupem, které tyto operace vyvolaly. Ve výpisech jsou také přidány SQL dotazy, které jsou vygenerovány rámci. Tyto dotazy jsou vypsány na místech, kdy jsou odeslány do databáze. \\
+Všechny výpisy vykonávají stejné operace. Nejdříve vytvoří nový záznam v tabulce \lstinline[style=inlinepython]|blog|. Poté tento záznam aktualizují a získají z databáze jeho vazební objekty ve formě záznamů tabulky \lstinline[style=inlinepython]|entry|. Dále je pak vytvořen dotaz do databáze na první záznam tabulky \lstinline[style=inlinepython]|entry|, jehož atribut \lstinline[style=inlinepython]|rating| je větší než nula a jehož atribut \lstinline[style=inlinepython]|headline| je první v abecedním pořadí. Nakonec jsou získány všechny záznamy tabulky \lstinline[style=inlinepython]|blog| seřazené podle atributu \lstinline[style=inlinepython]|name| pomocí vlastně vytvořeného SQL.
+
 \subsubsection{Mapování}
-Následující výpisy zobrazují mapování entit \lstinline[style=inlinepython]|Person| a \lstinline[style=inlinepython]|Author| pro rámce Django ORM, SQLAlchemy a web2py DBAL. Kompletní mapování struktur z diagramu na obrázku \ref{fig:BlogappErd} byly pro svoji délku vloženy do přílohy \ref{sec:ApendixMapping}. Reprezentace těchto struktur v databázi vygenerovaná rámci z těchto mapování je pak zobrazena v příloze \ref{sec:AppnedixSQL}.
-
-\clearpage
-
+\label{subsubsec:Mapping}
 \begin{lstlisting}[style=custompython, emphstyle={\bfseries}, label=src:Light-Mapping, caption=Ukázka mapování v Django ORM]
 class Person(models.Model):
     firstname = models.CharField(max_length=50)
@@ -673,7 +680,7 @@ class Author(Person):
 \clearpage
 
 \subsubsection{Dotazování}
-
+\label{subsubsec:Query}
 \begin{lstlisting}[style=custompython, label=src:dj-query, caption={Ukázka práce s daty v Django ORM}]
 >>> blog = Blog(name="New blog")
 >>> blog.save()
@@ -693,7 +700,7 @@ class Author(Person):
 [<Blog: Blog object>]
 \end{lstlisting}
 
-\begin{lstlisting}[style=custompython, label=src:w2p-query, caption={Ukázka získávání dat z databáze ve web2py DBAL}]
+\begin{lstlisting}[style=custompython, label=src:w2p-query, caption={Ukázka práce s daty ve web2py DBAL}]
 >>> db.blog.insert(name="New blog")
 #INSERT INTO blog(name) VALUES ('New blog');
 1L
@@ -713,7 +720,7 @@ class Author(Person):
 \end{lstlisting}
 \clearpage
 
-\begin{lstlisting}[style=custompython, label=src:sqla-query, caption={Ukázka získávání dat z databáze v SQLAlchemy}]
+\begin{lstlisting}[style=custompython, label=src:sqla-query, caption={Ukázka práce s daty v SQLAlchemy}]
 >>> Session = sessionmaker(bind=engine)
 >>> session = Session()
 >>> blog = Blog(name="New blog")
@@ -723,7 +730,7 @@ class Author(Person):
 #SELECT blog.id AS blog_id, ... FROM blog WHERE blog.id = 1
 1
 >>> blog.name = "New name"
->>> blog.entry.select()
+>>> blog.entry.all()
 #UPDATE blog SET name='New name' WHERE blog.id = 1
 #SELECT entry.id AS entry_id, ... FROM entry WHERE 1 = entry.blog_id
 >>> query = session.query(Entry).filter(Entry.rating > 0)
@@ -886,13 +893,19 @@ V některých případech však získávání dat pomocí samostatných dotazů 
 Vytvářenou knihovnu jsem nazval pypg. Knihovna bude splňovat všechny požadavky uvedené v sekci \ref{sec:Design}. Bude napsaná v jazyce Python a bude se specializovat na komunikaci se SŘBD PostgreSQL. Dále bude obsahovat jednoduché dotazovací API do databáze, které bude velmi podobné SQL. Knihovna bude malá, její architektura přehledná a požadavky na spuštění budou minimální. Bude obsahovat pouze funkce, které budou využívány při tvorbě systému firmou deving a svými funkcemi bude urychlovat operace pro čtení dat z databáze. \\
 
 \subsection{Klíčové vlastnosti}
-
-
+\begin{itemize}
+\item Knihovna nebude obsahovat objektově-relační mapování a podobně jako web2py DBAL bude mapovat databázové tabulky a řádky na instance a třídy reprezentující množiny a záznamy. Vzhledem k tomu, že nebude použito O/R mapování se knihovna nebude řídit žádným návrhovým vzorem pro toto mapování. Mapování knihovny pypg však bude zčásti podobné návrhovému vzoru Table Data Gateway. \\
+\item Knihovna nebude obsahovat žádný mechanismus pro definování strukturu v databázi. Vytvoření databázových tabulek knihovna nechá na uživateli. Při jejím pou- žívání tak nebude nutné tuto strukturu definovat a bude ji možné jednoduše použít s existující databází. Knihovna bude podporovat pouze jednoduché primární klíče. \\
+\item Rámce popsané v kapitole \ref{sec:Comparison} používají k vytváření dotazů do databáze mapování struktur nadefinované uživatelem. Jelikož tuto funkci knihovna nebude obsahovat, bude metadata databázové struktury potřebné pro sestavování dotazů získávat pomocí introspekce. Kompletní schéma databáze tak bude zjištěno při startu knihovny z informačního schématu SŘBD PostgreSQL. \\
+\item Knihovna bude metadata databázového schématu používat i pro různá zjednodu- šení. Například budou tato data využita pro automatické kompletování při psaní kódu, pro výjimky knihovny nebo pro validování vytvořených dotazů. Zároveň však nebudou vyzrazovány údaje o databázovém schématu, pokud bude knihovna nasazena v provozu. \\
+\item Introspekci dat nebude knihovna vyžadovat. Bude možné introspekci nahradit sadou předpisů, která bude určovat, jakými pravidly se řídí schéma v databázi. Toho bude možné dosáhnout rozšířením třídy \lstinline[style=inlinepython]|Naming| a předefinováním patřičných metod. Implicitně bude tato třída obsahovat pravidla, které budou určovat, že primární klíč každé tabulky má název \lstinline[style=inlinepython]|id| a každý cizí klíč odkazující se na tabulku \lstinline[style=inlinepython]|tabulka| má název \lstinline[style=inlinepython]|tabulka_id|. \\
+\item Knihovna nebude poskytovat žádnou validaci dat. Pro zajištění konzistence dat je lepší, pokud se data validují pouze v databázi, protože při přístupu do databáze přes jinou aplikaci může dojít k inkonzistenci dat \cite{notorm-why}. \\
+\end{itemize}
 
 \subsection{Architektura}
 
 Při vytváření knihovny bude kladem zřetel na čistotu a jednoduchou strukturu kódu. Kniha Roberta Martina poslouží jako zdroj pravidel a postupů při vytváření knihovny pypg \cite{cleancode}. Celková funkčnost bude tak rozdělena do kompaktních jednoduchých tříd, které budou většinou v samostatných modulech. Názvy funkcí, metod a proměnných budou vytvořeny s rozvahou tak, aby nepotřebovaly komentáře. Komentáře v kódu zastarávají a často jim není věnována stejná pozornost při změnách, což vede ke zmateným informacím  \cite{cleancode}. Jediným zdrojem pravdivých informací (SSOT) je kód. Knihovna tedy nebude obsahovat mnoho komentářů, ale bude napsána se snahou, aby kód popisoval sám sebe. Knihovna bude z 95\% pokryta jednotkovými testy, které budou zjednodušovat případné změny\footnote{Pro zjištění pokrytí kódu testy bude využit Python coverage (https://pypi.python.org/pypi/coverage)}. \\
-Níže jsou popsány třídy, které budou hlavní kostrou knihovny.
+Níže jsou popsány třídy, které budou hlavní kostrou knihovny. Všechny tyto třídy zobrazuje diagram na obrázku \ref{fig:Clsdiag}.
 
 \begin{description}
 \item[PyPg] Třída je vstupním bodem celé knihovny. Umožňuje nastavovat vlastnosti knihovny a poskytuje přístup k objektům třídy \lstinline[style=inlinepython]|Table|. Pomocí této třídy se spouští i vytváření materializovaných pohledů a automatická denormalizace.
@@ -914,9 +927,12 @@ Níže jsou popsány třídy, které budou hlavní kostrou knihovny.
 \item[ResultCache] Třída uchovává data při použití funkce samostatných dotazů. Umožňuje v těchto datech vyhledávat a rozdělovat je podle příslušných vazeb. Je využívána třídou \lstinline[style=inlinepython]|ResultSet|.
 \end{description}
 
-Všechny tyto třídy zobrazuje diagram na obrázku \ref{fig:Clsdiag}.
-
-\InsertFigure{architektura.png}{150mm}{Diagram tříd knihovny pypg}{fig:Clsdiag}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{architektura.png}
+    \caption{Diagram tříd knihovny pypg}
+    \label{fig:Clsdiag}
+\end{figure}
 
 \subsection{Funkce pro zrychlení čtení dat}
 \label{subsec:PyPgOpt}
@@ -946,12 +962,18 @@ Výstupem bude seznam otestovaných denormalizačních změn, který obsahuje do
 %Ukázku výstupu této operace zobrazuje tabulka/obrázek TODO. 
 Celý proces automatické denormalizace lze vidět na obrázku \ref{fig:Autoden}. Mezi denormalizačními změny bude podporován pouze materializovaný pohled.
 
-\InsertFigure{autodenormalizace.png}{150mm}{Diagram aktivit zobrazující procesy automatické denormalizace}{fig:Autoden}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{autodenormalizace.png}
+    \caption{Diagram aktivit zobrazující procesy automatické denormalizace}
+    \label{fig:Autoden}
+\end{figure}
 
 \subsubsection{Minimalizace přenášených dat}
 
 Knihovna bude implementovat mechanismus popsaný v sekci \ref{subsubsec:Selectin}. Tento mechanismus zmenšuje objem přenášených dat pomocí samostatných dotazů a tak i urychluje čtení z databáze. Celková funkčnost bude prováděna na pozadí a při dotazování nebude potřeba nic dalšího implementovat. \\
-Jak bude fukce vypadat zobrazuje výpis \ref{src:imp-selectin}. Tento výpis používá strukturu definovanou v sekci \ref{subsec:CodeCompare}. Výstupem tohoto výpisu je seznam všech blogů a pro každý blog prvních deset příspěvků v tomto blogu a jejich autoři.
+Jak bude fukce vypadat zobrazuje výpis \ref{src:imp-selectin}. Tento výpis používá strukturu definovanou v sekci \ref{subsec:CodeCompare}. Výstupem tohoto výpisu je seznam všech blogů a pro každý blog prvních deset příspěvků v tomto blogu a jejich autoři. Knihovna v tomto případě provede pouze 4 dotazy. Jeden dotaz pro získání dat z každé tabulky použité v tomto výpisu (\lstinline[style=inlinepython]|blog|, \lstinline[style=inlinepython]|entry|, \lstinline[style=inlinepython]|entry_authors| a \lstinline[style=inlinepython]|author|). \\
+Knihovna bude rozpoznávat, že se výsledek dotazu prochází smyčkou, uloží si primární klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomoci těchto klíčů vytvoří nový dotaz. Jelikož by nebylo efektivní vytvářet při každém přístupu k relaci nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří knihovna takový dotaz, kterým budou získány všechny relace od všech záznamů najednou. Tyto relace potom bude distribuovat ke konkrétním záznamům. \\
 
 \begin{lstlisting}[style=custompython, label=src:imp-selectin, caption={Návrh implementace samostatných dotazů v pypg}]
 >>>for blog in db.blog.select()
@@ -965,8 +987,6 @@ Jak bude fukce vypadat zobrazuje výpis \ref{src:imp-selectin}. Tento výpis pou
 ...            print author.first_name, author.last_name
 \end{lstlisting}
 
-Knihovna v tomto případě provede pouze 4 dotazy. Jeden dotaz pro získání dat z každé tabulky použité v tomto výpisu (\lstinline[style=inlinepython]|blog|, \lstinline[style=inlinepython]|entry|, \lstinline[style=inlinepython]|entry_authors| a \lstinline[style=inlinepython]|author|). \\
-Knihovna bude rozpoznávat, že se výsledek dotazu prochází smyčkou, uloží si primární klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomoci těchto klíčů vytvoří nový dotaz. Jelikož by nebylo efektivní vytvářet při každém přístupu k relaci nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří knihovna takový dotaz, kterým budou získány všechny relace od všech záznamů najednou. Tyto relace potom bude distribuovat ke konkrétním záznamům. \\
 V případě druhého cyklu ve výpisu \ref{src:imp-selectin}, kdy je dotazováno prvních 10 příspěvků blogu, bude tedy dotaz proveden pouze při prvním průchodu prvního cyklu a při dalších průchodech budou pak již využívána kešovaná data. Tento mechanismus bude fungovat nezávisle na počtu smyček. \\
 Knihovna bude dotazy pro relační objekty skládat za pomocí introspekce a nebo pomocí pravidel struktury databáze. Seznam všech dotazů, které se provedou pro výpis \ref{src:imp-selectin}, zobrazuje výpis \ref{src:sql-selectin}.
 
@@ -980,9 +1000,35 @@ SELECT * FROM "author" WHERE id IN (1, 2, 3, 4...);
 	--Do pomínky jsou použity hodnoty entry_authors.author_id
 \end{lstlisting}
 
+\subsection{Návrh syntaxe}
+
+Při návrhu syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelnost dotazů, které se provádějí na pozadí. Zčásti byla syntaxe inspirována dotazovacím API web2py DBAL a SQLAlchemy a knihovnou NotORM. Podle mého názoru je tedy k jejímu porozumění potřeba minimum znalostí, pokud je uživatel již obeznámený se syntaxí SQL. \\
+Ukázku navržené syntaxe zobrazuje výpis \ref{src:pypg}. Tento výpis používá schéma definované v sekci \ref{subsec:CodeCompare} a řídí se stejnými pravidly jako výpisy v sekci \ref{subsubsec:Mapping} tak, aby bylo možné tyto výpisy mezi sebou porovnat. \\ 
+Všechny možnosti API knihovny pro práci s daty, sestavování dotazů a jejich kompletní popis lze nalézt v příloze \ref{sec:Appendixcd} v uživatelské příručce.
+
+\clearpage
+
+\begin{lstlisting}[style=custompython, label=src:pypg, caption={Návrh syntaxe knihovny pypg}]
+>>> db = PyPg(conn, debug=True, strict=True)
+>>> blog = db.blog.insert_and_get(name="New blog")[0]
+#INSERT INTO "blog" ("name") VALUES ('New blog') RETURNING *
+>>> blog['id']
+1
+>>> blog.update(name = "New name")
+#UPDATE "blog" SET "name"='New name' WHERE "id"=1 
+>>> blog.entry.select()[0]
+#SELECT * FROM "entry"  WHERE "blog_id"=1
+>>> where = db.entry.select().where(db.entry.rating > 0)
+>>> entry = query.order(db.entry.headline).limit(1)[0]
+#SELECT * FROM "entry"  WHERE entry.rating > 0 ORDER BY entry.headline LIMIT 1
+>>> Query().execute_and_fetch('SELECT * FROM "blog" ORDER BY blog.name')
+#SELECT * FROM "blog" ORDER BY blog.name
+[[1, 'New name', None]]
+\end{lstlisting}
+
 \subsection{Funkce, které budou v budoucnu implementovány}
 
-Tyto funkce byly původně obsaženy v požadavcích pro tvorbu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti a nižší prioritě na základě požadavků popsaných v sekci \ref{sec:Design}, nebudou implementovány. Kvůli časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
+Tyto funkce byly původně obsaženy v návrhu knihovny a počítalo se s jejich implementací. Postupem času se však ukázalo, že vzhledem k jejich časové náročnosti a nižší prioritě na základě požadavků popsaných v sekci \ref{sec:Design}, nebudou implementovány. Kvůli časovému omezení diplomové práce jsou tedy tyto funkce považovány nad rámec této práce. \\
 Jak bylo popsáno výše, knihovna ovšem bude později používána jako prostředek pro tvorbu systémů firmy deving. Do budoucna se tedy plánuje s dalšími vylepšeními knihovny, mezi kterými budou i níže popsané funkce.
 
 \subsubsection{Tvoření dotazů pomocí SQL}
@@ -1027,57 +1073,6 @@ Z databáze budou data vrácena ve formátu JSON, který umožní jejich kompres
 
 Knihovna tyto data poté na pozadí zpracuje a vypíše v požadované podobě. \\
 Kromě této funkce bude knihovna na základě dotazu, implicitně rozhodovat o jeho provedení pomocí samostatných dotazů nebo spojení tabulek s výsledkem vráceným ve formátu JSON.
-
-\subsection{Mapování v pypg}
-
-Knihovna neobsahuje objektově-relační mapování a podobně jako web2py DBAL mapuje tabulky a záznamy na instance a třídy reprezentující množiny a záznamy. \\
-Definice a generování struktury databáze za pomocí modelů knihovna nepodporuje a slouží pouze jako generátor dotazů. Knihovna nechává vytvoření tabulek na uživateli. Při jejím používání tak není nutné definovat strukturu a je ji možné jednoduše použít i pro existující databázi. \\
-Knihovna pro správnou funkčnost potřebuje před spuštěním zjistit strukturu databáze. Toho je dosaženo buď pomocí introspekce, kdy si knihovna strukturu načte do paměti, a nebo pomocí sady pravidel, které struktura databáze dodržuje. Implicitně sada pravidel určuje pro každou tabulku primární klíč s názvem \lstinline[style=inlinepython]|id| a cizí klíč s názvem \lstinline[style=inlinepython]|'tabulka'_id| odkazující na primární klíč tabulky \lstinline[style=inlinepython]|'tabulka'|. Tuto sadu pravidel lze uzpůsobit potřebám poděděním třídy \lstinline[style=inlinepython]|pypg.structure.Naming| a přepsáním jednotlivých metod pro získávání informací o struktuře. Instanci této třídy je pak potřeba předat při inicializaci knihovny. Knihovna momentálně nepodporuje složené klíče. \\
-Vstupním bodem pro práci s knihovnou je třída \lstinline[style=inlinepython]|PyPg|. Konstruktor této třídy přijímá jako parametr spojení do databáze vytvořené pomocí ovladače psycopg2, jak zobrazuje řádek 5 ve výpisu \ref{src:pypg}. Při vytváření instance lze předat i další parametry, které slouží pro nastavení různých vlastností knihovny. Příkladem je parametr \lstinline[style=inlinepython]|debug|, který určuje zda má knihovna logovat dotazy prováděné do databáze. Pro logování je využito standardního logování v jazyce Python. Implicitně je logování nastaveno na standardní výstup. \\ 
-Dalším možným nastavením je parametr \lstinline[style=inlinepython]|strict|. Tento parametr určuje, zda se má provádět introspekce, jejíž výsledky se ukládají v paměti, a na základě této introspekce pak validace dotazů před jejich spuštěním nad databází. Seznam všech nastavení a podrobnější informace lze nalézt v uživatelské příručce v příloze \ref{sec:Appendixcd} na CD/DVD. \\
-Kromě validace dotazů knihovna neposkytuje žádnou validaci dat. Pro zajištění konzistence dat je lepší, pokud se data validují pouze v databázi, protože při přístupu do databáze přes jinou aplikaci může dojít k inkonzistenci dat \cite{notorm-why}. \\
-
-\subsubsection{Práce s řádkem tabulky}
-
-Knihovna na dotaz do databáze vrací data ve formě instancí třídy \lstinline[style=inlinepython]|pypg.row.Row|. Tato třída podobně jako ve web2py DBAL umožňuje základní manipulaci s řádkem. Ukázku zobrazují ve výpisu \ref{src:pypg} řádky 6-11. Instance obsahuje metody pro aktualizaci a mazání řádku. Při aktualizaci se do databáze zasílají pouze změněné atributy. \\
-Přes instanci řádku se lze dostat také k vazebním záznamům. Knihovna podporuje i zpětné relace, kdy je možné vazební objekty dále filtrovat. Příklad je zobrazen na řádku 9, kdy je přistupováno k prvním deseti záznamům blogu \lstinline[style=inlinepython]|blog|.
-
-\subsection{Dotazování}
-
-Při tvorbě syntaxe knihovny pypg byl kladen zřetel na jednoduchost a čitelnost dotazů, které se provádějí na pozadí. Zčásti byla syntaxe inspirována dotazovacím API web2py DBAL a SQLAlchemy a knihovnou NotORM. Podle mého názoru je tedy k jejímu porozumění potřeba minimum znalostí, pokud je uživatel již obeznámený se syntaxí SQL. \\
-
-\begin{lstlisting}[style=custompython, numbers=left, label=src:pypg, caption={Základy práce s knihovnou pypg}]
->>> import psycopg2
->>> from pypg import PyPg
->>> conn = psycopg2.connect("dbname=database user=username")
->>> db = PyPg(conn, debug=True, strict=True)
->>> db.blog.insert(name="David's new blog")
->>> blog = db.blog.insert_and_get(name="Another blog")[0]
->>> blog['id']
-2
->>> blog.entry.limit(10).select()
-#SELECT * FROM "entry" WHERE entry.blog_id =2 LIMIT 10
->>> blog.update(name = "Better name for the blog")
->>> db.blog.where(db.blog.id == 2).update(name = "Better name for the blog")
->>> db.blog.where(db.blog.id == 1).delete()
->>> query = db.blog.select().where(db.blog.name == "Better name for the blog") #Neprovádí se dotaz
->>> query = query.limit(10) #Neprovádí se dotaz
->>> print query[0]
-#SELECT * FROM "blog"  WHERE blog.name = 'Better name for the blog' LIMIT 10
-[2, 'Better name for the blog', None]
->>> db.blog.order(db.blog.name).where(db.blog.name.like("%blog")).select(db.blog.name)[0]
-#SELECT blog.id, blog.name FROM "blog" WHERE blog.name LIKE '%blog' ORDER BY blog.name
->>> db.blog.join(db.entry).select()[0]
-#SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.blog_id
->>> db.blog.join(db.entry, on=db.entry.id == db.blog.id).select()[0]
-#SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.id
-\end{lstlisting}
-
-Přes instanci třídy \lstinline[style=inlinepython]|PyPg| se lze dostat k objektům třídy \lstinline[style=inlinepython]|pypg.table.Table| představující databázové tabulky a v případě zapnuté introspekce je možné zobrazit seznam všech tabulek. Objekty tabulek poskytují metody k vytvoření SQL dotazů. Dotazy, které čtou data z databáze se vyhodnocují až v případě, kdy je to opravdu potřeba. Je tedy možné dotazy řetězit. Řádky 14-16 ve výpisu \ref{src:pypg} zobrazují toto chování. \\
-Knihovna podporuje nejpoužívanější konstrukce pro sestavování dotazu. Řádek 19 zobrazuje dotaz na seřazené názvy všech blogů, které končí slovem \uv{blog}. Je zde také vidět, že při řetězení jednotlivých podmínek nezáleží na jejich pořadí. \\
-Přes instanci třídy představující databázovou tabulku lze přistoupit na objekty typu \lstinline[style=inlinepython]|pypg.column.Column|. Tyto objekty lze porovnávat a vytvářet tak podmínky při dotazování a obsahují i metody, které generují příslušné SQL jako například metoda \lstinline[style=inlinepython]|like|. \\
-API poskytuje možnost vytvářet dotazy i pomocí spojení tabulek. Ukázka je zobrazena na řádku 21 a 23 ve výpisu \ref{src:pypg}. Metoda \lstinline[style=inlinepython]|join| přijímá jako argument instanci třídy \lstinline[style=inlinepython]|pypg.table.Table| a nepovinný argument \lstinline[style=inlinepython]|on|. Pokud je nepovinný argument prázdný, knihovna se pokusí podmínku spojení doplnit implicitně za pomocí introspekce nebo sady pravidel. \\
-Knihovna obsahuje i další možnosti pro sestavování dotazů a jejich kompletní popis lze nalézt v příloze \ref{sec:Appendixcd} v uživatelské příručce.
 
 \section{Porovnání knihovny pypg s ostatními rámci}
 \label{sec:Bench}
@@ -1324,7 +1319,7 @@ Materializované pohledy vytvořené knihovnou pypg na tento test neměly vliv.
 \end{table}
 
 \subsubsection{Test 6 - vytvoření nového zákazníka a objednávky}
-V šestém testu dopadla knihovna pypg nejhůře, jelikož neposkytuje žádné optimalizace pro zápis dat. Všechny ostatní rámce poskytují možnost hromadného ukládání. Rámec web2py dopadl nejlépe jelikož nejefektivněji pracuje s ukládáním dat. Při uložení získává zpět z databáze pouze primární klíč ukládaného záznamu, což se v tomto případě hodí. Výsledky tohoto testu zobrazuje graf na obrázku \ref{fig:TestNCO} a tabulka \ref{tab:TestNCO}.\\
+V šestém testu dopadla knihovna pypg nejhůře, jelikož neposkytuje žádné optimalizace pro zápis dat. Všechny ostatní rámce poskytují možnost hromadného ukládání. Rámec web2py dopadl nejlépe, jelikož nejefektivněji pracuje s ukládanými daty. Výsledky tohoto testu zobrazuje graf na obrázku \ref{fig:TestNCO} a tabulka \ref{tab:TestNCO}.\\
 Materializované pohledy vytvořené knihovnou pypg na tento dotaz neměly vliv. \\
 
 \begin{figure}[h!]
@@ -1399,7 +1394,7 @@ Tato diplomová práce je podobná svou strukturou předchozím diplomovým prac
 
 
 \appendix
-\section{Výpisy mapování rámců z kapitoly \ref{sec:Comparison}}
+\section{Výpisy mapování rámců ze sekce \ref{subsec:CodeCompare}}
 \label{sec:ApendixMapping}
 \begin{lstlisting}[style=custompython, emphstyle={\bfseries}, label=src:Mapping, caption=Schéma jednoduché aplikace pro vytváření blogů v Django ORM]
 from django.db import models
@@ -1542,7 +1537,7 @@ class VlogEntry(Base):
     }
 \end{lstlisting}
 
-\section{Výpisy SQL vygenerované rámci z kapitoly \ref{sec:Comparison}}
+\section{Výpisy SQL vygenerované rámci ze sekce \ref{subsec:CodeCompare}}
 \label{sec:AppnedixSQL}
 \begin{lstlisting}[label=src:SQLMapping, caption=Reprezentace modelů z výpisu \ref{src:Mapping} v PostgreSQL vygenerovaná rámcem Django ORM, style=customsql]
 CREATE TABLE "myapp_blog" (
