@@ -137,18 +137,19 @@ literate=%
 
 \PrintPublicationAgreement{true}
 
-\Thanks{Rád bych na tomto místě poděkoval všem, kteří mi pomohli, protože bez nich by tato práce nevznikla.}
+\Thanks{Rád bych na tomto místě poděkoval všem, kteří mi k vytvoření práce dopomohli, protože bez nich by tato práce nevznikla.}
 
-\CzechAbstract{Abstrakt cz}
+\CzechAbstract{Tato diplomová práce se zaměřuje na problém, který představuje komunikace aplikačního softwaru s relačním databázovým systémem. Popisuje datovou vrstvu aplikačního softwaru, její funkce a vlastnosti. Rozebírá objektově-relační mapování a návrhové vzory využívané při použití tohoto mapování. Dále pak seznamuje čtenáře s existujícími technologiemi pracujícími na datové vrstvě vytvořenými v jazyce Python a zaměřuje se na optimalizační techniky používané pro zefektivnění komunikace s relační databází. Výstu- pem této práce je knihovna optimalizovaná pro komunikaci s relačním databázovým systémem PostgreSQL. V práci je popsán návrh této knihovny a optimalizačních technik. V závěru je pak vytvořená knihovna srovnána s existujícími technologiemi pomocí rychlostních testů.}
 
-\CzechKeywords{Keywords cz}
+\CzechKeywords{Datová vrstva, Objektově-relační mapování, Optimalizace, SŘBD, PostgreSQL, Python, Django ORM, web2py DBAL, SQLAlchemy}
 
-\EnglishAbstract{Abstrakt en}
+\EnglishAbstract{This master's thesis focuses on difficuilties, which appear when application software is used with relational database system. It contains description of application data access layer and its characteristics, object-relational mapping and design patterns. Existing technologies used for data access created with Python programming language are described in this thesis. Furthermore, techniques optimizing the communication with relational database are discussed. The goal of this thesis was to create a new software for application data layer, that would focus on optimization of usage of DBMS PostgreSQL. The thesis goes through the design of this software and it's techniques. The software is tested against the existing technologies at the end.}
 
-\EnglishKeywords{Keywords en}
+\EnglishKeywords{Data access layer, Object-relational mapping, Optimization, DBMS, PostgreSQL, Python, Django ORM, web2py DBAL, SQLAlchemy}
 
 % Pridame pouzivane zkratky (pokud nejake pouzivame).
 \AddAcronym{SŘBD}{Systém řízení báze dat}
+\AddAcronym{DBMS}{Database Management System}
 \AddAcronym{DAL}{Data-Access Layer}
 \AddAcronym{DBAL}{Database-Abstraction Layer}
 \AddAcronym{SQL}{Structured Query Language}
@@ -164,7 +165,7 @@ literate=%
 \AddAcronym{CMS}{Content Management System}
 \AddAcronym{SSOT}{Single Source Of Truth}
 \AddAcronym{JSON}{JavaScript Object Notation}
-\AddAcronym{POCO} {Plain Old Python Object}
+\AddAcronym{POPO} {Plain Old Python Object}
 
 % Zacatek dokumentu
 \begin{document}
@@ -193,16 +194,16 @@ literate=%
 % Zacneme uvodem
 \section{Úvod}
 \label{sec:Intro}
-Systémy řízení báze dat (SŘBD) jsou dnes velmi rozšířenými systémy používanými pro ukládání dat v aplikačním softwaru. Velice používaným typem databázových systému jsou databáze relační. Na problém, který představuje komunikace aplikačního softwaru s relačním databázovým systémem, se zaměřuje tato diplomová práce. \\
-Při použití relační databáze pro ukládání dat a objektově orientovaných jazyků pro zpracovávání těchto dat nastává mnoho problémů, které plynou ze vzájemné nekompatibility těchto dvou technologií. Z tohoto důvodu je potřeba v aplikačním softwaru vytvořit datovou vrstvu, která slouží jako tlumočník mezi relační databází a aplikační logikou. \\
-Praktická část práce sestává z implementace knihovny pro datovou vrstvu orientující se na SŘBD PostgreSQL. Tato knihovna se zaměřuje na optimalizaci komunikace s tímto SŘBD. \\
+Aplikační softwary dnes ve velké míře pro ukládání dat používají systémy řízení báze dat (SŘBD). Velmi rozšířeným typem databázových systémů jsou relační databáze. Při použití relačních databází ovšem nastává mnoho prolbémů, pokud je aplikační software vyvinut pomocí objektvě orientovaného jazyka. Relační databáze totiž pro práci s daty používají dotazovací jazyky, které nejsou velmi kompatibilní s objektově orientovanými jazyky. Tyto dvě technologie se mezi sebou liší hlavně datovými typy, strukturami dat a řešením relací mezi entitami. \\
+Relační databázi tedy nelze v aplikačním softwaru použít přímo. Proto dnes většina systémů obsahuje mezivrstvu, která slouží jako prostředník mezi těmito technologiemi. Tato vrstva se nazývá datová vrstva. Datová vrstva řeší tuto nekompatibilitu, abstrahuje relační databázový systém a poskytuje objektově orientované aplikační rozhraní. Jelikož je relační databáze většinou nejzatěžovanější částí v celém systému, je také důležité, aby byla datová vrstva výkonná a komunikovala s databází efektivně. \\
+Tato diplomová práce se zaměřuje na technologie vytvořené pro realizaci datové vrstvy. Popisuje všechny vlastnosti této vrstvy a porovnává existující technologie pracující na této vrstvě. Dále se pak soustřeďuje na výkon a optimalizaci komunikace s relační databází, konkrétně pak se SŘBD PostgreSQL. Praktická část práce sestává z implementace knihovny pro datovou vrstvu orientující se na toto SŘBD, která se zaměřuje na optimalizaci komunikace s tímto SŘBD. \\
 V kapitole \ref{sec:Layers} je popsáno rozdělení architektury aplikačního softwaru do vrstev. Je zde popsána datová vrstva a jsou zde vysvětleny základní pojmy spojené s přístupem k relačním databázím pomocí objektově orientovaných jazyků. \\
-Kapitola \ref{sec:ORM} popisuje nejpoužívanější řešení pro datovou vrstvu, objektově-relační mapování. Jsou zde popsány různé přístupy mapování a návrhové vzory, kterými se řídí rámce implementující objektově-relační mapování. \\
-Kapitola \ref{sec:Comparison} obsahuje srovnání a popis existujících řešení pracujících na datové vrstvě vytvořených v jazyce Python. Jsou zde dopodrobna rozebrány rámce Django ORM, web2py DBAL a SQLAlchemy. U každého rámce jsou napsány jeho nevýhody. \\
-V kapitole \ref{sec:Design} jsou popsány důvody vytvoření nové knihovny, požadavky na její implementaci a funkce, které bude vytvořená knihovna obsahovat. Je zde shrnuto také, proč nebyly použity existující rámce. \\
-Implementaci knihovny popisuje kapitola \ref{sec:Impl}. Tato kapitola rozebírá vytvořenou knihovnu podobným způsobem jako existující rámce v kapitole \ref{sec:Comparison} a to tak, aby bylo možné tato řešení porovnat. Dále je zde rozebrána architektura knihovny a popis řešení pro optimalizaci komunikace se SŘBD PostgreSQL. \\
+Kapitola \ref{sec:ORM} popisuje velmi používané řešení pro datovou vrstvu, objektově-relační mapování. Jsou zde popsány různé přístupy mapování a návrhové vzory, kterými se řídí rámce implementující objektově-relační mapování. \\
+Kapitola \ref{sec:Comparison} obsahuje srovnání a popis existujících řešení pracujících na datové vrstvě vytvořených v jazyce Python. Jsou zde dopodrobna rozebrány rámce Django ORM, we- b2py DBAL a SQLAlchemy. U každého rámce jsou napsány jeho nevýhody. \\
+V kapitole \ref{sec:Design} jsou popsány důvody vytvoření nové knihovny, požadavky na její implementaci a funkce, které by vytvořená knihovna měla obsahovat. Je zde shrnuto také, proč nebyly použity existující rámce. \\
+Návrh knihovny popisuje kapitola \ref{sec:Impl}. Tato kapitola rozebírá návrh aplikačního rozhraní této knihovny a klíčové funkce, které bude knihovna obsahovat. Dále je zde analyzována architektura knihovny a popis návrhu řešení pro optimalizaci komunikace se SŘBD PostgreSQL. \\
 Kapitola \ref{sec:Bench} pak srovnává rámce z kapitoly \ref{sec:Comparison} a vytvořenou knihovnu pomocí rychlostních testů. \\
-Pro dokonalé porozumění textu je potřeba alespoň minimální znalost relačních databází a programovacího jazyka Python.
+Pro dokonalé porozumění textu je vhodná alespoň minimální znalost relačních databází a programovacího jazyka Python.
 
 \section{Vícevrstvá architektura}
 \label{sec:Layers}
@@ -1386,10 +1387,10 @@ Tato diplomová práce je podobná svou strukturou předchozím diplomovým prac
 \bibitem{notorm} VRÁNA, Jakub. Srovnání dotazů do závislých tabulek. In: PHP triky [online]. 2009, 27.2. [cit. 2013-04-24]. Dostupné z: http://php.vrana.cz/srovnani-dotazu-do-zavislych-tabulek.php
 \bibitem{notorm-why} Proč NotORM. VRÁNA, Jakub. NotORM - PHP library for simple working with data in the database [online]. 2010 [cit. 2013-04-24]. Dostupné z: http://www.notorm.com/\#why
 \bibitem{cleancode} MARTIN, Robert C. Clean code : a handbook of agile software craftsmanship. NJ : Prentice Hall: Upper Saddle River, 2009. ISBN 0132350882.
-\bibitem{wiki-sqla} http://en.wikipedia.org/wiki/SQLAlchemy
-\bibitem{sqla-doc} SQLAlchemy documentation Mike Bayer
-\bibitem{BasicORM} Implementace objektove-relačního mapování v datové vrstvě informačního systému pro platformu .NET
-\bibitem{EasyORM} Implementace objektově-relačního mapování v datové vrstvě informačního systému pro platformu Java Lubomír Turčík, 2010, Signatura: 201001844
+\bibitem{wiki-sqla} SQLAlchemy. In: Wikipedia: the free encyclopedia [online]. San Francisco (CA): Wikimedia Foundation, 2001-2013 [cit. 2013-05-04]. Dostupné z: http://en.wikipedia.org/wiki/SQLAlchemy
+\bibitem{sqla-doc} BAYER, Mike. SQLAlchemy Documentation. Release 0.8.0b2. 7. 3. 2013. Dostupné z: http://media.readthedocs.org/pdf/sqlalchemy/rel\_0\_8/sqlalchemy.pdf
+\bibitem{BasicORM} JEŘÁBEK, Tomáš. Implementace objektově-relačního mapování v datové vrstvě informačního systému pro platformu .NET. Ostrava, 2011. Diplomová práce. Vysoká škola báňská.
+\bibitem{EasyORM} TURČÍK, Lubomír. Implementace objektově-relačního mapování v datové vrstvě informačního systému pro platformu Java. Ostrava, 2010. Diplomová práce. Vysoká škola báňská.
 \end{thebibliography}
 
 
