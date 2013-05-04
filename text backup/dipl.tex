@@ -4,8 +4,8 @@
 \usepackage[czech]{babel}
 \usepackage[utf8]{inputenc}
 
-%\usepackage{hyperref}
-%\usepackage{hypcap}
+\usepackage{hyperref}
+\usepackage{hypcap}
 
 \usepackage{color}
 \usepackage{setspace}
@@ -139,11 +139,11 @@ literate=%
 
 \Thanks{Rád bych na tomto místě poděkoval všem, kteří mi k vytvoření práce dopomohli, protože bez nich by tato práce nevznikla.}
 
-\CzechAbstract{Tato diplomová práce se zaměřuje na problém, který představuje komunikace aplikačního softwaru s relačním databázovým systémem. Popisuje datovou vrstvu aplikačního softwaru, její funkce a vlastnosti. Rozebírá objektově-relační mapování a návrhové vzory využívané při použití tohoto mapování. Dále pak seznamuje čtenáře s existujícími technologiemi pracujícími na datové vrstvě vytvořenými v jazyce Python a zaměřuje se na optimalizační techniky používané pro zefektivnění komunikace s relační databází. Výstu- pem této práce je knihovna optimalizovaná pro komunikaci s relačním databázovým systémem PostgreSQL. V práci je popsán návrh této knihovny a optimalizačních technik. V závěru je pak vytvořená knihovna srovnána s existujícími technologiemi pomocí rychlostních testů.}
+\CzechAbstract{Tato diplomová práce se zaměřuje na problém, který představuje komunikace aplikační- ho softwaru s relačním databázovým systémem. Popisuje datovou vrstvu aplikačního softwaru, její funkce a vlastnosti. Rozebírá objektově-relační mapování a návrhové vzory využívané při použití tohoto mapování. Dále pak seznamuje čtenáře s existujícími technologiemi pracujícími na datové vrstvě vytvořenými v jazyce Python a zaměřuje se na optimalizační techniky používané pro zefektivnění komunikace s relační databází. Výstu- pem této práce je knihovna optimalizovaná pro komunikaci s relačním databázovým systémem PostgreSQL. V práci je popsán návrh této knihovny a optimalizačních technik. V závěru je pak vytvořená knihovna srovnána s existujícími technologiemi pomocí rychlostních testů.}
 
 \CzechKeywords{Datová vrstva, Objektově-relační mapování, Optimalizace, SŘBD, PostgreSQL, Python, Django ORM, web2py DBAL, SQLAlchemy}
 
-\EnglishAbstract{This master's thesis focuses on difficuilties, which appear when application software is used with relational database system. It contains description of application data access layer and its characteristics, object-relational mapping and design patterns. Existing technologies used for data access created with Python programming language are described in this thesis. Furthermore, techniques optimizing the communication with relational database are discussed. The goal of this thesis was to create a new software for application data layer, that would focus on optimization of usage of DBMS PostgreSQL. The thesis goes through the design of this software and it's techniques. The software is tested against the existing technologies at the end.}
+\EnglishAbstract{This master's thesis focuses on difficuilties, which appear when application software is used with relational database system. It contains a description of the application data access layer and its characteristics, object-relational mapping and design patterns. Existing technologies used for data access created with Python programming language are described in this thesis. Furthermore, techniques optimizing the communication with relational database are discussed. The goal of this thesis was to create a new software for the application data layer, that would focus on optimization of DBMS PostgreSQL usage. The thesis goes through the design of this software and its techniques. Finally, the software is compared to the existing technologies, using benchmarks.}
 
 \EnglishKeywords{Data access layer, Object-relational mapping, Optimization, DBMS, PostgreSQL, Python, Django ORM, web2py DBAL, SQLAlchemy}
 
@@ -156,7 +156,7 @@ literate=%
 \AddAcronym{ORM}{Object-Relational Mapping/Mapper}
 \AddAcronym{ERD}{Entity-Relationship Diagram}
 \AddAcronym{MVC}{Model-View-Controller}
-\AddAcronym{API}{Apllication Programming Interface}
+\AddAcronym{API}{Application Programming Interface}
 \AddAcronym{IDE}{Integrated Development Environment}
 \AddAcronym{XML}{Extensible Markup Language}
 \AddAcronym{HTML}{HyperText Markup Language}
@@ -194,13 +194,13 @@ literate=%
 % Zacneme uvodem
 \section{Úvod}
 \label{sec:Intro}
-Aplikační softwary dnes ve velké míře pro ukládání dat používají systémy řízení báze dat (SŘBD). Velmi rozšířeným typem databázových systémů jsou relační databáze. Při použití relačních databází ovšem nastává mnoho prolbémů, pokud je aplikační software vyvinut pomocí objektvě orientovaného jazyka. Relační databáze totiž pro práci s daty používají dotazovací jazyky, které nejsou velmi kompatibilní s objektově orientovanými jazyky. Tyto dvě technologie se mezi sebou liší hlavně datovými typy, strukturami dat a řešením relací mezi entitami. \\
+Aplikační softwary dnes ve velké míře používají pro ukládání dat systémy řízení báze dat (SŘBD). Velmi rozšířeným typem databázových systémů jsou relační databáze. Při použití relačních databází ovšem nastává mnoho prolbémů, pokud je aplikační software vyvinut pomocí objektvě orientovaného jazyka. Relační databáze totiž pro práci s daty používají dotazovací jazyky, které nejsou velmi kompatibilní s objektově orientovanými jazyky. Tyto dvě technologie se mezi sebou liší hlavně datovými typy, strukturami dat a řešením relací mezi entitami. \\
 Relační databázi tedy nelze v aplikačním softwaru použít přímo. Proto dnes většina systémů obsahuje mezivrstvu, která slouží jako prostředník mezi těmito technologiemi. Tato vrstva se nazývá datová vrstva. Datová vrstva řeší tuto nekompatibilitu, abstrahuje relační databázový systém a poskytuje objektově orientované aplikační rozhraní. Jelikož je relační databáze většinou nejzatěžovanější částí v celém systému, je také důležité, aby byla datová vrstva výkonná a komunikovala s databází efektivně. \\
-Tato diplomová práce se zaměřuje na technologie vytvořené pro realizaci datové vrstvy. Popisuje všechny vlastnosti této vrstvy a porovnává existující technologie pracující na této vrstvě. Dále se pak soustřeďuje na výkon a optimalizaci komunikace s relační databází, konkrétně pak se SŘBD PostgreSQL. Praktická část práce sestává z implementace knihovny pro datovou vrstvu orientující se na toto SŘBD, která se zaměřuje na optimalizaci komunikace s tímto SŘBD. \\
+Tato diplomová práce se zaměřuje na technologie vytvořené pro realizaci datové vrstvy. Popisuje všechny vlastnosti této vrstvy a porovnává existující technologie pracující na této vrstvě. Dále se pak soustřeďuje na výkon a optimalizaci komunikace s relační databází. Praktická část práce sestává z implementace knihovny pro datovou vrstvu orientující se na SŘBD PostgreSQL a zaměřující se na optimalizaci komunikace s tímto SŘBD. \\
 V kapitole \ref{sec:Layers} je popsáno rozdělení architektury aplikačního softwaru do vrstev. Je zde popsána datová vrstva a jsou zde vysvětleny základní pojmy spojené s přístupem k relačním databázím pomocí objektově orientovaných jazyků. \\
 Kapitola \ref{sec:ORM} popisuje velmi používané řešení pro datovou vrstvu, objektově-relační mapování. Jsou zde popsány různé přístupy mapování a návrhové vzory, kterými se řídí rámce implementující objektově-relační mapování. \\
 Kapitola \ref{sec:Comparison} obsahuje srovnání a popis existujících řešení pracujících na datové vrstvě vytvořených v jazyce Python. Jsou zde dopodrobna rozebrány rámce Django ORM, we- b2py DBAL a SQLAlchemy. U každého rámce jsou napsány jeho nevýhody. \\
-V kapitole \ref{sec:Design} jsou popsány důvody vytvoření nové knihovny, požadavky na její implementaci a funkce, které by vytvořená knihovna měla obsahovat. Je zde shrnuto také, proč nebyly použity existující rámce. \\
+V kapitole \ref{sec:Design} jsou popsány důvody vytvoření nové knihovny, požadavky na její implementaci a funkce, které by vytvořená knihovna měla obsahovat. Je zde shrnuto také, proč nevystačovaly existující rámce. \\
 Návrh knihovny popisuje kapitola \ref{sec:Impl}. Tato kapitola rozebírá návrh aplikačního rozhraní této knihovny a klíčové funkce, které bude knihovna obsahovat. Dále je zde analyzována architektura knihovny a popis návrhu řešení pro optimalizaci komunikace se SŘBD PostgreSQL. \\
 Kapitola \ref{sec:Bench} pak srovnává rámce z kapitoly \ref{sec:Comparison} a vytvořenou knihovnu pomocí rychlostních testů. \\
 Pro dokonalé porozumění textu je vhodná alespoň minimální znalost relačních databází a programovacího jazyka Python.
@@ -245,7 +245,7 @@ Pro zjednodušení a odstínění od těchto problémů byly vytvořeny rámce a
 
 Datová vrstva se v angličtině označuje pod názvem \textit{Data-Access Layer} (DAL). Tímto pojmem se také někdy nazývají knihovny a rámce, které zastávají funkci této vrstvy. Často se tento název plete s \textit{Database-Abstraction Layer} (DBAL). DBAL je typ DAL, který pomocí svých funkcí abstrahuje rozdíly mezi detaily a specifikacemi podporovaných SŘBD. Umožňuje tak jednodušeji změnit SŘBD bez velkých úprav aplikačního kódu. \\
 
-Samotná datová vrstva je velmi často rozdělena na další podvrstvy. Mezi nejprimitivnější DAL patří knihovny, které označujeme za konektory nebo ovladače. Řeší pouze část problému Impedance mismatch, poskytují základní funkce a zaměřují se pouze na jeden SŘBD. Zpravidla umožňují zadat pouze syrové SQL ve formě řetězce. Tyto konektory jsou většinou vytvářeny výrobcem SŘBD a řídí podle specifikovaných standardů. Mnoho programovacích jazyků má určeno tyto standardy proto, aby sjednotily rozhraní a práci s těmito knihovnami, což umožňuje lehčí přechod mezi SŘBD a jednodušší vytváření DBAL. Příkladem standardu pro jazyk Python je specifikace PEP 249\footnote{http://www.python.org/dev/peps/pep-0249/} .\\
+Samotná datová vrstva je velmi často rozdělena na další podvrstvy. Mezi nejprimitivnější DAL patří knihovny, které označujeme za konektory nebo ovladače. Řeší pouze část problému Impedance mismatch, poskytují základní funkce a zaměřují se pouze na jeden SŘBD. Zpravidla umožňují zadat pouze syrové SQL ve formě řetězce. Tyto konektory jsou většinou vytvářeny výrobcem SŘBD a řídí podle specifikovaných standardů. Mnoho programovacích jazyků má určeno tyto standardy proto, aby sjednotily rozhraní a práci s těmito knihovnami, což umožňuje lehčí přechod mezi SŘBD a jednodušší vytvá- ření DBAL. Příkladem standardu pro jazyk Python je specifikace PEP 249\footnote{http://www.python.org/dev/peps/pep-0249/} .\\
 Konektory pak využívají již zmíněné DBAL a složitější rámce a knihovny snažící se o větší míru abstrakce. Tyto tak tvoří další vrstvu. \\
 Nad touto vrstvou je dnes velmi často postavena ještě další funkčnost mající za cíl problém Impedance mismatch ještě více ulehčit a abstrahovat. Touto funkčností je objektově relační mapování, v angličtině \textit{Object-Relational Mapping} (ORM). ORM lze považovat za nejvyšší míru abstrakce ze všech typů DAL.  \\
 Rozdělení existujících rámců a knihoven do těchto tří vrstev znázorňuje obrázek \ref{fig:Layers}.
@@ -267,7 +267,7 @@ Podobně jako u DAL se i pod zkratkou ORM někdy označují rámce implementují
 
 \subsection{Rozhraní datové vrstvy}
 
-Každé ORM definuje způsob, kterým datová vrstva komunikuje s aplikační vrstvou. Tímto rozhraním ORM také abstrahuje přístup k databázi a z části určuje i architekturu doménové logiky. Martin Fowler pojmenoval několik základních typů a návrhových vzorů pro toto rozhraní jako \textit{Table Data Gateway}, \textit{Row Data Gateway}, \textit{Active Record} a \textit{Data Mapper} \cite{fowler}. Ve všech případech jsou v objektově orientovaném jazyce jako rozhraní využity třídy, pomoci kterých ORM abstrahuje tabulky, pohledy, dynamické 	dotazy nebo dotazy zapouzdřené v uložených procedurách. Vzory se mezi sebou liší typem abstrakce a způsobem, jakým jsou tyto třídy využity.
+Každé ORM definuje způsob, kterým datová vrstva komunikuje s aplikační vrstvou. Tímto rozhraním ORM také abstrahuje přístup k databázi a z části určuje i architekturu doménové logiky. Martin Fowler pojmenoval několik základních typů a návrhových vzorů pro toto rozhraní jako \textit{Table Data Gateway}, \textit{Row Data Gateway}, \textit{Active Record} a \textit{Data Mapper} \cite{fowler}. Ve všech případech jsou v objektově orientovaném jazyce jako rozhraní využi- ty třídy, pomoci kterých ORM abstrahuje tabulky, pohledy, dynamické 	dotazy nebo dotazy zapouzdřené v uložených procedurách. Vzory se mezi sebou liší typem abstrakce a způsobem, jakým jsou tyto třídy využity.
 
 \subsubsection{Table Data Gateway}
 
@@ -305,7 +305,7 @@ Mezi nevýhody návrhového vzoru Active Record patří mapování vztahů a dě
 
 \subsubsection{Data Mapper}
 
-Data Mapper se využívá při složitější aplikační logice, při rozdílném objektovém a relačním schématu nebo i často v případech, kdy je potřeba pracovat s již existující databází. Doménové objekty v aplikační logice se při použití tohoto vzoru nemusí shodovat s databázovým schématem. Lze je vytvořit naprosto nezávisle. Je tak možné kdykoliv změnit databázové schéma nebo struktury v aplikační logice, z čehož vyplývá mnoho výhod. \\
+Data Mapper se využívá při složitější aplikační logice, při rozdílném objektovém a rela- čním schématu nebo i často v případech, kdy je potřeba pracovat s již existující databází. Doménové objekty v aplikační logice se při použití tohoto vzoru nemusí shodovat s databázovým schématem. Lze je vytvořit naprosto nezávisle. Je tak možné kdykoliv změnit databázové schéma nebo struktury v aplikační logice, z čehož vyplývá mnoho výhod. \\
 Nevýhodou tohoto přístupu je přidání další vrstvy mezi databázi a aplikační vrstvu. Toto se může negativně projevovat na celkovém výkonu a složitosti systému. Proto se Data Mapper nedoporučuje používat pro jednoduché případy, které lze vyřešit například pomocí vzoru Active Record.\\
 Data Mapper komunikuje s aplikační vrstvou pomocí mapovací třídy, která poskytuje rozhraní k získávání doménových objektů. Mapovací třída může abstrahovat jednu databázovou tabulku, její část nebo i více tabulek. Většinou je výhodnější pro jednu doménovou třídu vytvořit vždy jednu mapovací třídu. \\
 Obrázek \ref{fig:DataMapper} zobrazuje jednoduchý příklad návrhového vzoru Data Mapper. Na obrázku je  mapovací třída \lstinline[style=inlinepython]|PersonMapper|, která získává data z databáze a vrací je ve formě instancí doménové třídy \lstinline[style=inlinepython]|Person|. Třída \lstinline[style=inlinepython]|PersonMapper| poskytuje metody i pro ukládání a mazání těchto instancí. Implementace získávání dat je před třídou \lstinline[style=inlinepython]|Person| skrytá a databázové schéma může vypadat jakkoliv. \\
@@ -318,7 +318,7 @@ Tento návrhový vzor má smysl používat jen tehdy, pokud se aplikační logik
 \label{subsec:Relmapping}
 
 V relační databázi se používají cizí klíče pro vyjádření relací, ale objekty v objektově orientovaných jazycích dosahují vazeb za pomocí referencí na vazební objekt. ORM tento nesoulad řeší mapováním vztahů.\\
-Mapování vztahů a relací patří mezi základní funkce ORM. ORM řídící se podle návrhových vzorů Row Data Gateway, Active Record a Data Mapper tuto funkci potřebují, jelikož mapují instance tříd, které abstrahují databázové tabulky, na záznamy těchto tabulek. \\
+Mapování vztahů a relací patří mezi základní funkce ORM. ORM řídící se podle návrhových vzorů Row Data Gateway, Active Record a Data Mapper tuto funkci potřebu- jí, jelikož mapují instance tříd, které abstrahují databázové tabulky, na záznamy těchto tabulek. \\
 ORM poskytuje mapování pro všechny druhy binárních relací. \\
 \textbf{Relace N:1 nebo 1:1} se mapuje nejjednodušeji. Řádek s cizím klíčem v relační databázi je namapován pomocí objektu, který obsahuje referenci na objekt mapující záznam odkazovaný cizím klíčem. \\
 \textbf{Relace 1:N} je v relační databázi řešena opačným způsobem než v objektově orientovaných jazycích. Záznamy databázové tabulky Město obsahují cizí klíč na tabulku Stát, ale instance třídy Stát obsahují kolekci s referencemi na objekty třídy Město. ORM mapováním zajišťuje naplnění této kolekce vetšinou pomocí dodatečného dotazu do databáze, anebo spojením tabulek ihned při získávání objektu třídy Stát. \\
@@ -328,8 +328,8 @@ Toto chování však také není vždy ideální, jelikož v určitých případ
 
 \subsection{Mapování dědičnosti}
 \label{subsec:Inhmapping}
-Objektově relační mapování definuje principy, pomocí kterých je možné mapovat dědičnost objektově orientovaných jazyků v relačních databázích. V současné době většina databází dědičnost přímo nepodporuje a neexistuje standard, který by tuto funkčnost pro databáze specifikoval. ORM proto často obsahuje funkce, které umožňují dědičnost různými způsoby simulovat. \\
-Dědičnost je jedním z hlavních prvků objektově orientovaných jazyků a prostřednictvím ORM je možné ji využívat při definici tříd, kterými ORM abstrahuje databázové tabulky. Mapování dědičnosti je možné dosáhnout třemi způsoby, které Martin Fowler pojmenovává jako \textit{Single Table Inheritance}, \textit{Concrete Table Inheritance} a \textit{Class Table Inheritance} \cite{fowler}. \\
+Objektově relační mapování definuje principy, pomocí kterých je možné mapovat dědi- čnost objektově orientovaných jazyků v relačních databázích. V současné době většina databází dědičnost přímo nepodporuje a neexistuje standard, který by tuto funkčnost pro databáze specifikoval. ORM proto často obsahuje funkce, které umožňují dědičnost různými způsoby simulovat. \\
+Dědičnost je jedním z hlavních prvků objektově orientovaných jazyků a prostředni- ctvím ORM je možné ji využívat při definici tříd, kterými ORM abstrahuje databázové tabulky. Mapování dědičnosti je možné dosáhnout třemi způsoby, které Martin Fowler pojmenovává jako \textit{Single Table Inheritance}, \textit{Concrete Table Inheritance} a \textit{Class Table Inheritance} \cite{fowler}. \\
 Nevýhodou tohoto mapování je složitější struktura tabulek a z toho plynoucí zhoršení výkonu operací prováděných nad databází. Obrázek \ref{fig:Inheritance} zobrazuje příklady těchto tří ná- vrhových vzorů.
 
 \InsertFigure{inheritance.png}{150mm}{Ukázka návrhových vzorů pro mapování dědičnosti \cite[str. 78-79]{fowler}}{fig:Inheritance}
@@ -388,7 +388,7 @@ Je možno vytvořit i rekurzivní relaci, relaci na objekty stejného typu. \\
 
 \paragraph{Mapování děčnosti}
 
-ORM frameworku Django podporuje dva typy z výše popsaných návrhových vzorů mapování dědičnosti v sekci \ref{subsec:Inhmapping}. Concrete Table Inheritance a Class Table Inheritance. Oba dva případy jsou použity ve výpisu \ref{src:Mapping}. \\
+ORM rámce Django podporuje dva typy z výše popsaných návrhových vzorů mapování dědičnosti v sekci \ref{subsec:Inhmapping}. Concrete Table Inheritance a Class Table Inheritance. Oba dva případy jsou použity ve výpisu \ref{src:Mapping}. \\
 Vzoru Concrete Table Inheritance využívá model \lstinline[style=inlinepython]|Author|, který dědí z abstraktního modelu \lstinline[style=inlinepython]|Person|. Model \lstinline[style=inlinepython]|Person| je označen jako abstraktní pomocí meta třídy. Instance tohoto modelu nelze ukládat, slouží pouze pro společné definice modelů, které z něj dědí. \\
 Modely \lstinline[style=inlinepython]|Entry| a \lstinline[style=inlinepython]|VlogEntry| využívají Class Table Inheritance. Mezi těmito modely ORM automaticky vytvoří relaci 1:1. Pokud je instance bázového modelu instancí i odvozeného modelu, je možné přistoupit přes relaci k datům odvozeného modelu. Při získávání dat z bázového modelu, ORM automaticky získá data spojením tabulek i z modelu odvozeného.
 
@@ -396,20 +396,20 @@ Modely \lstinline[style=inlinepython]|Entry| a \lstinline[style=inlinepython]|Vl
 
 Django ORM používá pro dotazování do databáze třídy, které pojmenovává jako \uv{mana- žery}. Každý manažer musí dědit z třídy \lstinline[style=custompython]|Manager| a každý model obsahuje jeden nebo více těchto manažerů. Implicitně lze manažer nalézt pod atributem modelu \lstinline[style=inlinepython]|objects|. Takováto struktura tak odděluje manipulaci s celou tabulkou a manipulaci s řádkem tabulky. \\
 Manažer poskytuje aplikační programové rozhraní (API) pomocí kterého abstrahuje SQL. Toto rozhraní nemá za úkol nahradit veškeré SQL, pouze usnadnit provádění častých dotazů. ORM však jako celek instruuje svými strukturami snahu nevyjadřovat výrazy pomocí SQL. \\
-API obsahuje metody pomocí, kterých lze objekty filtrovat, agregovat, řadit, limitovat a na pozadí provádí SQL. Každá z těchto metod vrací objekt typu \lstinline[style=inlinepython]|QuerySet|. \lstinline[style=inlinepython]|QuerySet| se stará o samotné provedení dotazu, získání dat z databáze a vytváření instancí modelů. \lstinline[style=inlinepython]|QuerySet| otálí s provedením dotazu, dokud data nejsou opravdu potřeba. Toto umožňuje jednotlivé metody pro dotazování řetězit. Je také možné \lstinline[style=inlinepython]|QuerySet| uložit do proměnné a vždy získat aktuální data, jelikož při řetězení metod je pokaždé vracen nový \lstinline[style=inlinepython]|QuerySet|. \\
+API obsahuje metody pomocí kterých lze objekty filtrovat, agregovat, řadit, limitovat, a na pozadí provádí SQL. Každá z těchto metod vrací objekt typu \lstinline[style=inlinepython]|QuerySet|. \lstinline[style=inlinepython]|QuerySet| se stará o samotné provedení dotazu, získání dat z databáze a vytváření instancí modelů. \lstinline[style=inlinepython]|QuerySet| otálí s provedením dotazu, dokud data nejsou opravdu potřeba. Toto umožňuje jednotlivé metody pro dotazování řetězit. Je také možné \lstinline[style=inlinepython]|QuerySet| uložit do proměnné a vždy získat aktuální data, jelikož při řetězení metod je pokaždé vracen nový \lstinline[style=inlinepython]|QuerySet|. \\
 Mezi nejdůležitější metody objektu \lstinline[style=inlinepython]|QuerySet| patří \lstinline[style=inlinepython]|all|, \lstinline[style=inlinepython]|filter|, \lstinline[style=inlinepython]|exclude| a \lstinline[style=inlinepython]|get|. Metoda \lstinline[style=inlinepython]|all| vrací všechny objekty daného modelu, \lstinline[style=inlinepython]|filter| jenom objekty, které splňují podmínku, \lstinline[style=inlinepython]|exclude| objekty, které podmínku nesplňují a \lstinline[style=inlinepython]|get| vrací jediný objekt pro danou podmínku.
 \lstinline[style=inlinepython]|QuerySet| je možné dále omezovat pomocí standardní konstrukce používané pro objekty typu pole v jazyce Python. ORM poskytuje i možnost zadat vlastní SQL, z jehož výsledku se pak vytvoří instance konkrétního modelu. \\
-Po každé operaci Django ORM provádí implicitně \lstinline[style=inlinepython]|commit|. Pokud je ORM použito nezávisle na rámci nejsou transakce podporovány. \\
+Po každé operaci Django ORM provádí implicitně \lstinline[style=inlinepython]|commit|. Pokud je ORM použito nezávisle na rámci, nejsou transakce podporovány. \\
 API pro dotazování poskytuje mnoho dalších funkcí, jejich popis je však nad rámec této diplomové práce. Další informace lze nalézt v oficiální dokumentaci \cite{djangodoc}. Ukázku API rámce Django ORM pro práci z daty zobrazuje výpis \ref{src:dj-query} v sekci \ref{subsubsec:Query}.
 
 \subsubsection{Optimalizace v Django ORM}
 \label{subsubsec:DjangoOpt}
 
-Django ORM umožňuje svými funkcemi optimalizovat některé náročnější operace. Přihlédnutím k těmto optimalizacím lze ve většině případů zlepšit výkon ORM. 
+Django ORM umožňuje svými funkcemi optimalizovat některé náročnější operace. Přihlé- dnutím k těmto optimalizacím lze ve většině případů zlepšit výkon ORM. 
 
 \paragraph{Ukládání do mezipaměti}
 
-Pro každý provedený dotaz ORM automaticky kešuje výsledná data. Data nejsou uložená ve společné keši, ale ve výsledném objektu \lstinline[style=inlinepython]|QuerySet| nebo v konkrétní instanci. Jelikož však ORM při řetězení metod vrací vždy nový \lstinline[style=inlinepython]|Query-| \lstinline[style=inlinepython]|Set|, keš je při každé změně dotazu zahozena a data jsou načtena znovu. \\
+Pro každý provedený dotaz ORM automaticky ke- šuje výsledná data. Data nejsou uložená ve společné keši, ale ve výsledném objektu \lstinline[style=inlinepython]|QuerySet| nebo v konkrétní instanci. Jelikož však ORM při řetězení metod vrací vždy nový \lstinline[style=inlinepython]|QuerySet|, keš je při každé změně dotazu zahozena a data jsou načtena znovu. \\
 Keš je použita v instanci v případě přístupu k relacím. Platí to však pouze, pokud relace odkazuje na konkrétní objekt. Keš se u relací M:N nebo zpětných relací u instance nepoužije \cite{dj-queries}. \\
 %Caching and QuerySets
 V případech, kdy výsledný \lstinline[style=inlinepython]|QuerySet| obsahuje mnoho záznamů, lze vypnutím této keše předejít zahlcení paměti \cite{dj-querysets}. %iterator
@@ -419,7 +419,7 @@ V případech, kdy výsledný \lstinline[style=inlinepython]|QuerySet| obsahuje 
 Při neopatrném používání ORM může dojít k tzv. \textit{N+1 problému}. N+1 problém nastává, pokud je použit cyklus při získávání dat z databáze spolu s líným nahráváním. Většinou se tento problém projevuje u relací. \\
 Výpis \ref{src:Nplus1} používá schéma definované v sekci \ref{subsec:CodeCompare}. Funkce \lstinline[style=custompython]|inefficient| v tomto výpisu zobrazuje, jak N+1 problém vypadá. Funkce se stará o jednoduchý výpis příspěvků a blogů, ve kterém jsou publikovány. Tato funkce však provede N+1 dotazů do tabáze. Jeden dotaz pro získání všech příspěvků a N dotazů pro získání blogu každého příspěvku. Tento kód navíc nebere v potaz ani to, že některé příspěvky mohou být publikovány ve stejném blogu. \\
 ORM poskytuje řešení v podobě funkcí \lstinline[style=custompython]|select_related| a \lstinline[style=custompython]|prefetch_related|. \\ 
-\lstinline[style=custompython]|select_related| se používá při přednačtení relací, které odkazují na konkrétní objekt. Při použití této funkce se všechny výsledné objekty a jejich relace načtou jedním dotazem pomocí spojení tabulek a relační objekty se uloží do keše k dané instanci. Funkce \lstinline[style=custompython]|efficient| ve výpisu \ref{src:Nplus1} tedy použije pouze jeden dotaz do databáze. \\
+\lstinline[style=custompython]|select_related| se používá při přednačtení relací, které odkazují na konkrétní objekt. Při použití této funkce se všechny výsledné objekty a jejich relace načtou jedním dotazem pomocí spojení tabulek, a relační objekty se uloží do keše k dané instanci. Funkce \lstinline[style=custompython]|efficient| ve výpisu \ref{src:Nplus1} tedy použije pouze jeden dotaz do databáze. \\
 Stejný problém může nastat i při použití zpětných relací nebo v případech, kdy relace odkazuje na kolekci objektů. Pro tento případ se využívá metoda \lstinline[style=custompython]|prefetch_related.| Funkce \lstinline[style=custompython]|efficient_backward| ve výpisu \ref{src:Nplus1} využívá této metody. Při spuštění se provedou dva dotazy. Jeden pro získání všech blogů a druhý pro získání všech příspěvků. Výsledek se opět uloží do keše k daným instancím blogu. 
 
 \begin{lstlisting}[style=custompython, label=src:Nplus1, caption={N+1 problém a jeho řešení v Django ORM}]
@@ -449,11 +449,11 @@ Implicitně se ORM pro každou tabulku dotazuje na všechny její atributy. Tent
 
 ORM umožňuje pro objekty stejného typu hromadné operace. Mezi poskytované funkce patří hromadné vytváření, mazání i ukládání. Ve všech případech je však generován vždy jen jeden dotaz a ORM tak neumožňuje zpracovávání po dávkách. Další nevýhodou je, že při provedení těchto operací je přeskočena aplikační logika v modelech \cite{dj-queries}. %Updating multiple objects at once
 
-\paragraph{Ukládání změn} Od verze 1.5 Django ORM umožňuje při ukládání instance uložit pouze specifikované atributy. Je tak možno uložit pouze změněná data a nezatěžovat databázi odesíláním všech atributů, což se v případě obsáhlého modelu může pozitivně projevit na výkonu. ORM však neposkytuje žádný mechanismus, který by tento přístup automatizoval, je tak potřeba implementovat vlastní sledování změn \cite{dj-save}.
+\paragraph{Ukládání změn} Od verze 1.5 Django ORM umožňuje při ukládání instance uložit pouze specifikované atributy. Je tak možno uložit pouze změněná data a nezatěžo- vat databázi odesíláním všech atributů, což se v případě obsáhlého modelu může pozitivně projevit na výkonu. ORM však neposkytuje žádný mechanismus, který by tento přístup automatizoval, je tak potřeba implementovat vlastní sledování změn \cite{dj-save}.
 
-\paragraph{Nevytváření instancí} ORM poskytuje možnost vyhnout se vytváření instancí z dat vrácených databází. Jelikož je proces vytváření instancí náročný, může tento postup v případech, kdy je potřeba získat pouze data, zlepšit celkový výkon \cite{dj-querysets}. %values
+\paragraph{Nevytváření instancí} ORM poskytuje možnost vyhnout se vytváření instancí modelu z dat vrácených databází. Jelikož je proces vytváření instancí náročný, může tento postup v případech, kdy je potřeba získat pouze data, zlepšit celkový výkon \cite{dj-querysets}. %values
 
-\paragraph{Zjišťování existence} Pro zjišťování existence záznamů v databázi používá ORM úsporný dotaz \lstinline[style=inlinepython]|SELECT (1) ... |. Využití této funkce je tedy většinou výhodnější než porovnávání výsledku obyčejného dotazu \cite{dj-querysets}. %exists
+\paragraph{Zjišťování existence} Pro zjišťování existence záznamů v databázi umožňuje ORM použít úsporný dotaz \lstinline[style=inlinepython]|SELECT (1) ... |. Využití této funkce je tedy většinou výho- dnější než porovnávání výsledku obyčejného dotazu \cite{dj-querysets}. %exists
 
 \subsubsection{Nevýhody Django ORM}
 
@@ -473,7 +473,7 @@ Navzdory nevýhodám uvedeným výše Django ORM funguje skvěle pro jednoduché
 
 \subsection{web2py DBAL}
 
-web2py je rámec pro tvorbu webových aplikací napsaný v jazyce Python, který vznikl původně jako univerzitní projekt vytvořený profesorem Massimem Di Peirrem pro výukové účely \cite{wikiw2p}. Byl stvořen s úmyslem co nejvíce usnadnit vývoj webových aplikací a problémy s tím spojené. Celý rámec je tak distribuován pomocí balíku, který v základu obsahuje integrované vývojové prostředí (IDE), webový server, relační databázi SQLite a dokonce i interpret jazyka Python. Není tedy potřeba nic instalovat, balík se rozbalí a ihned lze tento rámec používat \cite{web2py}. Rámec se řídí návrhovým vzorem MVC. \\
+web2py je rámec pro tvorbu webových aplikací napsaný v jazyce Python, který vznikl původně jako univerzitní projekt vytvořený profesorem Massimem Di Peirrem pro výu- kové účely \cite{wikiw2p}. Byl stvořen s úmyslem co nejvíce usnadnit vývoj webových aplikací a problémy s tím spojené. Celý rámec je tak distribuován pomocí balíku, který v základu obsahuje integrované vývojové prostředí (IDE), webový server, relační databázi SQLite a dokonce i interpret jazyka Python. Není tedy potřeba nic instalovat, balík se rozbalí a ihned lze tento rámec používat \cite{web2py}. Rámec se řídí návrhovým vzorem MVC. \\
 IDE sestává z administračního rozhraní, které je spuštěno na webovém serveru. Kód lze tak měnit v tomto IDE přímo na serveru a změny jsou viditelné ihned. Rámec obsahuje pro vytvořené aplikace i automaticky generované administrační rozhraní nad daty podobně jako Django. \\
 web2py implementuje DBAL pro komunikaci s databází. Odlišnost této vrstvy od ORM je popisována jako \uv{mapování databázových tabulek a záznamů na instance a třídy reprezentující množiny a záznamy namísto vysoko-úrovňové abstrakce} \cite{wikiw2p}. Mezi podporované SŘBD podle oficiální dokumentace patří Firebird, IBM DB2, Informix, Ingres, Microsoft SQL Server, MySQL, Oracle, PostgreSQL, Google App Engine a mnoho dalších. Stejně jako Django ORM lze tuto vrstvu používat nezávisle na rámci.
 
@@ -481,8 +481,8 @@ web2py implementuje DBAL pro komunikaci s databází. Odlišnost této vrstvy od
 Třída \lstinline[style=inlinepython]|web2py.gluon.dal.DAL| je vstupním bodem pro komunikaci s databází. Inicializací objektu této třídy je vytvořeno spojení s databází. DBAL obsahuje connection pool, do kterého se spojení uloží. Connection pool je možno konfigurovat podle potřeby. \\
 Rámec vyžaduje pro správnou funkčnost datové vrstvy nejdříve definovat strukturu tabulek v databázi. Definice struktury slouží jako metadata při dotazování do databáze a umožňuje tabulky v databázi automaticky generovat i měnit. Definice tabulek si DBAL ukládá do speciálních souborů. Pomocí těchto souborů lze pak provádět migrace databáze. \\
 Migracemi lze měnit datové typy konkrétních sloupců, odstraňovat nebo přidávat nové sloupce k tabulkám a nebo i přesouvat celé databáze do jiných SŘBD. Migrace však nejsou úplně automatizované a mohou při nich nastat problémy, které je potřeba řešit explicitně. Kromě migrací umožňuje DBAL i export dat do XML, HTML nebo CSV formátu. \\
-DBAL umožňuje používat i existující databázi, je však potřeba, aby splňovala určité podmínky. Konkrétně musí databáze obsahovat pro každou tabulku primární klíč a všechny relace musí být řešené pomocí primárního klíče. web2py DBAL podporuje složené klíče. \\
-Tabulky lze definovat pomocí instance třídy \lstinline[style=inlinepython]|DAL|. Je také možné pomocí tohoto objektu tabulkám dále nastavovat další parametry, měnit jejich strukturu nebo je i smazat. Primární klíč je automaticky vygenerován pro každou tabulku. Sloupce tabulky pak obsahují metody pro validaci, které lze využit před ukládáním do databáze. Výpis \ref{src:light-w2p-mapping} zobrazuje definici tabulky \lstinline[style=inlinepython]|author| využívající abstraktní strukturu \lstinline[style=inlinepython]|person|. \\
+DBAL umožňuje používat i existující databázi, je však potřeba, aby splňovala určité podmínky. Konkrétně musí databáze obsahovat pro každou tabulku primární klíč a vše- chny relace musí být řešené pomocí primárního klíče. web2py DBAL podporuje složené klíče. \\
+Tabulky lze definovat pomocí instance třídy \lstinline[style=inlinepython]|DAL|. Je také možné pomocí tohoto objektu tabulkám dále nastavovat další parametry, měnit jejich strukturu nebo je i smazat. Primární klíč je z definice automaticky vygenerován pro každou tabulku. Sloupce definice tabulky pak obsahují metody pro validaci, které lze využit před ukládáním do databáze. Výpis \ref{src:light-w2p-mapping} zobrazuje definici tabulky \lstinline[style=inlinepython]|author| využívající abstraktní strukturu \lstinline[style=inlinepython]|person|. \\
 DBAL neumožňuje pomocí této definice určit databázové indexy.
 
 \paragraph{Práce se řádkem tabulky}
@@ -492,13 +492,13 @@ Nová data se neukládají pomocí řádku, ale pomocí objektu tabulky. Řádek
 
 \paragraph{Mapování relací}
 
-DBAL podporuje implicitně pouze relace 1:N. Relační záznam lze získat přes atribut řádku, který obsahuje cizí klíč. DBAL provede dotaz do databáze a výsledek je k tomuto atributu přiřazen. \\
+DBAL podporuje implicitně pouze relace 1:N. Relační zázna- m lze získat přes atribut řádku, který obsahuje cizí klíč. DBAL provede dotaz do databáze a výsledek je k tomuto atributu přiřazen. \\
 K relaci lze přistoupit i z odkazovaného objektu. Pro realizaci zpětné relace je potřeba přistoupit přes atribut řádku jehož název je totožný s názvem tabulky, do které náleží vazební objekty. Vazební objekty je pak možné získat všechny nebo jejich množinu dále limitovat stejným způsobem jako při dotazování. \\
 Jak je možné vidět ve výpisu \ref{src:w2p-mapping}, pro relaci N:M mezi strukturami \lstinline[style=inlinepython]|author| a \lstinline[style=inlinepython]|entry| bylo potřeba definovat vazební tabulku. DBAL automaticky vazbu N:M nevytváří ani nepodporuje. Pro získání vazebních objektů je v případě N:M potřeba explicitně provést spojení tabulek. \\
 Rekurzivní relace pomocí DBAL definovat lze. \\
 
 \paragraph{Mapování dědičnosti}
-Datová vrstva web2py neumožňuje mapování dědičnosti, jelikož neobsahuje ORM. Nejjednodušší z návrhových vzorů pro mapování dědičnosti, Concrete Table Inheritance, lze ovšem nasimulovat pomocí struktur. Příklad zobrazuje výpis \ref{src:w2p-mapping}, kde tabulka \lstinline[style=inlinepython]|author| rozšiřuje abstraktní definici \lstinline[style=inlinepython]|person|. Tabulka \lstinline[style=inlinepython]|person| se v databázi neobjeví a tabulka \lstinline[style=inlinepython]|author| obsahuje všechny své definované sloupce i sloupce z definice \lstinline[style=inlinepython]|person|. V tomto výpisu je dále definována tabulka \lstinline[style=inlinepython]|vlog_entry|, která rozšiřuje konkrétní definici \lstinline[style=inlinepython]|entry|. Obě tyto tabulky jsou v databázi vytvořeny. \\
+Datová vrstva web2py neumožňuje mapování dědi- čnosti, jelikož neobsahuje ORM. Nejjednodušší z návrhových vzorů pro mapování dědi- čnosti, Concrete Table Inheritance, lze ovšem nasimulovat pomocí struktur. Příklad zobrazuje výpis \ref{src:w2p-mapping}, kde tabulka \lstinline[style=inlinepython]|author| rozšiřuje abstraktní definici \lstinline[style=inlinepython]|person|. Tabulka \lstinline[style=inlinepython]|person| se v databázi neobjeví a tabulka \lstinline[style=inlinepython]|author| obsahuje všechny své definované sloupce i sloupce z definice \lstinline[style=inlinepython]|person|. V tomto výpisu je dále definována tabulka \lstinline[style=inlinepython]|vlog_entry|, která rozšiřuje konkrétní definici \lstinline[style=inlinepython]|entry|. Obě tyto tabulky jsou v databázi vytvořeny. \\
 Tabulka \lstinline[style=inlinepython]|vlog_entry| pak obsahuje všechny sloupce definované ve své definici a navíc i všechny sloupce tabulky \lstinline[style=inlinepython]|entry|.
 
 \subsubsection{Dotazování}
@@ -526,7 +526,7 @@ Navíc je samotná struktura kódu DBAL velice nepěkná. Skládá se z jednoho 
 
 \subsubsection{Zhodnocení}
 
-Rámec web2py vznikl jako školní projekt pro výukové účely. Bohužel tento fakt a nevýhody z toho plynoucí jsou stále znát na kvalitě celého rámce i přesto, že od doby vzniku prošel mnoha změnami. \\
+Rámec web2py vznikl jako školní projekt pro výukové účely. Bohužel tento fakt a nevýho- dy z toho plynoucí jsou stále znát na kvalitě celého rámce i přesto, že od doby vzniku prošel mnoha změnami. \\
 Mezi jeho výhody patří dotazovací API, které má blízko k SQL, funkce jako migrace a verzování databázových záznamů. Jeho využití je pro ukázkové nebo velmi jednoduché projekty. Pro seriózní projekty se web2py DBAL však kvůli výše uvedeným nevýhodám nevyplatí používat. 
 
 \subsection{SQLAlchemy}
@@ -540,7 +540,7 @@ Rámec původně vznikl pouze jako generátor dotazů a postupně, jak se vyvíj
 \item[Engine] Modul Engine se stará o správu konkrétního spojení. Získává spojení z modulu Connection Pooling, zakládá a uzavírá transakce, předává požadavky modulu Dialect a loguje příkazy spuštěné nad databází. Tento modul je hlavním rozhraním k databázi.
 \item[SQL Expression Language] Modul SQL Expression Language obsahuje API pro generování SQL dotazů. API je velmi variabilní a poskytuje mnoho možností, jak dotazy tvořit. Umožňuje například vytváření vnořených dotazů, používání databázových funkcí a procedur, skládání dotazů zčásti za pomoci API a zčásti ručně vytvořeným SQL nebo i jenom pomocí vlastního SQL. \\
 Při použití tohoto API je jasně vidět jaké SQL dotazy se provádí a přitom je umožněno dotazy vytvářet jednoduše a přehledně.
-\item[Schema/Types] V tomto modulu jsou obsaženy funkce pro definování struktury a mapování relačního schématu v databázi. Pomocí tohoto modulu je možné nadefinovat databázové tabulky, jejich atributy, vlastnosti a integritní omezení. Rámec umožňuje definovat datové typy pomocí datových typů jazyka Python i pomocí datových typů relační databáze. Tyto typy jsou pak mezi sebou mapovány co nejpřesněji. SQLAlchemy podporuje mnoho databázových datových typů a umožňuje nadefinovat i vlastní.
+\item[Schema/Types] V tomto modulu jsou obsaženy funkce pro definování struktury a mapování relačního schématu v databázi. Pomocí tohoto modulu je možné nadefinovat databázové tabulky, jejich atributy, vlastnosti a integritní omezení. Rámec umožňuje definovat datové typy pomocí datových typů jazyka Python i pomocí datových typů relační databáze. Tyto typy jsou pak mezi sebou mapovány co nejpře- sněji. SQLAlchemy podporuje mnoho databázových datových typů a umožňuje nadefinovat i vlastní.
 \end{description}
 
 \begin{figure}[h!]
@@ -550,13 +550,13 @@ Při použití tohoto API je jasně vidět jaké SQL dotazy se provádí a přit
     \label{fig:sqla-layers}
 \end{figure}
 
-Při použití ORM rámce SQLAlchemy je možné v místech, kde ORM nevystačuje využít DBAL a SQL Expression Language. DBAL rámce SQLAlchemy je velice podobná DBAL rámci web2py a nebude zde tedy podrobně popsána. \\
-Mezi podporované SŘBD rámce patří Oracle, MSSQL Server, MySQL, PostgreSQL, SQLite, Sybase a mnoho dalších. Přes přídavné balíčky lze získat podporu i pro další SŘBD.
+Při použití ORM rámce SQLAlchemy je možné v místech, kde ORM nevystačuje využít DBAL a SQL Expression Language. DBAL rámce SQLAlchemy je velice podobná DBAL rámci web2py a nebude zde tedy podrobně popsána. Následující popis se tak zaměřuje na ORM. \\
+Mezi SŘBD podporované rámcem patří Oracle, MSSQL Server, MySQL, PostgreSQL, SQLite, Sybase a mnoho dalších. Přes přídavné balíčky lze získat podporu i pro další SŘBD.
 
 \subsubsection{Mapování v SQLAlchemy}
 
-Jak bylo popsáno výše, SQLAlchemy ORM se při mapování řídí návrhovým vzorem Data Mapper. Mapování se tedy skládá ze dvou struktur, a to z třídy z modulu Schema, která představuje strukturu databázové tabulky a z mapovací třídy, která představuje doménový objekt. Definice tříd představující struktury v databázi slouží jako metadata a používají se při vytváření dotazů do databáze. Mapovací třída je typu POPO (Plain Old Python Object), nerozšiřuje tedy žádnou bázovou třídu a neimplementuje žádné rozhraní. V mapovací třídě lze vytvořit i validátory dat, které je možné volat před uložením do databáze. \\
-Pomocí tříd, které představují strukturu databázových tabulek umožňuje SQLAlchemy vygenerovat SQL kód k jejich vytvoření a při použití existující databáze lze vygenerovat pomocí introspekce z databázových tabulek definici těchto tříd. \\
+Jak bylo popsáno výše, SQLAlchemy ORM se při mapování řídí návrhovým vzorem Data Mapper. Mapování se tedy skládá ze dvou struktur, a to z třídy z modulu Schema, která představuje strukturu databázové tabulky a z mapovací třídy, která představuje doménový objekt. Definice tříd představující struktury v databázi slouží jako metadata a používají se při vytváření dotazů do databáze. Mapovací třída je typu POPO (Plain Old Python Object), nerozšiřuje tedy žádnou bázovou třídu a neimplementuje žádné rozhraní. V mapovací třídě lze vytvořit i validátory dat, které je možné volat před uložením dat do databáze. \\
+Pomocí tříd, které představují strukturu databázových tabulek umožňuje SQLAlche- my vygenerovat SQL kód k jejich vytvoření a při použití existující databáze lze vygenerovat pomocí introspekce z databázových tabulek definici těchto tříd. \\
 SQLAlchemy lze bez problému používat s existující databází. Jedinou podmínkou je, aby každá tabulka obsahovala primární klíč. Rámec dovoluje používat složené klíče i složené vazební atributy. SQLAlchemy ovšem nepodporuje migrace databázových dat. Této funkce lze dosáhnout až přes zásuvné moduly třetích stran. \\
 Vzhledem k použití návrhového vzoru Data Mapper obsahuje SQLAlchemy mnoho možností, jak namapovat struktury v databázi na doménové objekty. Na jeden doménový objekt je možné namapovat více tabulek nebo část tabulky. Lze vytvořit hybridní a složené atributy, kompozitní sloupce nebo namapovat doménový objekt či jeho atribut přímo na SQL dotaz. \\
 SQLAlchemy ORM obsahuje i možnost definovat schéma a struktury v databázi podobně jako při použití návrhového vzoru Active Record. Pomocí tzv. deklarativního pří- stupu lze nadefinovat za pomocí jediné třídy mapovací třídu i třídu představující strukturu v databázi. Příkladem je třída \lstinline[style=inlinepython]|Author| ve výpisu \ref{src:light-sqla-mapping}.
@@ -580,8 +580,8 @@ SQLAlchemy používá pro práci s objekty systém řídící se návrhovým vzo
 Objekt třídy \lstinline[style=inlinepython]|Session| se stará o vytváření transakce skrze modul Engine, o stavy všech objektů registrovaných v sezení, a provádí SQL dotazy ve chvílích, kdy je to potřeba. Sezení otálí s prováděním dotazů do doby než je to nevyhnutelně nutné. Objekty registrované v sezení se pohybují mezi stavy transient, pending, persistent nebo detached.
 
 \begin{description}
-\item[Stav transient] Objekt ve stavu transient je instance mapovací třídy, která nebyla zatím registrována v sezení a data, která obsahuje nebyla uloženy do databáze. 
-\item[Stav pending] Instance, která byla registrována do sezení, ale data, zatím nebyla uložena do databáze je ve stavu pending.
+\item[Stav transient] Objekt ve stavu transient je instance mapovací třídy, která nebyla zatím registrována v sezení a data, která obsahuje nebyla uložena do databáze. 
+\item[Stav pending] Instance, která byla registrována do sezení, ale její data zatím nebyla ulože- na do databáze, je ve stavu pending.
 \item[Stav persistent] Objekty, které jsou získány z databáze nebo instance, jejichž data byla uložena do databáze jsou ve stavu persistent.
 \item[Stav detached] Instance, která obsahuje data z databáze, ale nebyla registrována do sezení, se nachází ve stavu detached. Instanci v tomto stavu lze používat, ale nelze načítat její vazební objekty z databáze.
 \end{description}
@@ -599,9 +599,9 @@ SQLAlchemy provádí mnoho optimalizací na pozadí. Jeho velkou výhodou je pou
 Mezi optimalizace, které je potřeba určit explicitně patří načítání relačních objektů.
 
 \paragraph{Načítání relací}
-Podobně jako Django ORM poskytuje SQLAlchemy optimalizace v podobě horlivého načítání relací při vytváření dotazů do databáze. Tyto optimalizace zabraňují, aby nastal N+1 problém a umožňují efektivní provedení SQL dotazů a vylepšují celkový výkon rámce. \\
+Podobně jako Django ORM poskytuje SQLAlchemy optimalizace v podobě horlivého načítání relací při vytváření dotazů do databáze. Tyto optimalizace zabraňují, aby nastal N+1 problém, umožňují efektivní provedení SQL dotazů a vylepšují celkový výkon rámce. \\
 SQLAlchemy umožňuje horlivého načítání dosáhnout pomocí vnořeného dotazu metodou \lstinline[style=inlinepython]|subqueryload|, implicitním spojení tabulek metodou \lstinline[style=inlinepython]|joinedload| a nebo explicitním spojením tabulek. \\
-SQLAlchemy doporučuje vnořený dotaz používat při načítání kolekce vazebních objektů a spojení tabulek při relaci N:1 \cite{sqla-doc}. Při spojení tabulek se totiž většinou přenáší více dat (jak bude popsáno v sekci \ref{subsubsec:Selectin}) a použití spojení tabulek v pro získání kolekce vazebních objektů nemusí být vždy nejefektivnějším řešením.
+SQLAlchemy doporučuje vnořený dotaz používat při načítání kolekce vazebních objektů a dotaz využívající spojení tabulek při relaci N:1 \cite{sqla-doc}. Při spojení tabulek se totiž většinou přenáší více dat (jak bude popsáno v sekci \ref{subsubsec:Selectin}) a pro získání kolekce vazebních objektů nemusí být spojení tabulek vždy nejefektivnějším řešením.
 
 \paragraph{Načítání relací při aktualizaci dat}
 Relační objekty je potřeba načíst z databáze před jejich smazáním nebo úpravou. SQLAlchemy provádí toto načítaní na pozadí. V případě velkých objemů dat se tento fakt může negativně projevit na výkonu. Nastavením atributu \lstinline[style=inlinepython]|passive_deletes| a \lstinline[style=inlinepython]|cascade| v mapovací třídě, lze toto chování změnit.
@@ -751,7 +751,7 @@ Konkrétními požadavky firmy byly:
 \begin{itemize}
 \item \textbf{jazyk Python} Firma vytváří své aplikace pomocí programovacího jazyka Python. Pro zachování kompatibility a jednoduchosti je potřeba, aby datová vrstva byla implementována za použití tohoto jazyka.
 \item \textbf{rychlost získávání dat} Jedním z nejdůležitějších požadavků byl požadavek na celkový výkon datové vrstvy. Systémy vytvářené firmou jsou typické pro časté čtení a občasný zápis. Je tedy potřeba, aby vrstva urychlovala hlavně operace pro čtení. 
-\item \textbf{konzistentní data, která drží relační schéma} Firma nesouhlasí s použitím objektové nebo dokumentově orientované databáze, jelikož výhody, které poskytují relační databázové systémy jsou pro vytváření aplikací kritické. Datová vrstva by se tedy měla zaměřovat na databáze relační.
+\item \textbf{konzistentní data, která drží relační schéma} Firma nesouhlasí s použitím objektové nebo dokumentově orientované databáze, jelikož výhody, které poskytují rela- ční databázové systémy jsou pro vytváření systémů kritické. Datová vrstva by se tedy měla zaměřovat na databáze relační.
 \item \textbf{jednoduchost použití a čitelnost syntaxe} Datová vrstva by měla vyžadovat minimální znalosti pro její použití a měla by obsahovat pouze funkce, které se využijí při implementaci systémů. Syntaxe dotazovacího API by měla být čitelná a mělo by být jasné jaký dotaz se při spustění provede. Syntaxe by měla být také jednodušší než samotné SQL nebo zápis SQL zjednodušovat.
 \item \textbf{stabilita} Výsledný produkt by měl být stabilní a měl by dodržovat základní principy čistého kódu. Struktura datové vrstvy a programového kódu by měla být přehledná a umožňovat jednoduché změny.
 \item \textbf{relační databáze PostgreSQL} Jako úložiště dat pro své systémy firma využívá SŘBD PostgreSQL. Firma SŘBD měnit neplánuje a nehodlá, a proto požaduje, aby se datová vrstva zaměřovala pouze na PostgreSQL.
@@ -764,7 +764,7 @@ Důvodem vytvoření nové knihovny byly neuspokojivé vlastnosti existujících
 Na základě požadavků jsem se rozhodl nevyužít funkcí objektově-relačního mapování. Požadavky odpovídají spíše datové vrstvě bez O/R mapování. \\
 Pro O/R mapování existuje mnoho kritiky \cite{seldo, fowler-orm, dbprogrammer-orm, mehdi}. Ve většině těchto případů se však jedná o špatné použití O/R mapování. O/R mapování není řešením pro všechny případy a snaha o jeho využití pro všechny situace vede k brzkému odhalení jeho limitů. ORM má své výhody a nevýhody. Pro mnoho projektů je ORM ideálním řešením, které ulehčí mnoho práce a času, pro některé případy však není vhodné. \\
 Při použití O/R mapování je složité vytvořit jednoduché a čitelné dotazovací API do databáze tak, aby se operace, které pracují s databází neskrývaly za API ORM a bylo tak jasné, jaké dotazy se provádějí. Také je velmi pravděpodobné, že API nebude dostatečně abstrahovat databázi, což by znamenalo v případě složitějších struktur rozpad této abstrakce. Tento fakt je dán vzájemnou nekompatibilitou relačních a objektových struktur. Toto se tedy neslučuje s požadavkem na jednoduchost a čitelnost. \\
-Databáze je pomocí ORM abstrahována, což většinou znamená, že všechny funkce databáze nejsou podporovány. Pokud je tomu tak, není využit maximální potenciál výkonu databáze, což se neslučuje s požadavkem na rychlost získávání dat. \\
+Databáze je pomocí ORM abstrahována, což většinou znamená, že všechny funkce databáze nejsou podporovány. Pokud je tomu tak, není využit maximální potenciál výko- nu databáze, což se neslučuje s požadavkem na rychlost získávání dat. \\
 Vytvořená knihovna tedy nebude implementovat O/R mapování. 
 
 \subsection{Podpora různých SŘBD}
@@ -779,7 +779,7 @@ SŘBD PostreSQL obsahuje mnoho specifických vlastností a funkcí, které nejso
 
 \begin{description}
   \item[Rozmanité datové typy] PostgreSQL umožňuje vytváření vlastních datových typů. Kromě toho již obsahuje různé datové typy, které umožňují ukládat například geografická data, JavaScriptový objektový zápis (JSON), XML nebo binární data. 
-  \item[Flexibilní datové typy] Pomocí datového typu \lstinline[style=inlinepython]|hstore| umožňuje SŘBD ukládat data ve formě klíč-hodnota. Tento datový typ je bez schématu a při jeho použití lze získat variabilitu a flexibilitu dat podobně jako v NoSQL databázích. PostgreSQL navíc poskytuje pro tento datový typ speciální dotazovací syntaxi. Dále pak SŘBD obsahuje podporu i pro složené datové typy a objekty typu pole. Je tak možné do jednoho databázového sloupce uložit například všechny telefonní čísla pro konkrétního uživatele. 
+  \item[Flexibilní datové typy] Pomocí datového typu \lstinline[style=inlinepython]|hstore| umožňuje SŘBD ukládat data ve formě klíč-hodnota. Tento datový typ je bez schématu a při jeho použití lze získat variabilitu a flexibilitu dat podobně jako v NoSQL databázích. PostgreSQL navíc poskytuje pro tento datový typ speciální dotazovací syntaxi. Dále pak SŘBD obsahuje podporu i pro složené datové typy a objekty typu pole. Je tak možné do jednoho databázového sloupce uložit například všechny telefonní čísla pro konkrétní- ho uživatele. 
   \item[Fukce použité při dotazování] Mezi nejzajímavější funkce, které lze použít při dotazování patří například funkce pro agregování jako \lstinline[style=inlinepython]|array_agg|, která vrací objekt typu pole, \lstinline[style=inlinepython]|bool_and|, který pro všechny prvky provede logický součin a nebo funkce \lstinline[style=inlinepython]|row_to_json|, která vrací každý řádek výsledku dotazu ve formátu JSON.
   \item[Podpora různých jazyků] PostgreSQL umožňuje vytváření uživatelských funkcí pomocí procedurálních jazyků. Kromě standardního PL/pgSQL je možno využít i Python (PL/Python), Perl (PL/Perl) nebo i Ruby (PL/Ruby) \cite{pllanguages}. 
   \item[Funkce nad okny] Funkce nad okny (v angličtině Window Functions) fungují podobně jako v SŘBD Oracle. Pomocí těchto funkcí je možné provádět výpočty nad daty obdobně jako u agregačních funkcí, ovšem s tím rozdílem, že data není nutné seskupovat do skupin.
@@ -796,7 +796,7 @@ Jedním z požadavků na vlastnosti vytvořené knihovny byla rychlá komunikace
 
 \subsubsection{Simulace materializovaných pohledů}
 
-SŘBD PostgreSQL obsahuje mnoho funkcí, ovšem materializované pohledy mezi nimi nejsou. Materializované pohledy jsou jednou z denormalizačních technik, které se používají pro urychlení čtení dat z databáze. Jsou podobné obyčejným databázovým pohledům, ale od těchto pohledů se liší realizací, která je řešená pomocí konstrukce podobné databázové tabulce. Tato tabulka obsahuje kopie dat získané pomocí SQL dotazu a slouží podobně jako keš pro data. Výhodou oproti obyčejným pohledům je možnost vytváření indexů nad touto tabulku a rychlost čtení dat. \\
+SŘBD PostgreSQL obsahuje mnoho funkcí, ovšem materializované pohledy mezi nimi nejsou. Materializované pohledy jsou jednou z denormalizačních technik, které se použí- vají pro urychlení čtení dat z databáze. Jsou podobné obyčejným databázovým pohledům, ale od těchto pohledů se liší realizací, která je řešená pomocí konstrukce podobné databázové tabulce. Tato tabulka obsahuje kopie dat získané pomocí SQL dotazu a slouží podobně jako keš pro data. Výhodou oproti obyčejným pohledům je možnost vytváření indexů nad touto tabulku a rychlost čtení dat. \\
 Pro zajištění konzistence dat je potřeba, aby v případě změny dat v tabulkách, které tvoří základ pro materializovaný pohled, byly aktualizovány i data v samotném materializovaném pohledu. To je možné buď ihned při změně dat nebo až při explicitním pokynutí. \\
 
 Výsledná knihovna bude implementovat simulaci materializovaných pohledů, které budou aplikovat změny ihned při změně bázových dat. Materializovaný pohled bude simulován pomocí tabulky, která bude vytvořená na základě SQL dotazu, a pomocí triggerů, které budou aktualizovat materializovaný pohled v případě změny bázových tabulek. \\
@@ -811,7 +811,7 @@ Tato funkce tak zjednoduší uživateli rozhodování, na jakém místě by měl
 \label{subsubsec:Selectin}
 
 Knihovna se bude svými funkcemi snažit o co nejmenší objem přenášených dat. V případě pomalé odezvy databázového serveru je pro rychlost komunikace nesmírně kritické co nejméně přenesených dat pro získání výsledku dotazu. \\
-Při pokládání dotazu pomocí spojení tabulek může nastat situace, kdy se přenáší stejná data vícekrát. V případě dlouhé odezvy nebo mnoha sloupců, lze data získat rychleji rozdělením dotazu na samostatné dotazy pro každou tabulku. Příklad zobrazuje tabulka \ref{tab:JoinTable}. Tabulka je výsledkem dotazu z testovací databáze world\footnote{http://pgfoundry.org/projects/dbsamples/}, který využívá spojení tabulek. Dotazem byla získána pro každé město i země do, které město náleží. Tabulka vypisuje pro přehlednost pouze část výsledku, ale i na tomto výsledku je však vidět, že každý záznam tabulky country se přenáší několikrát a vznikají několikanásobné kopie dat. \\
+Při pokládání dotazu pomocí spojení tabulek může nastat situace, kdy se přenáší stejná data vícekrát. V případě dlouhé odezvy nebo mnoha sloupců, lze data získat rychleji rozdělením dotazu na samostatné dotazy pro každou tabulku. Příklad zobrazuje tabulka \ref{tab:JoinTable}. Tabulka je výsledkem dotazu z testovací databáze world\footnote{http://pgfoundry.org/projects/dbsamples/}, který využívá spojení tabulek. Dotazem byla získána pro každé město i země do, které město náleží. Tabulka vypisuje pro přehlednost pouze část výsledku, ale i na tomto výsledku je však vidět, že každý záznam tabulky \lstinline[style=inlinepython]|country| se přenáší několikrát a vznikají několikanásobné kopie dat. \\
 
 \begin{table}
   \centering
@@ -913,7 +913,7 @@ Níže jsou popsány třídy, které budou hlavní kostrou knihovny. Všechny ty
 \item[Table] Třída je rozhraním nad databázovou tabulkou. Pomocí svých metod umožňuje vytvářet dotazy do databáze. Poskytuje přístup k objektům třídy \lstinline[style=inlinepython]|Column|.
 \item[TableValidator] Třída, která validuje dotazy před prováděním nad databází. Je využívána třídou \lstinline[style=inlinepython]|Table| a třídou \lstinline[style=inlinepython]|Row|.
 \item[RestrictedTableSelect] Třída, která se používá při přístupu k relacím. Umožňuje vazební objekty filtrovat a poskytuje podobné metody jako třída \lstinline[style=inlinepython]|Table|. 
-\item[ResultSet] Reprezentace výsledku vráceného na SQL dotaz. Umožňuje funkci samostatných dotazů, která minimalizuje objem přenášených dat, a poskytuje přístup k instancím třídy \lstinline[style=inlinepython]|Row|.
+\item[ResultSet] Reprezentace výsledku vráceného na SQL dotaz. Umožňuje funkci samosta- tných dotazů, která minimalizuje objem přenášených dat, a poskytuje přístup k instancím třídy \lstinline[style=inlinepython]|Row|.
 \item[Row] Třída představuje řádek výsledku vráceného na SQL dotaz. Umožňuje s řádkem dále pracovat, poskytuje metody pro aktualizaci a mazání a metody pro přístup k vazebním objektům řádků.
 \item[ReadOnlyRow] Reprezentace řádku z výsledku SQL dotazu, který používal spojení tabulek nebo neobsahuje primární klíče. Umožňuje data řádku pouze číst.
 \item[Column] Třída představující databázový sloupec. Používá se při tvoření dotazů a poskytuje různé metody pro vyhledávání řádku. Vrací objekt třídy \lstinline[style=inlinepython]|Literal|.
@@ -942,26 +942,25 @@ Knihovna bude implementovat funkce, které urychlují a optimalizují čtení da
 
 \subsubsection{Simulace materializovaných pohledů}
 
-Třída \lstinline[style=inlinepython]|MaterializedView| bude obsahovat logiku pro simulaci materializovaných pohledů. Tato třída bude umožňovat materializované pohledy vytvářet i mazat. Pro vytvoření materializovaného pohledu bude potřeba zavolat metodu \lstinline[style=inlinepython]|create_view| na instanci třídy \lstinline[style=inlinepython]|PyPg|. Metoda bdue přijímat jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvořený pomocí API knihovny. \\
+Třída \lstinline[style=inlinepython]|MaterializedView| bude obsahovat logiku pro simulaci materializovaných pohledů. Tato třída bude umožňovat materializované pohledy vytvářet i mazat. Pro vytvoření materializovaného pohledu bude potřeba zavolat metodu \lstinline[style=inlinepython]|create_view| na instanci třídy \lstinline[style=inlinepython]|PyPg|. Metoda bude přijímat jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvořený pomocí API knihovny. \\
 Nejdříve bude dotaz validován a pomocí introspekce bude zjištěno, zda obsahuje primární klíče všech dotazovaných tabulek. Pokud ne, budou primární klíče do dotazu přidány, jelikož jsou potřeba při aktualizaci záznamů. Poté bude všem sloupcům v dotazu vytvořen alias složený z názvu tabulky a sloupce tak, aby se předešlo případným kolizím v názvech. \\
-Pomocí výsledného dotazu bude vytvořen pohled a tento pohled bude pak použit jako zdroj dat při vytváření tabulky materializovaného pohledu. Pro tuto tabulku bude vytvořen primární klíč složený ze všech klíčů zjištěných dříve pomocí introspekce. \\
-Pro každou tabulku obsaženou v dotazu budou vytvořeny triggery pro vložení, aktualizaci a smazání záznamu. Při aktualizaci záznamu budou v tabulce materializovaného pohledu podle primárního klíče vyhledány všechny korespondující záznamy. Tyto záznamy budou smazány a pak znovu načteny pomocí pohledu vytvořeného dříve. Aktualizace záznamů budou fungovat spolehlivě i při změně primárního klíče. \\
+Pomocí výsledného dotazu bude v databázi vytvořen pohled a tento pohled bude pak použit jako zdroj dat při vytváření tabulky materializovaného pohledu. Pro tuto tabulku bude vytvořen primární klíč složený ze všech klíčů zjištěných dříve pomocí introspekce. \\
+Pro každou tabulku obsaženou v dotazu budou vytvořeny triggery pro vložení, aktualizaci a smazání záznamu. Při aktualizaci záznamu budou v tabulce materializovaného pohledu podle primárního klíče vyhledány všechny korespondující záznamy. Tyto zázna- my budou smazány a pak znovu načteny pomocí pohledu vytvořeného dříve. Aktualizace záznamů budou fungovat spolehlivě i při změně primárního klíče. \\
 Celý proces zobrazuje diagram na obrázku \ref{fig:Matview}. \\
 Metoda \lstinline[style=inlinepython]|drop_mview| třídy \lstinline[style=inlinepython]|PyPg| pak odstraní z databáze celou tuto logiku. Tabulku materializovaného pohledu, pohled pomocí, kterého byla tabulka vytvořena, a všechny triggery aktualizující data pro tento materializovaný pohled. \\
-S vytvořeným materializovaným pohledem, bude možné pracovat stejně jako s obyčejnou tabulkou. Podporovány budou pouze operace pro čtení dat, jelikož materializovaný pohled nebude obsahovat mechanismus, který by aktualizace dat aplikoval i na bázové tabulky (více v sekci \ref{subsubsec:EditView}). \\
+S vytvořeným materializovaným pohledem bude možné pracovat stejně jako s obyče- jnou tabulkou. Podporovány budou pouze operace pro čtení dat, jelikož materializovaný pohled nebude obsahovat mechanismus, který by aktualizace dat aplikoval i na bázové tabulky (více v sekci \ref{subsubsec:EditView}). \\
 I když bude možné vytváření materializovaného pohledu spustit za běhu aplikace, mělo by být vytváření nebo mazaní spouštěno mimo běh aplikace, jelikož je to časově náročná operace. \\
 
 \InsertFigure{matview.png}{100mm}{Diagram aktivit zobrazující vytváření materializovaného pohledu}{fig:Matview}
 
 \subsubsection{Automatická denormalizace}
 
-Celý proces automatické denormalizace začne při zapnutí logování statistik. Knihovna si vytvoří soubor, do kterého loguje všechny dotazy, které se provádějí nad databází. Každý řádek v tomto souboru bude ve formátu JSON a bude obsahovat provedený dotaz, čas provádění dotazu a názvy sloupců a tabulek použitých v dotazu. Ve stejném okamžiku se provede i záloha současného stavu databáze, aby pak bylo možné simulovat stejné podmínky při testování denormalizace. \\
-Poté, co je knihovna nějaký čas v provozu a každý prováděný dotaz byl logován, je možné spustit proces automatické denormalizace. Tento proces bude možné spusit pomocí metody \lstinline[style=inlinepython]|start_denormalization| třídy \lstinline[style=inlinepython]|PyPg| mimo běh aplikace. Před spuštěním se doporučuje pomocí knihovny vytvořit spojení na testovací databázový server, jelikož produkční server by mohl být touto operací velmi zatěžován. \\
-Třídy obstarávající funkčnost automatické denormalizace budou implementovány v modulu \lstinline[style=inlinepython]|pypg.denormalization|. Při spuštění procesu nejdříve pomocí třídy \lstinline[style=inlinepython]|Analyzer| proběhne ana- lýza. Tato třída si načte data a statistiky uložené v souboru s logovanými dotazy. Tyto data poté zanalyzuje a zjistí případné denormalizační změny, které by mohly prospět rychlosti čtení dat z databáze. Pro denormalizační změny bude podmínka, že celkový čas dotazů strávený čtením nad konkrétní tabulkou musí být větší než čas strávený zápisem. Pokud tomu tak není, nemá smysl nad touto tabulkou provádět denormalizaci, jelikož to operace zápisu ještě více zpomalí. Třída poté vrátí kolekci všech doporučovaných denormalizačních změn v podobně instancí třídy \lstinline[style=inlinepython]|Improvement|. Tato kolekce bude obsahovat i seznam dotazů, které byly získány ze statistik, a které dernomalizační změny ovlivní. \\
+Celý proces automatické denormalizace bude započat při zapnutí logování statistik. Kni- hovna si vytvoří soubor, do kterého bude logovat všechny dotazy, které se budou provádět nad databází. Každý řádek v tomto souboru bude ve formátu JSON a bude obsahovat provedený dotaz, čas provádění dotazu a názvy sloupců a tabulek použitých v dotazu. Ve stejném okamžiku se provede i záloha současného stavu databáze, aby pak bylo možné simulovat stejné podmínky při testování denormalizace. \\
+Poté, co bude knihovna nějaký čas v provozu a každý prováděný dotaz bude logován, bude možné spustit proces automatické denormalizace. Tento proces bude možné spustit pomocí metody \lstinline[style=inlinepython]|start_denormalization| třídy \lstinline[style=inlinepython]|PyPg| mimo běh aplikace. Před spuštěním bude doporučeno pomocí knihovny vytvořit spojení na testovací databázový server, jelikož produkční server by mohl být touto operací velmi zatěžován. \\
+Třídy obstarávající funkčnost automatické denormalizace budou implementovány v modulu \lstinline[style=inlinepython]|pypg.denormalization|. Při spuštění procesu nejdříve pomocí třídy \lstinline[style=inlinepython]|Analyzer| proběhne analýza. Tato třída si načte data a statistiky uložené v souboru s logovanými dotazy. Tyto data poté zanalyzuje a zjistí případné denormalizační změny, které by mohly prospět rychlosti čtení dat z databáze. Pro denormalizační změny bude podmínka, že celkový čas dotazů strávený čtením nad konkrétní tabulkou musí být větší než čas strávený zápisem. Pokud tomu tak není, nebude mít smysl nad touto tabulkou provádět denormalizaci, jelikož to operace zápisu ještě více zpomalí. Třída poté vrátí kolekci všech doporučovaných denormalizačních změn v podobně instancí třídy \lstinline[style=inlinepython]|Improvement|. Tato kolekce bude obsahovat i seznam dotazů, které byly získány ze statistik, a které dernomalizační změny ovlivní. \\
 Každá denormalizační změna bude poté otestována nad testovací databází. Záloha databáze, získaná dříve, bude nahrána do testovací databáze. Denormalizace bude v databázi nejdříve vytvořena a poté budou spuštěny dotazy získané ze statistik, které interagují s tabulkami nebo strukturami ovlivněné denormalizací. Aby byly zaručeny stejné podmínky pro všechny testy, bude vždy před každým testem databáze převedena do stavu v jakém byla před testováním. \\
-Výstupem bude seznam otestovaných denormalizačních změn, který obsahuje doporučení, zda konkrétní denormalizační změnu implementovat, a časy, které toto doporučení odůvo- dňují. \\
-%Ukázku výstupu této operace zobrazuje tabulka/obrázek TODO. 
-Celý proces automatické denormalizace lze vidět na obrázku \ref{fig:Autoden}. Mezi denormalizačními změny bude podporován pouze materializovaný pohled.
+Výstupem bude seznam otestovaných denormalizačních změn, který bude obsahovat doporučení, zda konkrétní denormalizační změnu implementovat, a časy, které toto doporučení odůvodňují. \\
+Celý proces automatické denormalizace lze vidět na obrázku \ref{fig:Autoden}. Mezi denormaliza- čními změnami bude podporován pouze materializovaný pohled.
 
 \begin{figure}[h!]
     \centering
@@ -974,7 +973,7 @@ Celý proces automatické denormalizace lze vidět na obrázku \ref{fig:Autoden}
 
 Knihovna bude implementovat mechanismus popsaný v sekci \ref{subsubsec:Selectin}. Tento mechanismus zmenšuje objem přenášených dat pomocí samostatných dotazů a tak i urychluje čtení z databáze. Celková funkčnost bude prováděna na pozadí a při dotazování nebude potřeba nic dalšího implementovat. \\
 Jak bude fukce vypadat zobrazuje výpis \ref{src:imp-selectin}. Tento výpis používá strukturu definovanou v sekci \ref{subsec:CodeCompare}. Výstupem tohoto výpisu je seznam všech blogů a pro každý blog prvních deset příspěvků v tomto blogu a jejich autoři. Knihovna v tomto případě provede pouze 4 dotazy. Jeden dotaz pro získání dat z každé tabulky použité v tomto výpisu (\lstinline[style=inlinepython]|blog|, \lstinline[style=inlinepython]|entry|, \lstinline[style=inlinepython]|entry_authors| a \lstinline[style=inlinepython]|author|). \\
-Knihovna bude rozpoznávat, že se výsledek dotazu prochází smyčkou, uloží si primární klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomoci těchto klíčů vytvoří nový dotaz. Jelikož by nebylo efektivní vytvářet při každém přístupu k relaci nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří knihovna takový dotaz, kterým budou získány všechny relace od všech záznamů najednou. Tyto relace potom bude distribuovat ke konkrétním záznamům. \\
+Knihovna bude rozpoznávat, že se výsledek dotazu prochází smyčkou, uloží si primá- rní klíče všech záznamů, kterými je procházeno, a v případě přístupu k relaci za pomoci těchto klíčů vytvoří nový dotaz. Jelikož by nebylo efektivní vytvářet při každém přístupu k relaci nový dotaz (nastal by tak N+1 problém popsaný v sekci \ref{par:N+1}), vytvoří knihovna takový dotaz, kterým budou získány všechny relace od všech záznamů najednou. Tyto relace potom bude distribuovat ke konkrétním záznamům. \\
 
 \begin{lstlisting}[style=custompython, label=src:imp-selectin, caption={Návrh implementace samostatných dotazů v pypg}]
 >>>for blog in db.blog.select()
@@ -1073,9 +1072,9 @@ Z databáze budou data vrácena ve formátu JSON, který umožní jejich kompres
 \end{lstlisting}
 
 Knihovna tyto data poté na pozadí zpracuje a vypíše v požadované podobě. \\
-Kromě této funkce bude knihovna na základě dotazu, implicitně rozhodovat o jeho provedení pomocí samostatných dotazů nebo spojení tabulek s výsledkem vráceným ve formátu JSON.
+Kromě této funkce bude knihovna na základě dotazu sestaveného pomocí API kniho- vny implicitně rozhodovat o jeho provedení pomocí samostatných dotazů nebo spojení tabulek s výsledkem vráceným ve formátu JSON.
 
-\section{Porovnání knihovny pypg s ostatními rámci}
+\section{Porovnání nové technologie s ostatními rámci}
 \label{sec:Bench}
 Rámce popsané v kapitole \ref{sec:Comparison} byly spolu s knihovnou pypg podrobeny testům. Testy měly za úkol srovnat knihovnu s těmito rámci a ukázat výkon a efektivnost knihovny a výše popsaných funkcí, které knihovna implementuje.
 
@@ -1127,7 +1126,7 @@ Bylo vybráno šest testovacích případů, které představují typickou prác
 mech, kde bude knihovna použita.
 
 \subsubsection{Test 1 - detail produktu}
-První test představuje detailní výpis jednoho záznamu z tabulky \lstinline[style=inlinepython]|product|. Spolu s každým produktem měly rámce a knihovna za úkol dále vypsat značku a varianty produktu a kategorie, do kterých produkt spadá. \\
+První test představuje detailní výpis jednoho záznamu z tabulky \lstinline[style=inlinepython]|product|. Spolu s každý- m produktem měly rámce a knihovna za úkol dále vypsat značku a varianty produktu a kategorie, do kterých produkt spadá. \\
 Celkem tedy v tomto testu testované technologie získávají data z šesti tabulek v databázi - \lstinline[style=inlinepython]|product|, \lstinline[style=inlinepython]|brand|, \lstinline[style=inlinepython]|product_variant|, \lstinline[style=inlinepython]|variant|, \lstinline[style=inlinepython]|product_category|, \lstinline[style=inlinepython]|category|.
 
 \subsubsection{Test 2 - detail zákazníka}
@@ -1146,11 +1145,11 @@ V tomto testu bylo za úkol vypsat detail zákazníka a všechny jeho objednávk
 Celkem byla data získávána ze tří databázových tabulek - \lstinline[style=inlinepython]|customer|, \lstinline[style=inlinepython]|order| a \lstinline[style=inlinepython]|orderline|.
 
 \subsubsection{Test 6 - vytvoření nového zákazníka a objednávky}
-Všechny testy výše se zaměřují na rychlost čtení z databáze. Tento test však testoval rychlost operací při aktualizaci dat. V tomto testu měly testované technologie za úkol vytvořit nového zákazníka a jeho adresu. Pro tohoto zákazníka pak dále vytvořit objednávku se třemi položkami. \\
+Všechny testy uvedené výše se zaměřují na rychlost čtení z databáze. Tento test však testoval rychlost operací při aktualizaci dat. V tomto testu měly testované technologie za úkol vytvořit nového zákazníka a jeho adresu. Pro tohoto zákazníka pak dále vytvořit objednávku se třemi položkami. \\
 Byl tedy testován zápis do tabulek \lstinline[style=inlinepython]|customer|, \lstinline[style=inlinepython]|address|, \lstinline[style=inlinepython]|order| a \lstinline[style=inlinepython]|orderline|.
 
 \subsection{Vytváření testů}
-Testy byly vytvářeny tak, aby co nejvíce využívaly vlastností rámců a knihovny, a byly tak maximálně optimalizované pro danou technologii. Zároveň však nebyl vytvořen žádný vlastní kód, který by operace dále optimalizoval. Testy byly vytvořeny čistě pomocí API testovaných technologií. 
+Testy byly vytvářeny tak, aby co nejvíce využívaly vlastností rámců a knihovny, a byly tak maximálně optimalizované pro danou technologii. Zároveň však nebyl vytvořen žá- dný vlastní kód, který by operace dále optimalizoval. Testy byly vytvořeny čistě pomocí API testovaných technologií. 
 
 \begin{description}
 \item[Django ORM] Při testování rámce byly využity optimalizace pro okamžité načtení vazebních objektů popsaných v sekci \ref{subsubsec:DjangoOpt}. Dále pak byla v testech využita funkce hromadného ukládání objektů.
@@ -1225,7 +1224,7 @@ Ve druhém testu nejsou patrné velké rozdíly mezi testovanými rámci a kniho
 \end{table}
 
 \subsubsection{Test 3 - detail objednávky}
-Výsledky třetího testu lze vidět na obrázku \ref{fig:TestOD} a v tabulce \ref{tab:TestOD}. Knihovna pypg opět dopadla nejlépe. Navrhované denormalizační změny ovšem výkon moc nezlepšily, jelikož urychlily pouze část dotazů v testu. Materializované pohledy byly testovány funkcí automatické denormalizace knihovny pypg v celém kontextu dotazů. Celkově tyto pohledy urychlily zpracování dat, ovšem v tomto testu zlepšení patrné nebylo. \\
+Výsledky třetího testu lze vidět na obrázku \ref{fig:TestOD} a v tabulce \ref{tab:TestOD}. Knihovna pypg opět dopadla nejlépe. Navrhované denormalizační změny ovšem výkon moc nezlepšily, jelikož urychlily pouze část dotazů v testu. Materializované pohledy byly testovány funkcí automatické denormalizace knihovny pypg v celém kontextu dotazů. Celkově tyto pohledy urychlily získávání dat, ovšem v tomto testu zlepšení patrné nebylo. \\
 Rámec web2py DBAL v tomto testu dopadl nejhůře. Jeho výsledky jsou dané zejména tím, že pomocí jeho API nebylo možné získat data spojením více než dvou tabulek nejspíše kvůli nějaké vnitřní chybě rámce. Jak bylo popsáno v sekci \ref{subsubsec:web2py-cons}, stabilita rámce není dokonalá. V testu tedy nastal u web2py DBAL N+1 problém, což se velmi negativně projevilo na výkonu.
 
 \begin{table}[h!]
