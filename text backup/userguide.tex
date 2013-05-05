@@ -1,0 +1,297 @@
+\documentclass[11pt]{article}
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{setspace}
+\lstset%
+{
+  extendedchars=true,
+  basicstyle=\footnotesize\sffamily,
+  commentstyle=\sffamily\slshape,
+  breaklines=true,
+  tabsize=3,
+  columns=flexible,
+  print=true,
+  captionpos=b,
+}
+\definecolor{SQLKeywords}{RGB}{0,0,127}
+\definecolor{SQLStrings}{RGB}{127,0,127}
+\definecolor{SQLNumbers}{RGB}{0,127,127}
+\definecolor{Code}{rgb}{0,0,0}
+\definecolor{Decorators}{rgb}{0.5,0.5,0.5}
+\definecolor{Numbers}{rgb}{0.5,0,0}
+\definecolor{MatchingBrackets}{rgb}{0.25,0.5,0.5}
+\definecolor{Keywords}{rgb}{0,0,1}
+\definecolor{self}{rgb}{0,0,0}
+\definecolor{Strings}{rgb}{0,0.63,0}
+\definecolor{Comments}{rgb}{0,0.63,1}
+\definecolor{Backquotes}{rgb}{0,0,0}
+\definecolor{Classname}{rgb}{0,0,0}
+\definecolor{FunctionName}{rgb}{0,0,0}
+\definecolor{Operators}{rgb}{0,0,0}
+\definecolor{Background}{rgb}{0.98,0.98,0.98}
+\lstdefinestyle{inline}{
+showspaces=false,
+showtabs=false,
+showstringspaces=false,
+tabsize=4,
+numberstyle=\footnotesize,
+numbersep=1em,
+% Basic
+basicstyle=\ttfamily\small\mdseries\setstretch{1},
+language=Python,
+}
+\lstdefinestyle{python}{
+showspaces=false,
+showtabs=false,
+showstringspaces=false,
+tabsize=4,
+numberstyle=\footnotesize,
+numbersep=1em,
+% Basic
+basicstyle=\ttfamily\small\mdseries\setstretch{1},
+language=Python,
+literate=%
+    {á}{{\'a}}1 
+	{é}{{\'e}}1 
+	{í}{{\'i}}1 
+	{ó}{{\'o}}1 
+	{ú}{{\'u}}1 
+	{ý}{{\'y}}1
+	{č}{{\v{c}}}1
+%	{ď}{{\v{d}}}1
+	{ě}{{\v{e}}}1
+%	{ň}{{\v{n}}}1	
+	{ř}{{\v{r}}}1
+	{š}{{\v{s}}}1
+%	{t}{{\v{ť}}}1
+	{ž}{{\v{z}}}1
+	{ě}{{\v{e}}}1
+	{ů}{\r u}1,
+% Comments
+commentstyle=\color{Gray}\slshape,
+% Strings
+stringstyle=\color{Strings}\slshape,
+morecomment=[s][\color{Strings}\slshape]{"""}{"""},
+morecomment=[s][\color{Strings}\slshape]{'''}{'''},
+% keywords
+morekeywords={import,from,class,def,for,while,if,is,in,elif,else,not,and,or,print,break,continue,return,True,False,None,access,as,,del,except,exec,finally,global,import,lambda,pass,print,raise,try,assert},
+keywordstyle={\color{Keywords}\bfseries},
+% additional keywords
+morekeywords={[2]@invariant},
+keywordstyle={[2]\color{Decorators}\slshape},
+emph={self},
+emphstyle={\color{self}\slshape},
+inputencoding=utf8,
+extendedchars=true,
+}
+ \usepackage{graphicx}    % needed for including graphics e.g. EPS, PS
+ \topmargin -1.5cm        % read Lamport p.163
+ \oddsidemargin -0.04cm   % read Lamport p.163
+ \evensidemargin -0.04cm  % same as oddsidemargin but for left-hand pages
+ \textwidth 16.59cm
+ \textheight 21.94cm 
+ %\pagestyle{empty}       % Uncomment if don't want page numbers
+ \parskip 7.2pt           % sets spacing between paragraphs
+ %\renewcommand{\baselinestretch}{1.5} 	% Uncomment for 1.5 spacing between lines
+ \parindent 0pt		  % sets leading space for paragraphs
+ \title{Uživatelský manuál knihovny pypg}
+\date{7.5.2013}
+\author{David Krutký}
+
+\begin{document}         
+% Start your text
+\maketitle
+
+\section{Instalace knihovny pypg}
+
+Knihovna je distribuována ve formě balíku programovacího jazyka Python. Pro spuštění knihovny stačí, když bude celý balík knihovny v cestě vykonávání programu \lstinline[style=inline]|PYTHONPATH|. \\
+Požadavky na spuštění knihovny jsou:
+\begin{itemize}
+\item SŘBD PostgreSQL minimální verze 8.4
+\item Python 2.7
+\item Databázový ovladač psycopg2 2.4.5
+\end{itemize}
+Knihovna byla testována s verzemi výše uvedených technologií na operačním systému Ubuntu 12.4. Provoz na operačním systému Windows otestován nebyl, knihovna by však měla být schopná na tomto systému pracovat bez větších problémů. \\
+Pro funkci automatické denormalizace je také potřeba, aby byla přes příkazovou řádku dostupná funkce PostgreSQL \lstinline[style=inline]|psql| a \lstinline[style=inline]|pg_dump|.
+\subsection{Příprava databáze}
+Spolu s tímto manuálem je k diplomové práci přiložen i skript \lstinline[style=inline]|blogapp.py| obsahující všechny následující ukázky kódu a skript \lstinline[style=inline]|blogapp.sql| pro vytvoření databáze, kterou tento kód využívá. Oba tyto skripty lze nalézt v adresáři \lstinline[style=inline]|src/| v příloze diplomové práce. Databáze používá schéma, které bylo popsáno v diplomové práci, a které zobrazuje diagram na obrázku \ref{fig:ERD}. \\
+Pro naplnění databáze ze skriptu \lstinline[style=inline]|blogapp.sql| je potřeba nejdříve na serveru PostgreSQL vytvořit prázdnou databázi a poté například použít přes příkazový řádek funkci \lstinline[style=inline]|psql|. 
+\begin{lstlisting}[style=python]
+user@station:~$ psql -f src/blogapp.sql -d databasename
+\end{lstlisting}
+Všechny následující výpisy jsou ve formátu příkazové řádky, kdy řádek začínající znakem \lstinline[style=inline]|>>>| reprezentuje operace, které je možné zadat na příkazové řádce jazyka Python, následované výstupem, které tyto operace vyvolaly.
+
+\clearpage
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=150mm]{blogapp.pdf}
+    \caption{ERD diagram zobrazující schéma databáze, kterou lze vygenerovat ze skriptu \lstinline[style=inline]|blogapp.sql|}
+    \label{fig:ERD}
+\end{figure}
+
+\section{Inicializace knihovny pypg}
+
+Pro inicializaci knihovny je potřeba nejdříve vytvořit spojení do databáze pomocí databázového ovladače \lstinline[style=inline]|psycopg2| a toto spojení předat třídě \lstinline[style=inline]|PyPg| z balíku \lstinline[style=inline]|pypg|.
+
+\begin{lstlisting}[style=python]
+>>> import psycopg2
+>>> from pypg import PyPg
+>>> conn = psycopg2("dbname=databasename user=databaseuser")
+>>> db = PyPg(conn)
+\end{lstlisting}
+
+Při inicializaci třídy \lstinline[style=inline]|PyPg| je možné také předat nepovinné parametry, které určují nastavení knihovny. Mezi tyto parametry patří:
+\begin{description}
+\item[debug] Tento parametr je typu \lstinline[style=inline]|boolean| a určuje, zda bude knihovna vypisovat prováděné SQL dotazy, a zda bude pomocí metadat získaných introspekcí napovídat při vytváření kódu nebo při vypisování výjimek. Implicitně je nastaven na \lstinline[style=inline]|False|.
+\item[logger] Tento parametr je typu \lstinline[style=inline]|logging.Logger|. Pro vypisování prováděných SQL dotazů knihovna používá standardní logování jazyka Python a implicitně se dotazy vypisují na standardní výstup. Nastavením tohoto parametru se při logování dotazů použije předaná instance třídy \lstinline[style=inline]|logging.Logger|.
+\item[strict] Tímto parametrem lze určit, zda se pro sestavování SQL dotazů použijí metadata získaná introspekcí z informačního schématu PostgreSQL. Také tento parametr určuje, zda se budou dotazy sestavené pomocí API knihovny validovat. Pokud je nastaven na \lstinline[style=inline]|False|, pro sestavování dotazů se využije sada pravidle v podobě třídy \lstinline[style=inline]|pypg.structure.Naming|. Implicitně sada pravidel určuje název primárního klíče jako \lstinline[style=inline]|id|, a název vazebního atributu na tabulku \lstinline[style=inline]|tabulka| jako \lstinline[style=inline]|tabulka_id|. Implicitně je tento parametr nastaven na \lstinline[style=inline]|False|.
+\item[naming] Tímto parametrem lze předat vlastní sadu pravidel v podobě instance třídy, která dědí z třídy \lstinline[style=inline]|pypg.structure.Naming|. 
+\item[log] Tento parametr určuje, zda se budou shromažďovat statistiky prováděných SQL dotazů. Tyto statistiky se využívají při funkci automatické denormalizace. Jakmile je tento parametr nastaven na \lstinline[style=inline]|True|, provede se záloha aktuální databáze a vytvoří se soubor \lstinline[style=inline]|statistics.log|, do kterého poté knihovna ukládá statistiky ve formátu JSON. Oba tyto soubory jsou umístěny v balíku knihovny do složky \lstinline[style=inline]|log/|. Implicitně je tento parametr nastaven na \lstinline[style=inline]|False|
+\end{description}
+Všechny tyto parametry lze nastavit při inicializaci třídy \lstinline[style=inline]|PyPg| nebo pomocí metod instance této třídy.
+\begin{lstlisting}[style=python]
+>>> db = PyPg(conn, strict=True)
+>>> db.set_log(False)
+>>> db.set_debug(True)
+\end{lstlisting}
+
+\section{Tvoření dotazů pomocí API knihovny pypg}
+
+Přes instanci třídy \lstinline[style=inline]|PyPg| se lze dostat k objektům představující databázové tabulky. Pokud je povolena introspekce, je možné získat nápovědu o všech tabulkách v databázi. Také je při přístupu k neexistující tabulce vyvolána výjimka.
+
+\begin{lstlisting}[style=python]
+>>> db.blog
+<pypg.table.Table at 0x993a5cc>
+>>> db.notexistingtable
+PyPgException: 'No table "notexistingtable" in database. Choices are: blog, entry, entry_authors, vlogentry, author'
+\end{lstlisting}
+
+Přes objekt třídy \lstinline[style=inline]|Table| je pak možné se dostat k objektům třídy \lstinline[style=inline]|Column| představující databázové sloupce. Opět, pokud je povolena introspekce, je chování podobné jako při přístupu k tabulkám.
+
+\begin{lstlisting}[style=python]
+>>> db.blog.name
+<pypg.column.Column at 0x9b857ac>
+>>> db.blog.notexistingcolumn
+PyPgException: 'Column "notexistingcolumn" is not a valid column in table "blog". Choices are: name, description, id'
+\end{lstlisting}
+
+Objekt třídy \lstinline[style=inline]|Table| poskytuje metody pro tvoření SQL dotazů. Mezi tyto metody patří \lstinline[style=inline]|limit|, \lstinline[style=inline]|order|, \lstinline[style=inline]|order_desc|, \lstinline[style=inline]|where|, \lstinline[style=inline]|join| a \lstinline[style=inline]|select|.
+
+\begin{description}
+\item[limit] Tato metoda přijímá jediný parametr, který musí být typu \lstinline[style=inline]|integer|, nebo převeditelný na typ \lstinline[style=inline]|integer|.
+\begin{lstlisting}[style=python]
+>>> db.blog.limit(10).select()[0]
+SELECT * FROM "blog"    LIMIT 10
+\end{lstlisting}
+\item[order] Metoda \lstinline[style=inline]|order| přijímá jenom jediný parametr, kterým lze data seřadit. Tento parametr musí být typu \lstinline[style=inline]|Column|. 
+\begin{lstlisting}[style=python]
+>>> db.blog.order(db.blog.name).select()[0]
+SELECT * FROM "blog"   ORDER BY blog.name
+\end{lstlisting}
+\item[order\_desc] Metoda se chová stejně jako \lstinline[style=inline]|order|, ale při jejím použití jsou výsledná data seřazena sestupně.
+\item[where] Metoda \lstinline[style=inline]|where| přijímá neomezený počet parametrů. Tyto parametry musí být podmínky sestavené pomocí instancí třídy \lstinline[style=inline]|Column|. Všechny tyto podmínky jsou spojeny pomocí SQL klauzule \lstinline[style=inline]|AND|.
+\begin{lstlisting}[style=python]
+>>> db.entry.where(db.entry.rating>0, db.entry.comments==0).select()[0]
+SELECT * FROM "entry"  WHERE entry.rating > 0 AND entry.comments = 0
+\end{lstlisting}
+\item[join] Tato metoda vytváří dotaz pomocí spojení tabulek. Prvním parametrem metody je instance třídy \lstinline[style=inline]|Table|. Druhý parametr určuje podmínku spojení tabulek a je tvořen pomocí instancí třídy \lstinline[style=inline]|Column|. Pokud je povolena introspekce, podmínka je implicitně zjištěna z metadat databáze. 
+\begin{lstlisting}[style=python]
+>>> db.blog.join(db.entry).select()[0]
+SELECT * FROM "blog" JOIN "entry" ON entry.blog_id = blog.id
+...
+>>> db.blog.join(db.entry, on=db.blog.id==db.entry.id).select()[0]
+SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.id
+\end{lstlisting}
+\item[select] Metoda \lstinline[style=inline]|select| přijímá neomezené množství nepovinných parametrů. Tyto parametry určují databázové sloupce, na které bude dotazováno a musí být typu \lstinline[style=inline]|Column|.
+\begin{lstlisting}[style=python]
+>>> db.entry.select(db.entry.headline, db.entry.rating)[0]
+SELECT entry.headline, entry.rating, entry.id FROM "entry"
+\end{lstlisting}
+\end{description}
+
+Při vytváření dotazů musí být vždy využita metoda select. Podle této metody knihovna pozná, že již může provést SQL dotaz. Knihovna však provedení dotazu odkládá do chvíle, kdy je to nezbytně nutné. Lze proto jednotlivé metody pro dotazování řetězit.
+
+\begin{lstlisting}[style=python]
+>>> query = db.entry.order(db.entry.headline)
+>>> query = query.limit(10)
+>>> query = query.select(db.entry.headline)
+>>> query[0]
+SELECT entry.headline, entry.id FROM "entry"   ORDER BY entry.headline LIMIT 1
+<pypg.row.Row at 0xa28734c>
+\end{lstlisting}
+
+Při tvoření dotazů nezáleží na pořadí jednotlivých metod.
+
+\begin{lstlisting}[style=python]
+>>> db.blog.limit(10).select(db.blog.name).order(db.blog.name)[0]
+SELECT blog.name, blog.id FROM "blog"   ORDER BY blog.id LIMIT 10
+\end{lstlisting}
+
+\subsection{Tvoření podmínek dotazů}
+
+Třída \lstinline[style=inline]|Column| umožňuje vytvářet při sestavování dotazů podmínky pomocí svých instancí. Mezi tyto metody patří \lstinline[style=inline]|__eq__|, \lstinline[style=inline]|__ne__|, \lstinline[style=inline]|__gt__|, \lstinline[style=inline]|__lt__|, \lstinline[style=inline]|like| a \lstinline[style=inline]|in_|.
+
+\textbf{\_\_eq\_\_}
+\begin{lstlisting}[style=python]
+>>> print db.entry.rating == 0
+entry.rating = 0
+\end{lstlisting}
+\textbf{\_\_ne\_\_}
+\begin{lstlisting}[style=python]
+>>> print db.entry.rating != 0
+entry.rating <> 0
+\end{lstlisting}
+\textbf{\_\_gt\_\_}
+\begin{lstlisting}[style=python]
+>>> print db.entry.rating > 0
+entry.rating > 0
+\end{lstlisting}
+\textbf{\_\_lt\_\_}
+\begin{lstlisting}[style=python]
+>>> print db.entry.rating < 0
+entry.rating < 0
+\end{lstlisting}
+\textbf{like}
+\begin{lstlisting}[style=python]
+>>> print db.blog.name.like("%blog")
+blog.name LIKE %blog
+\end{lstlisting}
+\textbf{in\_}
+\begin{lstlisting}[style=python]
+>>> print db.blog.id.in_([1,2,3])
+blog.id IN (1, 2, 3)
+\end{lstlisting}
+
+Všechny proměnné použité v podmínce nebo i v metodách používaných pro sestavování dotazu jsou zpracovány tak, aby nedošlo k SQL Injection. \\
+Syrové SQL.
+
+\subsection{Tvoření dotazů pro aktualizaci dat}
+
+Instance třídy \lstinline[style=inline]|Table| umožňuje vytvořit i SQL dotazy, které aktualizují data v databázi. Mezi tyto metody patři \lstinline[style=inline]|insert|, \lstinline[style=inline]|insert_and_get|, \lstinline[style=inline]|update|, \lstinline[style=inline]|update_and_get| a \lstinline[style=inline]|delete|.
+
+\begin{description}
+\item[insert] Metoda se používá pro vytvoření jednoho řádku v databázi. Přijímá neomezený počet atributů, jejichž názvy se musí shodovat s názvy atributů tabulky.
+\begin{lstlisting}[style=python]
+>>> db.blog.insert(name="New blog", description="New blog description")
+INSERT INTO "blog" ("name", "description") VALUES ('New blog', 'New blog description')
+\end{lstlisting}
+\item[insert\_and\_get] Tato metoda vytvoří záznam v databázi a zároveň vrátí všechny hodnoty zpět z databáze i s nově vygenerovanými nebo pozměněnými hodnotami při uložení.
+\begin{lstlisting}[style=python]
+>>> db.blog.insert_and_get(name="New blog", description="New blog description")
+INSERT INTO "blog" ("name", "description") VALUES ('New blog', 'New blog description') RETURNING *
+<pypg.resultset.ResultSet at 0xa287d4c>
+\end{lstlisting}
+\item[update]
+\item[update\_and\_get]
+\item[delete]
+\end{description}
+
+\section{Práce s řádkem tabulky v knihovně pypg}
+
+\section{Funkce knihovny pypg urychlující čtení dat z databáze}
+
+\section{Vytvoření vlastních sady pravidel pomocí třídy Naming}
+
+\end{document}
