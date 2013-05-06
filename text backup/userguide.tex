@@ -116,7 +116,7 @@ Požadavky na spuštění knihovny jsou:
 Knihovna byla testována s verzemi výše uvedených technologií na operačním systému Ubuntu 12.4. Provoz na operačním systému Windows otestován nebyl, knihovna by však měla být schopná na tomto systému pracovat bez větších problémů. \\
 Pro funkci automatické denormalizace je také potřeba, aby byla přes příkazovou řádku dostupná funkce PostgreSQL \lstinline[style=inline]|psql| a \lstinline[style=inline]|pg_dump|.
 \subsection{Příprava databáze}
-Spolu s tímto manuálem je k diplomové práci přiložen i skript \lstinline[style=inline]|blogapp.py| obsahující všechny následující ukázky kódu a skript \lstinline[style=inline]|blogapp.sql| pro vytvoření databáze, kterou tento kód využívá. Oba tyto skripty lze nalézt v adresáři \lstinline[style=inline]|src/| v příloze diplomové práce. Databáze používá schéma, které bylo popsáno v diplomové práci, a které zobrazuje diagram na obrázku \ref{fig:ERD}. \\
+Spolu s tímto manuálem je k diplomové práci přiložen i skript \lstinline[style=inline]|blogapp.py| obsahující ukázky kódu a skript \lstinline[style=inline]|blogapp.sql| pro vytvoření databáze, kterou tento kód využívá. Oba tyto skripty lze nalézt v adresáři \lstinline[style=inline]|src/| v příloze diplomové práce. Databáze používá schéma, které bylo popsáno v diplomové práci, a které zobrazuje diagram na obrázku \ref{fig:ERD}. \\
 Pro naplnění databáze ze skriptu \lstinline[style=inline]|blogapp.sql| je potřeba nejdříve na serveru PostgreSQL vytvořit prázdnou databázi a poté například použít přes příkazový řádek funkci \lstinline[style=inline]|psql|. 
 \begin{lstlisting}[style=python]
 user@station:~$ psql -f src/blogapp.sql -d databasename
@@ -146,7 +146,7 @@ Při inicializaci třídy \lstinline[style=inline]|PyPg| je možné také předa
 \begin{description}
 \item[debug] Tento parametr je typu \lstinline[style=inline]|boolean| a určuje, zda bude knihovna vypisovat prováděné SQL dotazy, a zda bude pomocí metadat získaných introspekcí napovídat při vytváření kódu nebo při vypisování výjimek. Implicitně je nastaven na \lstinline[style=inline]|False|.
 \item[logger] Tento parametr je typu \lstinline[style=inline]|logging.Logger|. Pro vypisování prováděných SQL dotazů knihovna používá standardní logování jazyka Python a implicitně se dotazy vypisují na standardní výstup. Nastavením tohoto parametru se při logování dotazů použije předaná instance třídy \lstinline[style=inline]|logging.Logger|.
-\item[strict] Tímto parametrem lze určit, zda se pro sestavování SQL dotazů použijí metadata získaná introspekcí z informačního schématu PostgreSQL. Také tento parametr určuje, zda se budou dotazy sestavené pomocí API knihovny validovat. Pokud je nastaven na \lstinline[style=inline]|False|, pro sestavování dotazů se využije sada pravidle v podobě třídy \lstinline[style=inline]|pypg.structure.Naming|. Implicitně sada pravidel určuje název primárního klíče jako \lstinline[style=inline]|id|, a název vazebního atributu na tabulku \lstinline[style=inline]|tabulka| jako \lstinline[style=inline]|tabulka_id|. Implicitně je tento parametr nastaven na \lstinline[style=inline]|False|.
+\item[strict] Tímto parametrem lze určit, zda se pro sestavování SQL dotazů použijí metadata získaná introspekcí z informačního schématu PostgreSQL. Také tento parametr určuje, zda se budou dotazy sestavené pomocí API knihovny validovat. Pokud je nastaven na \lstinline[style=inline]|False|, pro sestavování dotazů se využije sada pravidle v podobě třídy \lstinline[style=inline]|pypg.structure.Naming|. Implicitně sada pravidel určuje název primárního klíče jako \lstinline[style=inline]|id|, a název vazebního atributu na tabulku \lstinline[style=inline]|tabulka| jako \lstinline[style=inline]|tabulka_id|. Implicitně je parametr \lstinline[style=inline]|strict| nastaven na \lstinline[style=inline]|False|.
 \item[naming] Tímto parametrem lze předat vlastní sadu pravidel v podobě instance třídy, která dědí z třídy \lstinline[style=inline]|pypg.structure.Naming|. 
 \item[log] Tento parametr určuje, zda se budou shromažďovat statistiky prováděných SQL dotazů. Tyto statistiky se využívají při funkci automatické denormalizace. Jakmile je tento parametr nastaven na \lstinline[style=inline]|True|, provede se záloha aktuální databáze a vytvoří se soubor \lstinline[style=inline]|statistics.log|, do kterého poté knihovna ukládá statistiky ve formátu JSON. Oba tyto soubory jsou umístěny v balíku knihovny do složky \lstinline[style=inline]|log/|. Implicitně je tento parametr nastaven na \lstinline[style=inline]|False|
 \end{description}
@@ -211,7 +211,7 @@ SELECT entry.headline, entry.rating, entry.id FROM "entry"
 \end{lstlisting}
 \end{description}
 
-Při vytváření dotazů musí být vždy využita metoda select. Podle této metody knihovna pozná, že již může provést SQL dotaz. Knihovna však provedení dotazu odkládá do chvíle, kdy je to nezbytně nutné. Lze proto jednotlivé metody pro dotazování řetězit.
+Při vytváření dotazů musí být vždy využita metoda \lstinline[style=inline]|select|. Podle této metody knihovna pozná, že již může provést SQL dotaz. Knihovna však provedení dotazu odkládá do chvíle, kdy je to nezbytně nutné. Lze proto jednotlivé metody pro dotazování řetězit.
 
 \begin{lstlisting}[style=python]
 >>> query = db.entry.order(db.entry.headline)
@@ -227,6 +227,26 @@ Při tvoření dotazů nezáleží na pořadí jednotlivých metod.
 \begin{lstlisting}[style=python]
 >>> db.blog.limit(10).select(db.blog.name).order(db.blog.name)[0]
 SELECT blog.name, blog.id FROM "blog"   ORDER BY blog.id LIMIT 10
+\end{lstlisting}
+
+Pro zadání vlastně vytvořeného SQL lze využít třídu \lstinline[style=inline]|pypg.query.Query|.
+
+\begin{lstlisting}[style=python]
+>>> from pypg.query import Query
+>>> Query().execute_and_fetch('SELECT * FROM "blog" ORDER BY blog.name')
+SELECT * FROM "blog" ORDER BY blog.name
+[[2, 'Devblog', 'Firemn\xc3\xad blog firmy deving'],
+[1, "Peter's tool blog", 'Blog o n\xc3\xa1\xc5\x99ad\xc3\xad']]
+\end{lstlisting}
+
+Pro kódování znaků se využívá UTF8. Pro vypsání dat z databáze na příkazové řádce ve správném tvaru se použije funkce \lstinline[style=inline]|print|.
+
+\begin{lstlisting}[style=python]
+>>> for row in db.blog.select():
+...     print row['name'], row['description']
+SELECT * FROM "blog"
+Peters tool blog Blog o nářadí
+Devblog Firemní blog firmy deving
 \end{lstlisting}
 
 \subsection{Tvoření podmínek dotazů}
@@ -264,34 +284,153 @@ blog.name LIKE %blog
 blog.id IN (1, 2, 3)
 \end{lstlisting}
 
-Všechny proměnné použité v podmínce nebo i v metodách používaných pro sestavování dotazu jsou zpracovány tak, aby nedošlo k SQL Injection. \\
-Syrové SQL.
+Podmínky lze vytvořit i porovnáním dvou instancí třídy \lstinline[style=inline]|Column|.
+\begin{lstlisting}[style=python]
+>>> print db.entry.blog_id == db.blog.id
+entry.blog_id = blog.id
+\end{lstlisting}
+Všechny proměnné použité v podmínce nebo i v metodách používaných pro sestavování dotazu jsou zpracovány tak, aby nedošlo k SQL Injection. 
 
 \subsection{Tvoření dotazů pro aktualizaci dat}
 
 Instance třídy \lstinline[style=inline]|Table| umožňuje vytvořit i SQL dotazy, které aktualizují data v databázi. Mezi tyto metody patři \lstinline[style=inline]|insert|, \lstinline[style=inline]|insert_and_get|, \lstinline[style=inline]|update|, \lstinline[style=inline]|update_and_get| a \lstinline[style=inline]|delete|.
 
 \begin{description}
-\item[insert] Metoda se používá pro vytvoření jednoho řádku v databázi. Přijímá neomezený počet atributů, jejichž názvy se musí shodovat s názvy atributů tabulky.
+\item[insert] Metoda se používá pro vytvoření jednoho řádku v databázi. Přijímá neomezený počet parametrů, jejichž názvy se musí shodovat s názvy atributů tabulky.
 \begin{lstlisting}[style=python]
 >>> db.blog.insert(name="New blog", description="New blog description")
 INSERT INTO "blog" ("name", "description") VALUES ('New blog', 'New blog description')
 \end{lstlisting}
-\item[insert\_and\_get] Tato metoda vytvoří záznam v databázi a zároveň vrátí všechny hodnoty zpět z databáze i s nově vygenerovanými nebo pozměněnými hodnotami při uložení.
+\item[insert\_and\_get] Tato metoda vytvoří záznam v databázi a zároveň vrátí všechny hodnoty zpět z databáze i s nově vygenerovanými nebo pozměněnými hodnotami při uložení. Hodnoty jsou vráceny v instanci třídy \lstinline[style=inline]|ResultSet|, jelikož se v budoucnu počítá s možností uložení více záznamu najednou.
 \begin{lstlisting}[style=python]
 >>> db.blog.insert_and_get(name="New blog", description="New blog description")
 INSERT INTO "blog" ("name", "description") VALUES ('New blog', 'New blog description') RETURNING *
 <pypg.resultset.ResultSet at 0xa287d4c>
 \end{lstlisting}
-\item[update]
-\item[update\_and\_get]
-\item[delete]
+\item[update] Metoda pro aktualizaci záznamů tabulky. Dotaz lze vytvořit s využitím metody \lstinline[style=inline]|where|. Metoda \lstinline[style=inline]|update| však musí být vždy v řetězení dotazů na konci. Přijímá neomezený počet parametrů, jejichž názvy se musí shodovat s názvy atributů tabulky.
+\begin{lstlisting}[style=python]
+>>> db.blog.where(db.blog.id==1).update(name="Peters tool blog")
+UPDATE "blog" SET "name"='Peters tool blog' WHERE blog.id = 1
+\end{lstlisting}
+\item[update\_and\_get] Tato metoda má stejnou podobu jako metoda \lstinline[style=inline]|update|. Vrací však z databáze aktualizované záznamy. 
+\begin{lstlisting}[style=python]
+>>> db.blog.where(db.blog.id==1).update_and_get(name="Peters tool blog")
+UPDATE "blog" SET "name"='Peters tool blog' WHERE blog.id = 1 RETURNING *
+<pypg.resultset.ResultSet at 0x9a524ac>
+\end{lstlisting}
+\item[delete] Metoda pro mazání záznamů v databázové tabulce. Lze vytvořit s využitím metody \lstinline[style=inline]|where|. Metoda \lstinline[style=inline]|delete| však musí být vždy v řetězení dotazů na konci.
+\begin{lstlisting}[style=python]
+>>> db.blog.where(3==db.blog.id).delete()
+DELETE FROM "blog" WHERE blog.id = 3
+\end{lstlisting}
 \end{description}
 
-\section{Práce s řádkem tabulky v knihovně pypg}
+\section{Výsledky dotazu}
 
-\section{Funkce knihovny pypg urychlující čtení dat z databáze}
+Metody \lstinline[style=inline]|select|, \lstinline[style=inline]|insert_and_get| a \lstinline[style=inline]|update_and_get| vrací z databáze záznamy v podobě instance třídy \lstinline[style=inline]|ResultSet|. Tato třída se chová podobně jako objekt pole. Je možné tedy výsledky iterovat nebo k nim přistoupit pomocí identifikátoru. Jednotlivé záznamy jsou pak ve formátu instancí třídy \lstinline[style=inline]|Row|.
+
+\begin{lstlisting}[style=python]
+>>> query = db.blog.select()
+>>> for row in query:
+...     print row['name'], row['description']
+SELECT * FROM "blog"
+Peters tool blog Blog o nářadí
+Devblog Firemní blog firmy deving
+>>> query[0]
+<pypg.row.Row at 0x9a5232c>
+\end{lstlisting}
+
+S instancí třídy \lstinline[style=inline]|Row| lze pak dále pracovat. Tato instance uchovává data ve formátu klíč-hodnota. Pro získání hodnoty daného atributu se přistupuje přes název tohoto atributu. Přes klíč lze nastavit záznamu i novou hodnotu.
+\begin{lstlisting}[style=python]
+>>> row = query[1]
+>>> row['description'] = "Blog description"
+\end{lstlisting}
+
+Instance poskytuje metody \lstinline[style=inline]|update| a \lstinline[style=inline]|delete|. Instance si pamatuje, které atributy byly přenastaveny a při zavolání metody update tyto změny uloží do databáze. Tato metoda přijímá také neomezený počet parametrů, jejichž názvy se musí shodovat s názvy atributů tabulky.
+\begin{lstlisting}[style=python]
+>>> row.update()
+UPDATE "blog" SET "description"='Blog description' WHERE "id"=2
+>>> row.update(name="Blog name")
+UPDATE "blog" SET "name"='Blog name' WHERE "id"=2
+\end{lstlisting}
+
+Pokud je záznam smazán metodou \lstinline[style=inline]|delete|, instance zůstane v paměti, ale nelze s ní již dále pracovat.
+\begin{lstlisting}[style=python]
+>>> row.delete()
+DELETE FROM "blog" WHERE "id"=2
+>>> row.update(name="Blog name")
+PyPgException: 'This row was deleted.'
+\end{lstlisting}
+
+\subsection{Relační záznamy}
+
+Přes instanci třídy \lstinline[style=inline]|Row| lze přistupovat k relačním záznamům. Pokud je přistupováno k relaci N:1, používá se atribut jehož název je shodný s názvem cizího klíče. Pokud je přistupováno k relaci 1:N, používá se atribut jehož název je shodný s názvem tabulky relačních objektů. Relaci 1:N lze dále filtrovat podle stejnými pravidly jako při tvoření dotazů.
+
+\begin{lstlisting}[style=python]
+>>> row = db.entry.limit(1).select()[0]
+SELECT * FROM "entry"    LIMIT 1
+>>> row.blog_id['name']
+SELECT * FROM "blog"  WHERE "id"=1
+'Peters tool blog'
+>>> for ea row.entry_authors.select():
+...     print ea.author_id['firstname']
+SELECT * FROM "entry_authors"  WHERE "entry_id"=1   
+SELECT * FROM "author"  WHERE author.id IN (2)  
+Jan
+\end{lstlisting}
+
+\section{Funkce urychlující čtení dat z databáze}
+
+Při cyklování výsledky dotazu a při přistupování k relacím se vytváří efektivní dotazy, které nezatěžují databázi. Pro každou tabulku použitou v cyklu se vždy vytvoří pouze jeden dotaz. Příklad lze nalézt ve skriptu \lstinline[style=inline]|blogapp.py|. Konkrétně ve funkci \lstinline[style=inline]|print_database_data|. \\
+Funkce knihovny pypg umožňuje vytvořit v databázi struktury, které simulují materializovaný pohled. Pro vytvoření se používá metoda \lstinline[style=inline]|create_mview| instance třídy \lstinline[style=inline]|PyPg|. Tato metoda přijímá jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvoření pomocí API knihovny. Pomocí metody \lstinline[style=inline]|drop_mview| je z databáze materializovaný pohled odstraněn. Tato operace by měla být prováděna mimo běh aplikace.
+
+\begin{lstlisting}[style=python]
+>>> db.create_mview('blog_entry', db.blog.join(db.entry).select())
+Materialized view blog_entry created successfully
+>>> db.blog_entry.select()[0]
+SELECT * FROM "blog_entry"   
+<pypg.row.Row at 0x9f7a5ac>
+>>> db.drop_mview('blog_entry')
+Materialized view blog_entry dropped successfully
+\end{lstlisting}
+
+Pro funkci automatické denormalizace je nejdříve nutné zapnout logování statistik pomocí funkce \lstinline[style=inline]|set_log| instance třídy \lstinline[style=inline]|PyPg|. Poté knihovna loguje statistiky každého prováděného dotazu. Automatická denormalizace se pak spouští metodou \lstinline[style=inline]|start_denormalization|. Tato funkce vyžaduje, aby byly přes příkazový řádek dostupné funkce \lstinline[style=inline]|psql| a \lstinline[style=inline]|pg_dump| SŘBD PostgreSQL. Při spuštění bude na databázovém serveru vytvořena testovací databáze, která bude testována a zatěžována. Příklad použití této funkce lze nalézt ve skriptu \lstinline[style=inline]|blogapp.py|. \\
 
 \section{Vytvoření vlastních sady pravidel pomocí třídy Naming}
+
+K vytvoření vlastních pravidel použitých při tvoření dotazů je potřeba podědit z třídy \lstinline[style=inline]|pypg.structure.Naming| a předefinovat její metody.
+\begin{lstlisting}[style=python]
+from pypg.structure import Naming
+class CustomNaming(Naming):
+    def get_pk_naming(self, table):
+        return "id"
+
+    def get_fk_naming(self, table, foreign_table):
+        return "%s_id" % foreign_table
+
+    def match_fk_naming(self, table, attr):
+        return attr.endswith("_id")
+
+    def get_fk_column(self, table, foreign_key):
+        return foreign_key.rstrip("_id")
+\end{lstlisting}
+Metoda \lstinline[style=inline]|get_pk_naming| přijímá jako parametr název tabulky a měla by vracet název primárního klíče této tabulky. \\
+Metoda \lstinline[style=inline]|get_fk_naming| přijíma parametry, které představují název tabulky a název relační tabulky. Metoda by měla vracet název cizího klíče pro tuto relaci. \\
+Metoda \lstinline[style=inline]|match_fk_naming| přijíma jako parametry název tabulky a název atributu. Metoda by měla zjistit, zda je tento atribut cizím klíčem a vrátit výsledek. \\
+Metoda \lstinline[style=inline]|get_fk_column| přijímá název tabulky a název cizího klíče, který tato tabulka obsahuje. Metoda by měla název relační tabulky, na kterou tento cizí klíč odkazuje. \\
+Instanci této třídy je pak potřeba předat do nastavení knihovny.
+\begin{lstlisting}[style=python]
+>>> db.set_naming(CustomNaming())
+\end{lstlisting}
+
+\section{Obsah přiloženého skriptu}
+
+Skript \lstinline[style=inline]|blogapp.py| obsažený v příloze v adresáři \lstinline[style=inline]|src/| obsahuje ukázkové funkce \lstinline[style=inline]|print_database_data|, \lstinline[style=inline]|create_mview|, \lstinline[style=inline]|drop_mview|, \lstinline[style=inline]|fill_statistics| a \lstinline[style=inline]|run_denormalization|. U každé funkce je popis, co daná funkce dělá. Před spuštěním funkcí je potřeba ve skriptu na řádku 7 definovat správné údaje pro spojení do databáze vytvořené ze skriptu \lstinline[style=inline]|blogapp.sql|. Skript lze poté spouštět z příkazové řádky.
+
+\begin{lstlisting}[style=python]
+user@station:~$ python blogapp.py
+\end{lstlisting}
+
+Na řádku 64 v tomto skriptu je určeno, které funkce se budou provádět při spuštění skriptu. Implicitně se bude provádět pouze funkce \lstinline[style=inline]|print_database_data|. Pro spuštění ostatních funkcí je potřeba je odkomentovat.
 
 \end{document}
