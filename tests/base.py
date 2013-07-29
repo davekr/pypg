@@ -17,7 +17,9 @@ class TestHelper(object):
     @classmethod
     def fill_db(cls):
         print "Filling test database %s." % cls.DBNAME
-        subprocess.call(["psql", "-d", cls.DBNAME, "-U", cls.DBUSER, "-f", "tests/%s.sql" % cls.DBNAME], \
+        import os
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        subprocess.call(["psql", "-d", cls.DBNAME, "-U", cls.DBUSER, "-f", "%s/%s.sql" % (dirname, cls.DBNAME)], \
                         stdout=subprocess.PIPE)
 
     @classmethod

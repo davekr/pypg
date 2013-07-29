@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 
 from structure import Structure
 from exception import PyPgException
 
 class TableValidator(object):
+    """Třída, která validuje dotazy před prováděním nad databází. Je využívána třídou Table
+    a třídou Row."""
 
     _NO_ARGUMENTS_ERROR = 'Method "%s" got no arguments.'
 
@@ -13,11 +16,13 @@ class TableValidator(object):
         return Structure.table_has_column(self._table_name, str(column))
             
     def _check_limit(self, limit):
+        error = 'Wrong limit "%s". Limit has to be a positive integer or convertable to integer.' \
+                % limit
+        if not limit:
+            raise PyPgException(error)
         try:
             return int(limit)
         except ValueError:
-            error = 'Wrong limit "%s". Limit has to be an integer or convertable to integer.' \
-                    % limit
             raise PyPgException(error)
             
     def _validate_row(self, kwargs):

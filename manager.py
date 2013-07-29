@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from collections import defaultdict
 from exception import PyPgException
 import settings
@@ -5,6 +7,7 @@ import logging
 import os
 
 class Manager(object):
+    """Třída, která se stará o správu spojení a nastavení knihovny."""
 
     _CONNECTION = None
     #Example entry: 'book': {'columns': ['title', 'id', 'author_id'], 'pks': ['id'], \
@@ -38,6 +41,7 @@ class Manager(object):
     _NAMING = None
 
     _LIB_PATH = os.path.realpath(os.path.dirname(__file__))
+    _timings = []
     
     @staticmethod
     def set_connection(conn):

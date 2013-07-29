@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 
 from literal import Literal
 
 class Column(object):
+    """Třída představující databázový sloupec. Používá se při tvoření dotazů a
+    poskytuje různé metody pro vyhledávání v řádku. Vrací objekt třídy Literal."""
 
     def __init__(self, table_name, name):
         self._name = name

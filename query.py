@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 import logging
 import json
 import time
@@ -7,6 +9,8 @@ from cursor import PyPgCursor
 import settings
 
 class Query(object):
+    """Třída, která přijímá hodnoty vrácené instancí třídy SQLBuilder, provádí SQL dotaz
+    a získává výsledná data. Také shromažďuje statistiky pro automatickou denormalizaci."""
 
     def __init__(self):
         self._conn = Manager.get_connection()
@@ -46,7 +50,6 @@ class Query(object):
         logdict = {}
         logdict['query'] = self._cursor.query
         logdict['time'] = t
-        logdict['datetime'] = time.strftime("%d.%m.%y %H:%M", time.localtime())
         logdict['tables'] = kwargs.get('tables')
         logdict['columns'] = map(str, kwargs.get('columns', []))
         logdict['rowcount'] = self._cursor.rowcount

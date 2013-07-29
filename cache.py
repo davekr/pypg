@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 
 class ResultSetCache(object):
+    """Třída uchovává data při použití funkce samostatných dotazů. 
+    Umožňuje v těchto datech vyhledávat a rozdělovat je podle příslušných vazeb.
+    Je využívána třídou ResultSet"""
         
     def __init__(self, table, data):
         self._cache = {}        

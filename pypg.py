@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from table import Table, TableSelect
 from exception import PyPgException
@@ -8,6 +9,9 @@ import settings as dbsettings
 from denormalization import Denormalization, DBBackup
 
 class PyPg(object):
+    """Třída je vstupním bodem celé knihovny. Umožňuje nastavovat vlastnosti knihovny a
+    poskytuje přístup k objektům třídy Table. Pomocí této třídy se spouští i vytváření 
+    materializovaných pohledů a automatická denormalizace."""
     
     def __init__(self, conn, logger=None, naming=None, **kwargs):
         Manager.set_connection(conn)

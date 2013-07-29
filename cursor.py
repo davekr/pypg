@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
+
 from psycopg2.extras import DictCursor
 import time
 
 from manager import Manager
 
 class PyPgCursor(DictCursor):
-    """A cursor that keeps a list of column name -> index mappings.
-        And logs every executed query."""
+    """Cursor, který obsahuje výsledky ve formě klíč-hodnota.
+    Pokud je to nastaveno, loguje dotazy pomocí standardního logování a 
+    pro každý dotaz měří čas provádění."""
 
     def __init__(self, *args, **kwargs):
         super(PyPgCursor, self).__init__(*args, **kwargs)

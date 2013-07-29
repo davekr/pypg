@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
 
 class SQLBuilder(object):
+    """Třída pro sestavování SQL dotazu"""
     
-    SELECT = 'SELECT %(args)s FROM %(table)s %(join)s %(where)s %(order)s %(limit)s'
-    INSERT = 'INSERT INTO %(table)s (%(args)s) VALUES (%(values)s) %(returning)s'
-    DELETE = 'DELETE FROM %(table)s %(where)s'
-    UPDATE = 'UPDATE %(table)s SET %(values)s %(where)s %(returning)s'
+    _SELECT = 'SELECT %(args)s FROM %(table)s %(join)s %(where)s %(order)s %(limit)s'
+    _INSERT = 'INSERT INTO %(table)s (%(args)s) VALUES (%(values)s) %(returning)s'
+    _DELETE = 'DELETE FROM %(table)s %(where)s'
+    _UPDATE = 'UPDATE %(table)s SET %(values)s %(where)s %(returning)s'
     
     def __init__(self, table):
         self._table = self._escape(table)
@@ -99,7 +101,7 @@ class SQLBuilder(object):
         self._tables.append(table)
         
     def build_select(self):
-        select = self.SELECT % ({'table': self._table, 'args': ', '.join(map(str, self._select_args)) if self._select_args else '*', \
+        select = self._SELECT % ({'table': self._table, 'args': ', '.join(map(str, self._select_args)) if self._select_args else '*', \
                                  'where': self._where, 'order': self._order, 'limit': self._limit, 'join': self._join})
         parameters_list = self._where_values[:]
         if self._limit_to:
@@ -107,16 +109,16 @@ class SQLBuilder(object):
         return {'sql': select, 'parameters': parameters_list, 'tables': self._tables, 'columns': self._select_args}
         
     def build_delete(self):
-        delete = self.DELETE % ({'table': self._table, 'where': self._where})
+        delete = self._DELETE % ({'table': self._table, 'where': self._where})
         return {'sql': delete, 'parameters': self._where_values, 'tables': self._tables, 'columns': []}
         
     def build_insert(self):
-        insert = self.INSERT % ({'table': self._table, 'args': ', '.join(self._insert_keys), \
+        insert = self._INSERT % ({'table': self._table, 'args': ', '.join(self._insert_keys), \
                                  'values': ', '.join(['%s' for k in self._insert_values]), 'returning': self._returning})
         return {'sql': insert, 'parameters': self._insert_values, 'tables': self._tables, 'columns': []}
         
     def build_update(self):
-        update = self.UPDATE % ({'table': self._table, 'values': self._update, 'where': self._where, \
+        update = self._UPDATE % ({'table': self._table, 'values': self._update, 'where': self._where, \
                                  'returning': self._returning})
         return {'sql': update, 'parameters': self._update_values + self._where_values, 'tables': self._tables, 'columns': []}
         

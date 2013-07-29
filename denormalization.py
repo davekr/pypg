@@ -15,6 +15,7 @@ import os
 import platform
 
 class Analyzer(object):
+    """Třída slouží pro analyzování logovaných statistik a pro návrh denormalizačních změn."""
 
     def __init__(self):
         self._modifying_time = defaultdict(lambda: 0)
@@ -40,7 +41,8 @@ class Analyzer(object):
         for line in data:
             self._all_queries.append({'sql': line['query'], 'tables': line['tables']})
             if len(line['tables']) > 1:
-                self._queries_to_improve.add_query(line['query'], line['time'], line['tables'], line['columns'])
+                query, condition = line['query'].split(' WHERE ') if ' WHERE ' in line['query'] else (line['query'], '')
+                self._queries_to_improve.add_query(query, line['time'], line['tables'], line['columns'])
             elif line['tables']:
                 if not line['query'].startswith('SELECT'):
                     table = line['tables'][0]
@@ -55,6 +57,7 @@ class Analyzer(object):
         print str(self._queries_to_improve)
 
 class Improvement(object):
+    """Instance třídy jsou návrhem denormalizačních změn v databázi."""
 
     def __init__(self, query, time, tables, columns):
         self.query = query
@@ -68,8 +71,10 @@ class Improvement(object):
     def add_read_time(self, time):
         self.time_read += time
 
-    def improvement_sql(self):
-        return 'SELECT * FROM test_mview;'
+    def improvement_sql(self, where=''):
+        if where:
+            where = ' WHERE %s' % where.replace('.', '_')
+        return 'SELECT * FROM test_mview %s;' % where
 
     def __str__(self):
         return 'Improving query: %s' % self.query
@@ -78,7 +83,7 @@ class Improvement(object):
         unit = 's' if platform.system() == 'Windows' else 'ms'
         result = self.get_result_report()
         return 'Improvement: \n\
-        query: %(q)s\n\
+        materialized view based on query: \n\t\t%(q)s\n\
         original time spent reading: %(orig_read)s %(unit)s\n\
         original time spent writing: %(orig_write)s %(unit)s\n\
         improved time spent reading: %(impro_read)s %(unit)s \n\
@@ -95,7 +100,7 @@ class Improvement(object):
             percentage = round((total_orig_time - total_improved_time) / total_orig_time * 100)
             if percentage > 9:
                 recomended = True
-        result = 'Improvement is%(not)s recomended. Improvement is %(percent)s%% better then the original.' \
+        result = 'Improvement is%(not)s recomended. Improvement is %(percent)s%% better than the original.' \
                 % {'not': '' if recomended else ' not', 'percent': percentage}
         return result
 
@@ -121,6 +126,7 @@ class Improvement(object):
         pass
 
     class BuilderMockObject(object):
+        """Třída umožňuje vlastní způsob skládání dotazů, podobný třídě SQLBuilder."""
 
         def __init__(self, query, tables, columns):
             self._query = query
@@ -146,6 +152,7 @@ class Improvement(object):
             return {'sql': query, 'parameters': []}
 
 class ImprovementCollection(object):
+    """Instance třídy obsahuje kolekci navrhovaných denormalizačních změn."""
 
     def __init__(self):
         self.collection = []
@@ -190,8 +197,10 @@ class ImprovementCollection(object):
         return '\n'.join(map(str, self.collection))
 
 class Denormalization(object):
+    """Třída je vstupním bodem automatické denormalizace. Koriguje všechny ostatní
+    třídy v tomto modulu."""
 
-    DBNAME = 'testingdatabase'
+    DBNAME = 'testingdatabase' #Název databáze, která bude vytvořena pro testování denormalizačních změn
 
     def __init__(self):
         self.dbbackup = DBBackup()
@@ -224,8 +233,9 @@ class Denormalization(object):
         conn = Manager.get_connection()
         for query in all_queries:
             cursor = conn.cursor(cursor_factory=PyPgCursor)
-            if query['sql'] == improvement.query:
-                cursor.execute(improvement.improvement_sql())
+            qhead, qcondition = query['sql'].split(' WHERE ') if ' WHERE ' in query['sql'] else (query['sql'], '')
+            if qhead == improvement.query:
+                cursor.execute(improvement.improvement_sql(qcondition))
                 t = (time.time() - cursor.timestamp) * 1000
                 improvement.improved_time_read += t
             elif len(query['tables']) == 1 and not query['sql'].startswith('SELECT'):
@@ -271,6 +281,7 @@ class Denormalization(object):
         self.dbbackup.restore_backup()
 
 class DBBackup(object):
+    """Třída slouží pro vytváření zálohy databáze a obnovu databáze z této zálohy."""
 
     def __init__(self):
         self.command = []

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from builder import SQLBuilder
 from exception import PyPgException
 from query import Query
@@ -5,6 +7,8 @@ from utils import TableValidator
 from structure import Structure
 
 class ReadOnlyRow(TableValidator):
+    """Reprezentace řádku z výsledku SQL dotazu, který používal spojení tabulek 
+    nebo neobsahuje primární klíče. Umožňuje data řádku pouze číst."""
 
     def __init__(self, data, table):
         super(ReadOnlyRow, self).__init__(table)
@@ -36,6 +40,8 @@ class ReadOnlyRow(TableValidator):
             raise PyPgException('This row was deleted.')  
 
 class Row(ReadOnlyRow):
+    """Třída představuje řádek výsledku vráceného na SQL dotaz. Umožňuje s řádkem 
+    dále pracovat, poskytuje metody pro aktualizaci a mazání a metody pro přístup k vazebním objektům řádků."""
 
     def __init__(self, data, table, result_set=None):
         super(Row, self).__init__(data, table)
@@ -99,7 +105,7 @@ class Row(ReadOnlyRow):
             self._sql.add_update_kwargs(kwargs)
             Query().execute(**self._sql.build_update())
             self._changed = False
-            #self._set_sql_builder()
+            self._set_sql_builder()
             return self
         else:
             raise PyPgException('No data to update for this row.')

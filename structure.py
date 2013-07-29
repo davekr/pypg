@@ -1,8 +1,12 @@
+# -*- coding: utf-8 -*- 
+
 from manager import Manager
 import settings
 from exception import PyPgException
 
 class Structure(object):
+    """Třída, která abstrahuje strukturu databáze a poskytuje metody pro 
+    vyhledávání v této struktuře. """
 
     @staticmethod
     def table_has_column(table, column):
@@ -119,6 +123,8 @@ class Structure(object):
             return None
     
 class Naming(object):
+    """Třída obsahuje pravidla, podle kterých se řídí struktura databáze. 
+    Pokud není povolena introspekce, je využívána třídou Structure."""
 
     def get_pk_naming(self, table):
         return "id"

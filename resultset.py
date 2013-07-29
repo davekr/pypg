@@ -1,11 +1,16 @@
+# -*- coding: utf-8 -*- 
+
 from row import Row, ReadOnlyRow
 from column import Column
 from structure import Structure
 from query import Query
 from builder import SQLBuilder
 from cache import ResultSetCache
+import copy
 
 class ReadOnlyResultSet(object):
+    """Reprezentace výsledků z SQL dotazu, který používal spojení tabulek nebo 
+    neobsahuje primární klíče. Umožňuje výsledná data pouze číst."""
 
     def __init__(self, data, table_name):
         self._table_name = table_name
@@ -27,6 +32,8 @@ class ReadOnlyResultSet(object):
         return iter([ReadOnlyRow(row, self._table_name) for row in self._data])
 
 class ResultSet(ReadOnlyResultSet):
+    """Reprezentace výsledku vráceného na SQL dotaz. Umožňuje funkci samostatných dotazů, 
+    která minimalizuje objem přenášených dat, a poskytuje přístup k instancím třídy Row."""
 
     def __init__(self, data, table_name, cache=None):
         super(ResultSet, self).__init__(data, table_name)
@@ -67,7 +74,6 @@ class ResultSet(ReadOnlyResultSet):
                 union_sql = []
                 union_parameters = []
                 union_dict = {}
-                import copy
                 for id in self._cache.get_all_keys(table_name, pk):
                     limiting_sql = copy.deepcopy(sql)
                     limiting_sql.add_where_literal(Column(relation, relation_fk) == id)

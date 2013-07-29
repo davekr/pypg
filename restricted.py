@@ -1,14 +1,15 @@
+# -*- coding: utf-8 -*- 
+
 from table import TableSelect, TableSelected
 from exception import PyPgException
 
 class RestrictedTableSelect(TableSelect):
+    """Třída, která se používá při přístupu k relacím. Umožňuje vazební objekty
+    filtrovat a poskytuje podobné metody jako třída Table."""
 
     def __init__(self, name, sql, result_set):
         super(RestrictedTableSelect, self).__init__(name, sql)
         self._result_set = result_set
-
-    def join(self, *args, **kwargs):
-        raise PyPgException("Join not supported in SELECT...IN functionality")
 
     def _table_select_instance(self):
         return self

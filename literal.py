@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
 
 class Literal(object):
+    """Reprezentace podmínky v SQL dotazu obsahující text a hodnoty.
+    Třída SQLBuilder z instancí této třídy vytváří SQL dotazy."""
 
     def __init__(self, sql, column, value):
         self._sql = sql

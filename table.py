@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from builder import SQLBuilder
 from resultset import ResultSet, ReadOnlyResultSet
 from column import Column
@@ -9,6 +11,8 @@ from exception import PyPgException
 __all__ = ['Table']
 
 class TableSelect(TableValidator):
+    """Tabulka představující dotaz jehož podmínky byly omezeny pomocí klauzule select
+    nebo klazulí použitých pouze pro select."""
 
     def __init__(self, name, sql):
         super(TableSelect, self).__init__(name)
@@ -76,6 +80,7 @@ class TableSelect(TableValidator):
         return TableWhere(self._table_name, self._sql)
 
 class TableSelected(TableSelect):
+    """Třída umožňuje funkci řetězení podmínek. Obsahuje data vrácená na SQL dotaz."""
 
     def __getitem__(self, item):
         data = self._get_data()
@@ -113,6 +118,7 @@ class TableSelected(TableSelect):
         return self
 
 class TableWhere(TableSelect):
+    """Tabulka představující dotaz jehož podmínky byly omezeny pomocí where."""
     
     def delete(self):
         Query().execute(**self._sql.build_delete())
@@ -132,6 +138,8 @@ class TableWhere(TableSelect):
         return ResultSet(data, self._table_name)
         
 class Table(TableWhere):
+    """Třída je rozhraním nad databázovou tabulkou. Pomocí svých metod umožňuje
+    vytvářet dotazy do databáze. Poskytuje přístup k objektům tříd Column."""
 
     def __init__(self, name):
         super(Table, self).__init__(name, SQLBuilder(name))

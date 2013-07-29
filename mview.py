@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from column import Column
 from structure import Structure
 from query import Query
@@ -7,8 +9,9 @@ import settings
 from exception import PyPgException
 
 class MaterializedView(object):
+    """Třída obsahujicí aplikační logiku pro simulaci materializovaných pohledů."""
 
-    update_trigger_sql = """CREATE FUNCTION %(view)s_%(mview)s_%(table)s_ut() RETURNS TRIGGER
+    _update_trigger_sql = """CREATE FUNCTION %(view)s_%(mview)s_%(table)s_ut() RETURNS TRIGGER
         SECURITY DEFINER LANGUAGE 'plpgsql' AS '
         BEGIN
           IF OLD.%(pk)s = NEW.%(pk)s THEN
@@ -24,7 +27,7 @@ class MaterializedView(object):
         CREATE TRIGGER %(view)s_%(mview)s_ut AFTER UPDATE ON %(table)s
           FOR EACH ROW EXECUTE PROCEDURE %(view)s_%(mview)s_%(table)s_ut();"""
 
-    insert_trigger_sql = """CREATE FUNCTION %(view)s_%(mview)s_%(table)s_it() RETURNS TRIGGER
+    _insert_trigger_sql = """CREATE FUNCTION %(view)s_%(mview)s_%(table)s_it() RETURNS TRIGGER
         SECURITY DEFINER LANGUAGE 'plpgsql' AS '
         BEGIN
           INSERT INTO %(mview)s SELECT * FROM %(view)s WHERE %(mview_pk)s = NEW.%(pk)s;
@@ -34,7 +37,7 @@ class MaterializedView(object):
         CREATE TRIGGER %(view)s_%(mview)s_it AFTER INSERT ON %(table)s
           FOR EACH ROW EXECUTE PROCEDURE %(view)s_%(mview)s_%(table)s_it();"""
 
-    delete_trigger_sql = """CREATE FUNCTION %(view)s_%(mview)s_%(table)s_dt() RETURNS TRIGGER
+    _delete_trigger_sql = """CREATE FUNCTION %(view)s_%(mview)s_%(table)s_dt() RETURNS TRIGGER
         SECURITY DEFINER LANGUAGE 'plpgsql' AS '
         BEGIN
           DELETE FROM %(mview)s WHERE %(mview_pk)s = OLD.%(pk)s;
@@ -44,15 +47,15 @@ class MaterializedView(object):
         CREATE TRIGGER %(view)s_%(mview)s_dt AFTER DELETE ON %(table)s
           FOR EACH ROW EXECUTE PROCEDURE %(view)s_%(mview)s_%(table)s_dt();"""
 
-    drop_update_trigger_sql = """DROP TRIGGER %(view)s_%(mview)s_ut ON %(table)s;
+    _drop_update_trigger_sql = """DROP TRIGGER %(view)s_%(mview)s_ut ON %(table)s;
         DROP FUNCTION %(view)s_%(mview)s_%(table)s_ut();
         """
     
-    drop_insert_trigger_sql = """DROP TRIGGER %(view)s_%(mview)s_it ON %(table)s;
+    _drop_insert_trigger_sql = """DROP TRIGGER %(view)s_%(mview)s_it ON %(table)s;
         DROP FUNCTION %(view)s_%(mview)s_%(table)s_it();
         """
 
-    drop_delete_trigger_sql = """DROP TRIGGER %(view)s_%(mview)s_dt ON %(table)s;
+    _drop_delete_trigger_sql = """DROP TRIGGER %(view)s_%(mview)s_dt ON %(table)s;
         DROP FUNCTION %(view)s_%(mview)s_%(table)s_dt();
         """
 
@@ -121,28 +124,31 @@ class MaterializedView(object):
         for table_name in self.table._sql._tables:
             pk = Structure.get_primary_key(table_name)
             mview_pk = Column(table_name, pk).get_aliased_name()
-            cursor.execute(self.update_trigger_sql % ({'view': name + '_view', 'mview': name, \
+            cursor.execute(self._update_trigger_sql % ({'view': name + '_view', 'mview': name, \
                                                         'table': table_name, 'pk': pk, 'mview_pk': mview_pk}))
-            cursor.execute(self.insert_trigger_sql % ({'view': name + '_view', 'mview': name, \
+            cursor.execute(self._insert_trigger_sql % ({'view': name + '_view', 'mview': name, \
                                                         'table': table_name, 'pk': pk, 'mview_pk': mview_pk}))
-            cursor.execute(self.delete_trigger_sql % ({'view': name + '_view', 'mview': name, \
+            cursor.execute(self._delete_trigger_sql % ({'view': name + '_view', 'mview': name, \
                                                         'table': table_name, 'pk': pk, 'mview_pk': mview_pk}))
         Manager.renew_cache()
 
     def drop_mview(self, name):
+        debug = settings.DEBUG
+        settings.DEBUG = False
         tables = self._get_all_involved_tables(name)
         for table in tables:
-            Query().execute(self.drop_update_trigger_sql % {'view': name + '_view', 'mview': name, \
+            Query().execute(self._drop_update_trigger_sql % {'view': name + '_view', 'mview': name, \
                                                             'table': table})
-            Query().execute(self.drop_insert_trigger_sql % {'view': name + '_view', 'mview': name, \
+            Query().execute(self._drop_insert_trigger_sql % {'view': name + '_view', 'mview': name, \
                                                             'table': table})
-            Query().execute(self.drop_delete_trigger_sql % {'view': name + '_view', 'mview': name, \
+            Query().execute(self._drop_delete_trigger_sql % {'view': name + '_view', 'mview': name, \
                                                             'table': table})
         if tables:
             view_sql = 'DROP VIEW %(view)s;' % {'view': name + '_view'}
             mview_sql = 'DROP TABLE %(mview)s;' % {'mview': name}
             Query().execute(mview_sql)
             Query().execute(view_sql)
+        settings.DEBUG = debug
         print 'Materialized view %s dropped successfully' % name
 
     def _get_all_involved_tables(self, name):
