@@ -1,3 +1,6 @@
+import os, sys
+dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, dirname)
 import unittest
 from exception import PyPgException
 from table import TableWhere, Table, TableSelect, TableSelected
@@ -457,7 +460,9 @@ class LoggingTest(unittest.TestCase):
         self.db.country.join(self.db.city).join(self.db.countrylanguage).limit(1).select()[0]
 
     def test_statistics(self):
-        with open('log/statistics.log') as f:
+        import os
+        dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(dirname, 'log/statistics.log')) as f:
             import json
             record = json.loads(list(f)[-1])
             self.assertEqual(set(record['tables']), set(['country', 'countrylanguage', 'city']))
