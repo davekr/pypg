@@ -11,7 +11,7 @@ It includes functionality as:
 
 The application was developed for my [Master thesis](http://theses.cz/id/sgb68f).
 
-Instalace knihovny pypg
+Instalace
 --------------------------
 
 Knihovna je distribuována ve formě balíku programovacího jazyka Python. Pro spuštění knihovny stačí, 
@@ -25,7 +25,7 @@ Knihovna byla testována s verzemi výše uvedených technologií na operačním
 Provoz na operačním systému Windows otestován nebyl, knihovna by však měla být schopná na tomto systému pracovat bez větších problémů.
 Pro funkci automatické denormalizace je také potřeba, aby byla přes příkazovou řádku dostupná funkce PostgreSQL `psql` a `pg_dump`.
 
-Inicializace knihovny pypg
+Inicializace
 ------------------------------
 
 Pro inicializaci knihovny je potřeba nejdříve vytvořit spojení do databáze pomocí databázového ovladače `psycopg2` a toto spojení předat třídě `PyPg` z balíku `pypg`.
@@ -52,7 +52,7 @@ Všechny tyto parametry lze nastavit při inicializaci třídy `PyPg` nebo pomoc
 >>> db.set_debug(True)
 ```
 
-Tvoření dotazů pomocí API knihovny pypg
+Tvoření dotazů
 ------------------------------------------
 
 Přes instanci třídy `PyPg` se lze dostat k objektům představující databázové tabulky. Pokud je povolena introspekce, je možné získat nápovědu o všech tabulkách v databázi. Také je při přístupu k neexistující tabulce vyvolána výjimka.
@@ -76,22 +76,27 @@ PyPgException: 'Column "notexistingcolumn" is not a valid column in table "blog"
 Objekt třídy `Table` poskytuje metody pro tvoření SQL dotazů. Mezi tyto metody patří `limit`, `order`, `order_desc`, `where`, `join` a `select`.
 
 * __limit__ Tato metoda přijímá jediný parametr, který musí být typu `integer`, nebo převeditelný na typ `integer`.
+
 ```python
 >>> db.blog.limit(10).select()[0]
 SELECT * FROM "blog"    LIMIT 10
 ```
 * __order__ Metoda `order` přijímá jenom jediný parametr, kterým lze data seřadit. Tento parametr musí být typu `Column`. 
+
 ```python
 >>> db.blog.order(db.blog.name).select()[0]
 SELECT * FROM "blog"   ORDER BY blog.name
 ```
 * __order_desc__ Metoda se chová stejně jako `order`, ale při jejím použití jsou výsledná data seřazena sestupně.
 * __where__ Metoda `where` přijímá neomezený počet parametrů. Tyto parametry musí být podmínky sestavené pomocí instancí třídy `Column`. Všechny tyto podmínky jsou spojeny pomocí SQL klauzule `AND`.
+
 ```python
 >>> db.entry.where(db.entry.rating>0, db.entry.comments==0).select()[0]
 SELECT * FROM "entry"  WHERE entry.rating > 0 AND entry.comments = 0
 ```
+
 * __join__ Tato metoda vytváří dotaz pomocí spojení tabulek. Prvním parametrem metody je instance třídy `Table`. Druhý parametr určuje podmínku spojení tabulek a je tvořen pomocí instancí třídy `Column`. Pokud je povolena introspekce, podmínka je implicitně zjištěna z metadat databáze. 
+
 ```python
 >>> db.blog.join(db.entry).select()[0]
 SELECT * FROM "blog" JOIN "entry" ON entry.blog_id = blog.id
@@ -100,6 +105,7 @@ SELECT * FROM "blog" JOIN "entry" ON entry.blog_id = blog.id
 SELECT * FROM "blog" JOIN "entry" ON blog.id = entry.id
 ```
 * __select__ Metoda `select` přijímá neomezené množství nepovinných parametrů. Tyto parametry určují databázové sloupce, na které bude dotazováno a musí být typu `Column`.
+
 ```python
 >>> db.entry.select(db.entry.headline, db.entry.rating)[0]
 SELECT entry.headline, entry.rating, entry.id FROM "entry"
@@ -143,26 +149,27 @@ Peters tool blog Blog o nářadí
 Devblog Firemní blog firmy deving
 ```
 
-\subsection{Tvoření podmínek dotazů}
+Tvoření podmínek dotazů
+-------------------------
 
 Třída `Column` umožňuje vytvářet při sestavování dotazů podmínky pomocí svých instancí. Mezi tyto metody patří `__eq__`, `__ne__`, `__gt__`, `__lt__`, `like` a `in_`.
 
-__eq__
+**\_\_eq\_\_**
 ```python
 >>> print db.entry.rating == 0
 entry.rating = 0
 ```
-__ne__
+**\_\_ne\_\_**
 ```python
 >>> print db.entry.rating != 0
 entry.rating <> 0
 ```
-__gt__
+**\_\_gt\_\_**
 ```python
 >>> print db.entry.rating > 0
 entry.rating > 0
 ```
-__lt__
+**\_\_lt\_\_**
 ```python
 >>> print db.entry.rating < 0
 entry.rating < 0
@@ -172,7 +179,7 @@ __like__
 >>> print db.blog.name.like("%blog")
 blog.name LIKE %blog
 ```
-__in__
+**in\_**
 ```python
 >>> print db.blog.id.in_([1,2,3])
 blog.id IN (1, 2, 3)
@@ -191,28 +198,33 @@ Tvoření dotazů pro aktualizaci dat
 Instance třídy `Table` umožňuje vytvořit i SQL dotazy, které aktualizují data v databázi. Mezi tyto metody patři `insert`, `insert_and_get`, `update`, `update_and_get` a `delete`.
 
 * __insert__ Metoda se používá pro vytvoření jednoho řádku v databázi. Přijímá neomezený počet parametrů, jejichž názvy se musí shodovat s názvy atributů tabulky.
+
 ```python
 >>> db.blog.insert(name="New blog", description="New blog description")
 INSERT INTO "blog" ("name", "description") VALUES ('New blog', 'New blog description')
 ```
 * __insert_and_get__ Tato metoda vytvoří záznam v databázi a zároveň vrátí všechny hodnoty zpět z databáze i s nově vygenerovanými nebo pozměněnými hodnotami při uložení. Hodnoty jsou vráceny v instanci třídy `ResultSet`, jelikož se v budoucnu počítá s možností uložení více záznamu najednou.
+
 ```python
 >>> db.blog.insert_and_get(name="New blog", description="New blog description")
 INSERT INTO "blog" ("name", "description") VALUES ('New blog', 'New blog description') RETURNING *
 <pypg.resultset.ResultSet at 0xa287d4c>
 ```
 * __update__ Metoda pro aktualizaci záznamů tabulky. Dotaz lze vytvořit s využitím metody `where`. Metoda `update` však musí být vždy v řetězení dotazů na konci. Přijímá neomezený počet parametrů, jejichž názvy se musí shodovat s názvy atributů tabulky.
+
 ```python
 >>> db.blog.where(db.blog.id==1).update(name="Peters tool blog")
 UPDATE "blog" SET "name"='Peters tool blog' WHERE blog.id = 1
 ```
 * __update_and_get__ Tato metoda má stejnou podobu jako metoda `update`. Vrací však z databáze aktualizované záznamy. 
+
 ```python
 >>> db.blog.where(db.blog.id==1).update_and_get(name="Peters tool blog")
 UPDATE "blog" SET "name"='Peters tool blog' WHERE blog.id = 1 RETURNING *
 <pypg.resultset.ResultSet at 0x9a524ac>
 ```
 * __delete__ Metoda pro mazání záznamů v databázové tabulce. Lze vytvořit s využitím metody `where`. Metoda `delete` však musí být vždy v řetězení dotazů na konci.
+
 ```python
 >>> db.blog.where(3==db.blog.id).delete()
 DELETE FROM "blog" WHERE blog.id = 3
@@ -277,7 +289,7 @@ Jan
 Funkce urychlující čtení dat z databáze
 ------------------------------------------
 
-Při cyklování výsledky dotazu a při přistupování k relacím se vytváří efektivní dotazy, které nezatěžují databázi. Pro každou tabulku použitou v cyklu se vždy vytvoří pouze jeden dotaz. Příklad lze nalézt ve skriptu `blogapp.py`. Konkrétně ve funkci `print_database_data`. 
+Při cyklování výsledky dotazu a při přistupování k relacím se vytváří efektivní dotazy, které nezatěžují databázi. Pro každou tabulku použitou v cyklu se vždy vytvoří pouze jeden dotaz.
 
 Funkce knihovny pypg umožňuje vytvořit v databázi struktury, které simulují materializovaný pohled. Pro vytvoření se používá metoda `create_mview` instance třídy `PyPg`. Tato metoda přijímá jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvoření pomocí API knihovny. Pomocí metody `drop_mview` je z databáze materializovaný pohled odstraněn. Tato operace by měla být prováděna mimo běh aplikace.
 
@@ -291,9 +303,9 @@ SELECT * FROM "blog_entry"
 Materialized view blog_entry dropped successfully
 ```
 
-Pro funkci automatické denormalizace je nejdříve nutné zapnout logování statistik pomocí funkce `set_log` instance třídy `PyPg`. Poté knihovna loguje statistiky každého prováděného dotazu. Automatická denormalizace se pak spouští metodou `start_denormalization`. Tato funkce vyžaduje, aby byly přes příkazový řádek dostupné funkce `psql` a `pg_dump` SŘBD PostgreSQL. Při spuštění bude na databázovém serveru vytvořena testovací databáze, která bude testována a zatěžována. Příklad použití této funkce lze nalézt ve skriptu `blogapp.py`. 
+Pro funkci automatické denormalizace je nejdříve nutné zapnout logování statistik pomocí funkce `set_log` instance třídy `PyPg`. Poté knihovna loguje statistiky každého prováděného dotazu. Automatická denormalizace se pak spouští metodou `start_denormalization`. Tato funkce vyžaduje, aby byly přes příkazový řádek dostupné funkce `psql` a `pg_dump` SŘBD PostgreSQL. Při spuštění bude na databázovém serveru vytvořena testovací databáze, která bude testována a zatěžována. 
 
-Vytvoření vlastních sady pravidel pomocí třídy Naming
+Vytvoření vlastní sady pravidel
 --------------------------------------------------------
 
 K vytvoření vlastních pravidel použitých při tvoření dotazů je potřeba podědit z třídy `pypg.structure.Naming` a předefinovat její metody.
@@ -312,10 +324,14 @@ class CustomNaming(Naming):
     def get_fk_column(self, table, foreign_key):
         return foreign_key.rstrip("_id")
 ```
-Metoda `get_pk_naming` přijímá jako parametr název tabulky a měla by vracet název primárního klíče této tabulky. \\
-Metoda `get_fk_naming` přijíma parametry, které představují název tabulky a název relační tabulky. Metoda by měla vracet název cizího klíče pro tuto relaci. \\
-Metoda `match_fk_naming` přijíma jako parametry název tabulky a název atributu. Metoda by měla zjistit, zda je tento atribut cizím klíčem a vrátit výsledek. \\
-Metoda `get_fk_column` přijímá název tabulky a název cizího klíče, který tato tabulka obsahuje. Metoda by měla název relační tabulky, na kterou tento cizí klíč odkazuje. \\
+Metoda `get_pk_naming` přijímá jako parametr název tabulky a měla by vracet název primárního klíče této tabulky.
+
+Metoda `get_fk_naming` přijíma parametry, které představují název tabulky a název relační tabulky. Metoda by měla vracet název cizího klíče pro tuto relaci.
+
+Metoda `match_fk_naming` přijíma jako parametry název tabulky a název atributu. Metoda by měla zjistit, zda je tento atribut cizím klíčem a vrátit výsledek.
+
+Metoda `get_fk_column` přijímá název tabulky a název cizího klíče, který tato tabulka obsahuje. Metoda by měla název relační tabulky, na kterou tento cizí klíč odkazuje.
+
 Instanci této třídy je pak potřeba předat do nastavení knihovny.
 ```python
 >>> db.set_naming(CustomNaming())
