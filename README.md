@@ -288,8 +288,11 @@ Jan
 
 Funkce urychlující čtení dat z databáze
 ------------------------------------------
+__Optimalizované dotazy__
 
 Při cyklování výsledky dotazu a při přistupování k relacím se vytváří efektivní dotazy, které nezatěžují databázi. Pro každou tabulku použitou v cyklu se vždy vytvoří pouze jeden dotaz.
+
+__Simulace materializovaných pohledů__
 
 Funkce knihovny pypg umožňuje vytvořit v databázi struktury, které simulují materializovaný pohled. Pro vytvoření se používá metoda `create_mview` instance třídy `PyPg`. Tato metoda přijímá jako první parametr název materializovaného pohledu a jako druhý parametr dotaz vytvoření pomocí API knihovny. Pomocí metody `drop_mview` je z databáze materializovaný pohled odstraněn. Tato operace by měla být prováděna mimo běh aplikace.
 
@@ -302,6 +305,8 @@ SELECT * FROM "blog_entry"
 >>> db.drop_mview('blog_entry')
 Materialized view blog_entry dropped successfully
 ```
+
+__Denormalizace pomocí rychlostních testů__
 
 Pro funkci automatické denormalizace je nejdříve nutné zapnout logování statistik pomocí funkce `set_log` instance třídy `PyPg`. Poté knihovna loguje statistiky každého prováděného dotazu. Automatická denormalizace se pak spouští metodou `start_denormalization`. Tato funkce vyžaduje, aby byly přes příkazový řádek dostupné funkce `psql` a `pg_dump` SŘBD PostgreSQL. Při spuštění bude na databázovém serveru vytvořena testovací databáze, která bude testována a zatěžována. 
 
